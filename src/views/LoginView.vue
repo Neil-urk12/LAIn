@@ -166,16 +166,20 @@ const socialLogin = (provider: string) => {
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 .auth-page {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: var(--bg-white);
+  background-image: url("data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><g fill='none' stroke='%23e5e7eb' stroke-width='1'><path d='M0 0 L100 0 L100 100 L0 100 Z'/><path d='M0 0 L100 100'/><path d='M100 0 L0 100'/></g></svg>");
+  background-repeat: repeat;
+  background-size: 150px 150px;
+  background-position: center;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #fff;
+  color: var(--text-dark);
 }
 
 .auth-container {
-  background: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-dark) 100%);
   backdrop-filter: blur(10px);
   border-radius: 20px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
@@ -221,55 +225,102 @@ const socialLogin = (provider: string) => {
   text-align: center;
 }
 
-.input-group {
+/* Login form input styles */
+.login-form .input-group {
   position: relative;
   margin-bottom: 25px;
 }
 
-.input-group input {
+.login-form .input-group input {
   width: 100%;
-  padding: 15px 1px;
-  background: rgba(255, 255, 255, 0.2);
+  padding: 15px 20px;
   border: none;
   border-radius: 50px;
-  color: #fff;
+  color: var(--text-dark);
   font-size: 16px;
   outline: none;
   transition: all 0.3s ease;
 }
 
-.input-group input:focus {
+.login-form .input-group input:focus {
   background: rgba(255, 255, 255, 0.3);
 }
 
-.input-group input::placeholder {
+.login-form .input-group input::placeholder {
   color: rgba(255, 255, 255, 0.7);
 }
 
-.input-group label {
+.login-form .input-group label {
   position: absolute;
   top: 15px;
   left: 20px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-dark);
   font-size: 16px;
   pointer-events: none;
   transition: all 0.3s ease;
 }
 
-.input-group input:focus + label,
-.input-group input:not(:placeholder-shown) + label {
-  top: -20px;
-  left: 12px;
+.login-form .input-group input:focus + label,
+.login-form .input-group input:not(:placeholder-shown) + label {
+  top: -24px;
+  left: 5px;
   font-size: 15px;
+  color: black;
+  padding: 0 5px;
+  border-radius: 10px;
+}
 
+/* Register form input styles */
+.register-form .input-group {
+  position: relative;
+  margin-bottom: 25px;
+}
+
+.register-form .input-group input {
+  width: 100%;
+  box-sizing: border-box;
+  box-sizing: border-box;
+  padding: 15px 20px;
+  background: var(--bg-white);
+  border: none;
+  border-radius: 50px;
+  color: var(--text-dark);
+  font-size: 16px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.register-form .input-group input:focus {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.register-form .input-group input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.register-form .input-group label {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 16px;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.register-form .input-group input:focus + label,
+.register-form .input-group input:not(:placeholder-shown) + label {
+  top: -24px;
+  left: 5px;
+  font-size: 15px;
   color: black;
   padding: 0 5px;
   border-radius: 10px;
 }
 
 .btn {
-  background: #fff;
-  color: #667eea;
+  background: var(--bg-white);
+  color: var(--primary-color);
   border: none;
   padding: 15px;
   border-radius: 50px;
@@ -298,7 +349,7 @@ const socialLogin = (provider: string) => {
 .toggle-btn {
   background: transparent;
   border: none;
-  color: #fff;
+  color: var(--bg-white);
   text-decoration: underline;
   cursor: pointer;
   font-weight: 600;
@@ -313,6 +364,8 @@ const socialLogin = (provider: string) => {
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  box-sizing: border-box;
   opacity: 0;
   pointer-events: none;
   transform: translateX(50px);
