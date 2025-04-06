@@ -35,21 +35,21 @@ import { ArrowRight, Users, BookOpen, Globe, Image as ImageIcon } from 'lucide-v
 
 <style scoped>
 .hero-section {
-  background-color: var(--bg-light); /* Light background for hero */
-  padding-top: calc(var(--spacing-unit) * 8); /* Adjust padding */
+  background: linear-gradient(to bottom, #e6f9f2, #ffffff); /* Soft green gradient */
+  padding-top: calc(var(--spacing-unit) * 22);
   padding-bottom: calc(var(--spacing-unit) * 8);
 }
 
 .hero-container {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: calc(var(--spacing-unit) * 6);
+  grid-template-columns: 1fr 1fr;
+  gap: calc(var(--spacing-unit) * 10);
   align-items: center;
 }
 
 .hero-content h1 {
-  font-size: 3rem; /* ~48px */
-  margin-bottom: calc(var(--spacing-unit) * 3);
+  font-size: 4rem; /* ~64px */
+  margin-bottom: calc(var(--spacing-unit) * 5);
   font-weight: 700;
 }
 
@@ -58,22 +58,22 @@ import { ArrowRight, Users, BookOpen, Globe, Image as ImageIcon } from 'lucide-v
 }
 
 .hero-content p {
-  font-size: 1.125rem; /* 18px */
+  font-size: 1.375rem; /* 22px */
   color: var(--text-light);
-  margin-bottom: calc(var(--spacing-unit) * 4);
-  max-width: 500px;
+  margin-bottom: calc(var(--spacing-unit) * 4); /* less space before buttons */
+  max-width: 650px;
 }
 
 .hero-actions {
   display: flex;
   gap: calc(var(--spacing-unit) * 2);
-  margin-bottom: calc(var(--spacing-unit) * 5);
+  margin-bottom: calc(var(--spacing-unit) * 3); /* less space before stats */
 }
 
 .hero-stats {
   display: flex;
   gap: calc(var(--spacing-unit) * 4);
-  color: var(--text-light);
+  color: var(--primary-color); /* green text */
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -88,6 +88,7 @@ import { ArrowRight, Users, BookOpen, Globe, Image as ImageIcon } from 'lucide-v
   display: flex;
   justify-content: center;
   align-items: center;
+  max-width: 100%;
 }
 
 /* Responsive adjustments for hero */
@@ -121,6 +122,13 @@ import { ArrowRight, Users, BookOpen, Globe, Image as ImageIcon } from 'lucide-v
   .hero-image {
     grid-row: 1; /* Move image to top on mobile */
     margin-bottom: calc(var(--spacing-unit) * 4);
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    padding-top: calc(var(--spacing-unit) * 4);
+    padding-bottom: calc(var(--spacing-unit) * 4);
   }
 }
 </style>

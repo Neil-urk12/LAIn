@@ -1,13 +1,16 @@
 <template>
   <header class="app-header">
     <div class="container header-container">
-      <a href="#" class="logo">LAIn</a>
+      <RouterLink to="/" class="logo">
+        <BookOpen :size="26" color="var(--primary-color)" style="margin-right: 6px; vertical-align: middle;" />
+        LAIn
+      </RouterLink>
       <nav class="main-nav">
         <ul>
-          <li><a href="#">Courses</a></li>
-          <li><a href="#">About</a></li>
-          <li><a href="#">Pricing</a></li>
-          <li><a href="#">Blog</a></li>
+          <li><RouterLink to="/courses">Courses</RouterLink></li>
+          <li><RouterLink to="/about">About</RouterLink></li>
+          <li><RouterLink to="/pricing">Pricing</RouterLink></li>
+          <li><RouterLink to="/blog">Blog</RouterLink></li>
         </ul>
       </nav>
       <div class="header-actions">
@@ -20,12 +23,12 @@
     </div>
      <nav class="mobile-nav" :class="{ 'is-open': isMobileMenuOpen }">
         <ul>
-          <li><a href="#">Courses</a></li>
-          <li><a href="#">About</a></li>
-          <li><a href="#">Pricing</a></li>
-          <li><a href="#">Blog</a></li>
-          <li><a href="#" class="btn btn-secondary">Sign In</a></li>
-          <li><a href="#" class="btn btn-primary">Get Started</a></li>
+          <li><RouterLink to="/courses">Courses</RouterLink></li>
+          <li><RouterLink to="/about">About</RouterLink></li>
+          <li><RouterLink to="/pricing">Pricing</RouterLink></li>
+          <li><RouterLink to="/blog">Blog</RouterLink></li>
+          <li><RouterLink to="/signin" class="btn btn-secondary">Sign In</RouterLink></li>
+          <li><RouterLink to="/get-started" class="btn btn-primary">Get Started</RouterLink></li>
         </ul>
       </nav>
   </header>
@@ -33,7 +36,8 @@
 
 <script setup lang=ts>
 import { ref } from 'vue';
-import { Menu } from 'lucide-vue-next';
+import { RouterLink } from 'vue-router';
+import { Menu, BookOpen } from 'lucide-vue-next';
 
 const isMobileMenuOpen = ref(false);
 
@@ -60,6 +64,9 @@ const toggleMobileMenu = () => {
 }
 
 .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 1.5rem; /* 24px */
   font-weight: 700;
   color: var(--text-dark);
@@ -73,7 +80,7 @@ const toggleMobileMenu = () => {
 }
 
 .main-nav a {
-  color: var(--text-light);
+  color: #000000; /* black text */
   font-weight: 500;
   text-decoration: none;
   transition: color 0.2s ease;
@@ -130,7 +137,7 @@ const toggleMobileMenu = () => {
 .mobile-nav a {
     display: block;
     padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 3);
-    color: var(--text-dark);
+    color: #000000; /* black text */
     font-weight: 500;
     text-decoration: none;
 }

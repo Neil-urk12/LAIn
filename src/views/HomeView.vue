@@ -14,10 +14,10 @@ const TheFooter = defineAsyncComponent(() => import('../components/TheFooter.vue
   <TheHeader />
   <main>
     <HeroSection />
-    <FeaturesSection />
-    <CoursesSection />
-    <TestimonialsSection />
-    <CtaSection />
+    <FeaturesSection class="section" />
+    <CoursesSection class="section" />
+    <TestimonialsSection class="section" />
+    <CtaSection class="section" />
   </main>
   <TheFooter />
 </template>
