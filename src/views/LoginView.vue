@@ -252,7 +252,7 @@ const socialLogin = (provider: string) => {
 
 .login-form .input-group label {
   position: absolute;
-  top: 15px;
+  top: 12px;
   left: 20px;
   color: var(--text-dark);
   font-size: 16px;
@@ -300,7 +300,7 @@ const socialLogin = (provider: string) => {
 
 .register-form .input-group label {
   position: absolute;
-  top: 15px;
+  top: 12px;
   left: 20px;
   color: rgba(0, 0, 0, 0.6);
   font-size: 16px;
