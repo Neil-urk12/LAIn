@@ -1,63 +1,23 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-
-interface LoginForm {
-  email: string
-  password: string
-}
-
-interface RegisterForm {
-  name: string
-  email: string
-  password: string
-  confirmPassword: string
-}
+import { useAuthStore } from '../stores/auth'
 
 const showRegister = ref(false)
-const loginForm = ref<LoginForm>({
-  email: '',
-  password: ''
-})
-
-const registerForm = ref<RegisterForm>({
-  name: '',
-  email: '',
-  password: '',
-  confirmPassword: ''
-})
-
-const handleLogin = () => {
-  console.log('Login submitted:', loginForm.value)
-  // Add your login logic here
-}
-
-const handleRegister = () => {
-  if (registerForm.value.password !== registerForm.value.confirmPassword) {
-    alert('Passwords do not match!')
-    return
-  }
-  console.log('Register submitted:', registerForm.value)
-  // Add your registration logic here
-}
-
-const socialLogin = (provider: string) => {
-  console.log(`Social login with ${provider}`)
-  // Add social login logic here
-}
+const auth = useAuthStore()
 </script>
 
 <template>
   <div class="auth-page">
     <div class="auth-container" :class="{ active: showRegister }">
       <div class="form-container">
-        <form class="form login-form" @submit.prevent="handleLogin">
+        <form class="form login-form" @submit.prevent="auth.handleLogin">
           <h2 class="form-title">Welcome Back</h2>
 
           <div class="input-group">
             <input
               type="email"
               id="login-email"
-              v-model="loginForm.email"
+              v-model="auth.loginForm.email"
               placeholder=" "
               required
             >
@@ -68,7 +28,7 @@ const socialLogin = (provider: string) => {
             <input
               type="password"
               id="login-password"
-              v-model="loginForm.password"
+              v-model="auth.loginForm.password"
               placeholder=" "
               required
             >
@@ -89,26 +49,26 @@ const socialLogin = (provider: string) => {
           </div>
 
           <div class="social-login">
-            <div class="social-icon" @click="socialLogin('google')">
+            <div class="social-icon" @click="auth.socialLogin('google')">
               <i class="fab fa-google"></i>
             </div>
-            <div class="social-icon" @click="socialLogin('facebook')">
+            <div class="social-icon" @click="auth.socialLogin('facebook')">
               <i class="fab fa-facebook-f"></i>
             </div>
-            <div class="social-icon" @click="socialLogin('twitter')">
+            <div class="social-icon" @click="auth.socialLogin('twitter')">
               <i class="fab fa-twitter"></i>
             </div>
           </div>
         </form>
 
-        <form class="form register-form" @submit.prevent="handleRegister">
+        <form class="form register-form" @submit.prevent="auth.handleRegister">
           <h2 class="form-title">Create Account</h2>
 
           <div class="input-group">
             <input
               type="text"
               id="register-name"
-              v-model="registerForm.name"
+              v-model="auth.registerForm.name"
               placeholder=" "
               required
             >
@@ -119,7 +79,7 @@ const socialLogin = (provider: string) => {
             <input
               type="email"
               id="register-email"
-              v-model="registerForm.email"
+              v-model="auth.registerForm.email"
               placeholder=" "
               required
             >
@@ -130,7 +90,7 @@ const socialLogin = (provider: string) => {
             <input
               type="password"
               id="register-password"
-              v-model="registerForm.password"
+              v-model="auth.registerForm.password"
               placeholder=" "
               required
             >
@@ -141,7 +101,7 @@ const socialLogin = (provider: string) => {
             <input
               type="password"
               id="register-confirm"
-              v-model="registerForm.confirmPassword"
+              v-model="auth.registerForm.confirmPassword"
               placeholder=" "
               required
             >
