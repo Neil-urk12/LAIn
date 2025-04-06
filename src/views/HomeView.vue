@@ -1,10 +1,27 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { defineAsyncComponent } from 'vue';
+
+const TheHeader = defineAsyncComponent(() => import('../components/TheHeader.vue'));
+const HeroSection = defineAsyncComponent(() => import('../components/HeroSection.vue'));
+const FeaturesSection = defineAsyncComponent(() => import('../components/FeatureSection.vue'));
+const CoursesSection = defineAsyncComponent(() => import('../components/CoursesSection.vue'));
+const TestimonialsSection = defineAsyncComponent(() => import('../components/TestimonialsSection.vue'));
+const CtaSection = defineAsyncComponent(() => import('../components/CtaSection.vue'));
+const TheFooter = defineAsyncComponent(() => import('../components/TheFooter.vue'));
+</script>
 
 <template>
+  <TheHeader />
   <main>
-    <p>Welcome to the Vue.js application!</p>
-    <p>This is a simple example of a Vue.js application.</p>
+    <HeroSection />
+    <FeaturesSection />
+    <CoursesSection />
+    <TestimonialsSection />
+    <CtaSection />
   </main>
+  <TheFooter />
 </template>
 
-<style scoped></style>
+<style>
+@import '../assets/main.css';
+</style>
