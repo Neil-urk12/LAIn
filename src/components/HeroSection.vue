@@ -15,9 +15,9 @@
           <a href="#" class="btn btn-secondary">View Demo</a>
         </div>
         <div class="hero-stats">
-          <span><Users :size="16" /> 10K+ Students</span>
+          <span><Users :size="16" /> 2 Students</span>
           <span><BookOpen :size="16" /> 50+ Courses</span>
-          <span><Globe :size="16" /> Global Community</span>
+          <span><Globe :size="16" /> Global Community (Hopefully)</span>
         </div>
       </div>
       <div class="hero-image">
