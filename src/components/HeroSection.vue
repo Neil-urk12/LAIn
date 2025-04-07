@@ -21,16 +21,14 @@
         </div>
       </div>
       <div class="hero-image">
-        <div class="placeholder-image">
-          <ImageIcon class="placeholder-icon" :size="64" />
-        </div>
+        <img src="https://newhorizoncollegeofengineering.in/wp-content/uploads/2023/10/AI-Engineering-2048x1154-1.jpg" alt="AI Engineering" class="hero-img" />
       </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ArrowRight, Users, BookOpen, Globe, Image as ImageIcon } from 'lucide-vue-next';
+import { ArrowRight, Users, BookOpen, Globe } from 'lucide-vue-next';
 </script>
 
 <style scoped>
@@ -89,6 +87,15 @@ import { ArrowRight, Users, BookOpen, Globe, Image as ImageIcon } from 'lucide-v
   justify-content: center;
   align-items: center;
   max-width: 100%;
+}
+
+.hero-img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  object-fit: cover;
 }
 
 /* Responsive adjustments for hero */

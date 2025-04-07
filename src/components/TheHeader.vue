@@ -1,3 +1,25 @@
+<script setup lang="ts">
+import { ref } from 'vue';
+import { RouterLink } from 'vue-router';
+import { Menu, BookOpen } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
+
+const isMobileMenuOpen = ref(false);
+
+const router = useRouter();
+const auth = useAuthStore();
+
+const handleGetStarted = () => {
+ if (auth.isAuthenticated) {
+   router.push('/dashboard');
+ } else {
+   router.push('/login');
+ }
+}
+const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
+</script>
+
 <template>
   <header class="app-header">
     <div class="container header-container">
@@ -15,7 +37,7 @@
       </nav>
       <div class="header-actions">
         <a href="#" class="btn btn-secondary btn-signin">Sign In</a>
-        <a href="#" class="btn btn-primary">Get Started</a>
+        <a href="#" class="btn btn-primary" @click.prevent="handleGetStarted">Get Started</a>
       </div>
       <button class="mobile-nav-toggle" @click="toggleMobileMenu" aria-label="Toggle menu">
          <Menu :size="24" />
@@ -33,18 +55,6 @@
       </nav>
   </header>
 </template>
-
-<script setup lang=ts>
-import { ref } from 'vue';
-import { RouterLink } from 'vue-router';
-import { Menu, BookOpen } from 'lucide-vue-next';
-
-const isMobileMenuOpen = ref(false);
-
-const toggleMobileMenu = () => {
-  isMobileMenuOpen.value = !isMobileMenuOpen.value;
-};
-</script>
 
 <style scoped>
 .app-header {

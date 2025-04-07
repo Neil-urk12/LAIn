@@ -4,127 +4,137 @@ import { useAuthStore } from '../stores/auth'
 
 const showRegister = ref(false)
 const auth = useAuthStore()
+import { onMounted } from 'vue'
+
+const isLoading = ref(true)
+
+onMounted(() => {
+  isLoading.value = false
+})
 </script>
 
 <template>
-  <div class="auth-page">
-    <div class="auth-container" :class="{ active: showRegister }">
-      <div class="form-container">
-        <form class="form login-form" @submit.prevent="auth.handleLogin">
-          <h2 class="form-title">Welcome Back</h2>
+  <div v-cloak>
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loader"></div>
+    </div>
+    <div v-else class="auth-page">
+      <div class="auth-container" :class="{ active: showRegister }">
+        <div class="form-container">
+          <form class="form login-form" @submit.prevent="auth.handleLogin">
+            <h2 class="form-title">Welcome Back</h2>
 
-          <div class="input-group">
-            <input
-              type="email"
-              id="login-email"
-              v-model="auth.loginForm.email"
-              placeholder=" "
-              required
-            >
-            <label for="login-email">Email</label>
-          </div>
-
-          <div class="input-group">
-            <input
-              type="password"
-              id="login-password"
-              v-model="auth.loginForm.password"
-              placeholder=" "
-              required
-            >
-            <label for="login-password">Password</label>
-          </div>
-
-          <button type="submit" class="btn">Sign In</button>
-
-          <div class="toggle-form">
-            Don't have an account?
-            <button type="button" class="toggle-btn" @click="showRegister = true">
-              Sign Up
-            </button>
-          </div>
-
-          <div class="divider">
-            <span>OR</span>
-          </div>
-
-          <div class="social-login">
-            <div class="social-icon" @click="auth.socialLogin('google')">
-              <i class="fab fa-google"></i>
+            <div class="input-group">
+              <input
+                type="email"
+                id="login-email"
+                v-model="auth.loginForm.email"
+                placeholder=" "
+                required
+              >
+              <label for="login-email">Email</label>
             </div>
-            <div class="social-icon" @click="auth.socialLogin('facebook')">
-              <i class="fab fa-facebook-f"></i>
+
+            <div class="input-group">
+              <input
+                type="password"
+                id="login-password"
+                v-model="auth.loginForm.password"
+                placeholder=" "
+                required
+              >
+              <label for="login-password">Password</label>
             </div>
-            <div class="social-icon" @click="auth.socialLogin('twitter')">
-              <i class="fab fa-twitter"></i>
+
+            <button type="submit" class="btn">Sign In</button>
+
+            <div class="toggle-form">
+              Don't have an account?
+              <button type="button" class="toggle-btn" @click="showRegister = true">
+                Sign Up
+              </button>
             </div>
-          </div>
-        </form>
 
-        <form class="form register-form" @submit.prevent="auth.handleRegister">
-          <h2 class="form-title">Create Account</h2>
+            <div class="divider">
+              <span>OR</span>
+            </div>
 
-          <div class="input-group">
-            <input
-              type="text"
-              id="register-name"
-              v-model="auth.registerForm.name"
-              placeholder=" "
-              required
-            >
-            <label for="register-name">Full Name</label>
-          </div>
+            <div class="social-login">
+              <div class="social-icon" @click="auth.socialLogin('google')">
+                <i class="fab fa-google"></i>
+              </div>
+              <div class="social-icon" @click="auth.socialLogin('facebook')">
+                <i class="fab fa-facebook-f"></i>
+              </div>
+              <div class="social-icon" @click="auth.socialLogin('twitter')">
+                <i class="fab fa-twitter"></i>
+              </div>
+            </div>
+          </form>
 
-          <div class="input-group">
-            <input
-              type="email"
-              id="register-email"
-              v-model="auth.registerForm.email"
-              placeholder=" "
-              required
-            >
-            <label for="register-email">Email</label>
-          </div>
+          <form class="form register-form" @submit.prevent="auth.handleRegister">
+            <h2 class="form-title">Create Account</h2>
 
-          <div class="input-group">
-            <input
-              type="password"
-              id="register-password"
-              v-model="auth.registerForm.password"
-              placeholder=" "
-              required
-            >
-            <label for="register-password">Password</label>
-          </div>
+            <div class="input-group">
+              <input
+                type="text"
+                id="register-name"
+                v-model="auth.registerForm.name"
+                placeholder=" "
+                required
+              >
+              <label for="register-name">Full Name</label>
+            </div>
 
-          <div class="input-group">
-            <input
-              type="password"
-              id="register-confirm"
-              v-model="auth.registerForm.confirmPassword"
-              placeholder=" "
-              required
-            >
-            <label for="register-confirm">Confirm Password</label>
-          </div>
+            <div class="input-group">
+              <input
+                type="email"
+                id="register-email"
+                v-model="auth.registerForm.email"
+                placeholder=" "
+                required
+              >
+              <label for="register-email">Email</label>
+            </div>
 
-          <button type="submit" class="btn">Sign Up</button>
+            <div class="input-group">
+              <input
+                type="password"
+                id="register-password"
+                v-model="auth.registerForm.password"
+                placeholder=" "
+                required
+              >
+              <label for="register-password">Password</label>
+            </div>
 
-          <div class="toggle-form">
-            Already have an account?
-            <button type="button" class="toggle-btn" @click="showRegister = false">
-              Sign In
-            </button>
-          </div>
-        </form>
+            <div class="input-group">
+              <input
+                type="password"
+                id="register-confirm"
+                v-model="auth.registerForm.confirmPassword"
+                placeholder=" "
+                required
+              >
+              <label for="register-confirm">Confirm Password</label>
+            </div>
+
+            <button type="submit" class="btn">Sign Up</button>
+
+            <div class="toggle-form">
+              Already have an account?
+              <button type="button" class="toggle-btn" @click="showRegister = false">
+                Sign In
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
 .auth-page {
   background-color: var(--bg-white);
   background-image: url("data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><g fill='none' stroke='%23e5e7eb' stroke-width='1'><path d='M0 0 L100 0 L100 100 L0 100 Z'/><path d='M0 0 L100 100'/><path d='M100 0 L0 100'/></g></svg>");
@@ -395,5 +405,35 @@ const auth = useAuthStore()
   padding: 0 10px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
+}
+[v-cloak] {
+  display: none;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loader {
+  width: 50px;
+  height: 50px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
