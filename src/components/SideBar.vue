@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, defineEmits } from 'vue'
+import { useRoute } from 'vue-router'
 import { BookOpen, LayoutGrid, Calendar, MessageSquare, FileText, CreditCard, Settings } from 'lucide-vue-next'
 import ThemeToggleButton from './ThemeToggleButton.vue'
 
@@ -10,6 +11,8 @@ const emit = defineEmits<{
 }>()
 
 const isCollapsed = ref(true)
+
+const route = useRoute()
 
 function toggleSidebar() {
   isCollapsed.value = !isCollapsed.value
@@ -37,11 +40,11 @@ function toggleSidebar() {
 
     <nav>
       <ul>
-        <li class="active">
+        <li :class="{ active: route.path === '/dashboard' }" @click="$router.push('/dashboard')">
           <LayoutGrid :size="18" color="#059669" />
           <span v-show="!isCollapsed">Dashboard</span>
         </li>
-        <li>
+        <li :class="{ active: route.path === '/courses' }" @click="$router.push('/courses')">
           <BookOpen :size="18" color="#059669" />
           <span v-show="!isCollapsed">My Courses</span>
         </li>
