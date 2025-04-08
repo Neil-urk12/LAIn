@@ -17,6 +17,143 @@ const registerPassword = ref("");
 const registerRepeatPassword = ref("");
 const registerUsername = ref("");
 
+// Validation error states
+const loginErrors = ref<{ email: string; password: string }>({
+  email: "",
+  password: "",
+});
+
+const registerErrors = ref<{
+  fullName: string;
+  username: string;
+  email: string;
+  password: string;
+  repeatPassword: string;
+}>({
+  fullName: "",
+  username: "",
+  email: "",
+  password: "",
+  repeatPassword: "",
+});
+
+// Email format validation with allowed domains
+function validateEmail(email: string): boolean {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!re.test(email)) {
+    return false;
+  }
+
+  const domain = email.split("@")[1].toLowerCase();
+
+  const disposableDomains = [
+    "mailinator.com",
+    "tempmail.com",
+    "10minutemail.com",
+    "guerrillamail.com",
+    "yopmail.com"
+  ];
+
+  if (disposableDomains.includes(domain)) {
+    return false;
+  }
+
+  const allowedDomains = [
+    "gmail.com",
+    "googlemail.com",
+    "outlook.com",
+    "hotmail.com",
+    "msn.com",
+    "yahoo.com",
+    "yahoo.co.uk",
+    "yahoo.fr",
+    "protonmail.com",
+    "icloud.com",
+    "mac.com",
+    "company.com",
+    "business.com"
+  ];
+
+  return allowedDomains.includes(domain);
+}
+
+// Password complexity validation
+function validatePasswordComplexity(password: string): boolean {
+  return (
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
+  );
+}
+
+function validateLoginForm(): boolean {
+  let valid = true;
+  loginErrors.value.email = "";
+  loginErrors.value.password = "";
+
+  if (!auth.loginForm.email) {
+    loginErrors.value.email = "Email is required.";
+    valid = false;
+  } else if (!validateEmail(auth.loginForm.email)) {
+    loginErrors.value.email = "Email must be from an allowed provider (e.g., Gmail, Outlook, Yahoo, etc.).";
+    valid = false;
+  }
+
+  if (!auth.loginForm.password) {
+    loginErrors.value.password = "Password is required.";
+    valid = false;
+  }
+
+  return valid;
+}
+
+function validateRegisterForm(): boolean {
+  let valid = true;
+  registerErrors.value.fullName = "";
+  registerErrors.value.username = "";
+  registerErrors.value.email = "";
+  registerErrors.value.password = "";
+  registerErrors.value.repeatPassword = "";
+
+  if (!registerFullName.value) {
+    registerErrors.value.fullName = "Full name is required.";
+    valid = false;
+  }
+
+  if (!registerUsername.value) {
+    registerErrors.value.username = "Username is required.";
+    valid = false;
+  }
+
+  if (!registerEmail.value) {
+    registerErrors.value.email = "Email is required.";
+    valid = false;
+  } else if (!validateEmail(registerEmail.value)) {
+    registerErrors.value.email = "Email must be from an allowed provider (e.g., Gmail, Outlook, Yahoo, etc.).";
+    valid = false;
+  }
+
+  if (!registerPassword.value) {
+    registerErrors.value.password = "Password is required.";
+    valid = false;
+  } else if (!validatePasswordComplexity(registerPassword.value)) {
+    registerErrors.value.password =
+      "Password must be at least 8 characters, include uppercase, number, and special character.";
+    valid = false;
+  }
+
+  if (!registerRepeatPassword.value) {
+    registerErrors.value.repeatPassword = "Please confirm your password.";
+    valid = false;
+  } else if (registerPassword.value !== registerRepeatPassword.value) {
+    registerErrors.value.repeatPassword = "Passwords do not match.";
+    valid = false;
+  }
+
+  return valid;
+}
+
 import { computed } from "vue";
 
 const passwordStrength = computed(() => {
@@ -34,11 +171,15 @@ const passwordStrength = computed(() => {
 });
 
 function handleLogin() {
-  auth.handleLogin();
+  if (validateLoginForm()) {
+    auth.handleLogin();
+  }
 }
 
 function handleRegister() {
-  auth.handleRegister();
+  if (validateRegisterForm()) {
+    auth.handleRegister();
+  }
 }
 
 onMounted(() => {
@@ -78,8 +219,10 @@ onMounted(() => {
                 placeholder=" "
                 required
                 style="color: black"
+                :class="{ 'error': loginErrors.email }"
               />
               <label for="login-email">Email</label>
+              <i v-if="loginErrors.email" class="fas fa-exclamation-circle error-icon" :title="loginErrors.email"></i>
             </div>
 
             <div class="input-group">
@@ -89,8 +232,10 @@ onMounted(() => {
                 v-model="auth.loginForm.password"
                 placeholder=" "
                 required
+                :class="{ 'error': loginErrors.password }"
               />
               <label for="login-password">Password</label>
+              <i v-if="loginErrors.password" class="fas fa-exclamation-circle error-icon" :title="loginErrors.password"></i>
             </div>
 
             <button type="submit" class="btn">Sign In</button>
@@ -127,7 +272,7 @@ onMounted(() => {
             class="form register-form"
             @submit.prevent="handleRegister"
           >
-            <h2 class="form-title">Create Account</h2>
+            <h2 class="form-title register-form-title">Create Account</h2>
 
             <div class="input-group">
               <input
@@ -135,9 +280,10 @@ onMounted(() => {
                 id="register-name"
                 v-model="registerFullName"
                 placeholder=" "
-                required
+                :class="{ 'error': registerErrors.fullName }"
               />
               <label for="register-name">Full Name</label>
+              <i v-if="registerErrors.fullName" class="fas fa-exclamation-circle error-icon" :title="registerErrors.fullName"></i>
             </div>
 
             <div class="input-group">
@@ -146,9 +292,10 @@ onMounted(() => {
                 id="register-username"
                 v-model="registerUsername"
                 placeholder=" "
-                required
+                :class="{ 'error': registerErrors.username }"
               />
               <label for="register-username">Username</label>
+              <i v-if="registerErrors.username" class="fas fa-exclamation-circle error-icon" :title="registerErrors.username"></i>
             </div>
 
             <div class="input-group">
@@ -157,9 +304,10 @@ onMounted(() => {
                 id="register-email"
                 v-model="registerEmail"
                 placeholder=" "
-                required
+                :class="{ 'error': registerErrors.email }"
               />
               <label for="register-email">Email</label>
+              <i v-if="registerErrors.email" class="fas fa-exclamation-circle error-icon" :title="registerErrors.email"></i>
             </div>
 
             <div class="input-group">
@@ -168,16 +316,16 @@ onMounted(() => {
                 id="register-password"
                 v-model="registerPassword"
                 placeholder=" "
-                required
+                :class="{ 'error': registerErrors.password }"
               />
               <label for="register-password">Password</label>
-            </div>
-            <div
-              v-if="registerPassword"
-              class="password-strength-meter"
-              :style="{ color: passwordStrength === 'Weak' ? 'red' : passwordStrength === 'Moderate' ? 'orange' : 'green' }"
-            >
-              Password Strength: {{ passwordStrength }}
+              <i v-if="registerErrors.password" class="fas fa-exclamation-circle error-icon" :title="registerErrors.password"></i>
+              <div
+                v-show="registerPassword"
+                class="password-strength-meter"
+              >
+                <p>Password Strength: <span :style="{ background: passwordStrength === 'Weak' ? '#8b0000' : passwordStrength === 'Moderate' ? 'orange' : 'green' }">{{ passwordStrength }}</span></p>
+              </div>
             </div>
 
             <div class="input-group">
@@ -186,9 +334,10 @@ onMounted(() => {
                 id="register-confirm"
                 v-model="registerRepeatPassword"
                 placeholder=" "
-                required
+                :class="{ 'error': registerErrors.repeatPassword }"
               />
               <label for="register-confirm">Confirm Password</label>
+              <i v-if="registerErrors.repeatPassword" class="fas fa-exclamation-circle error-icon" :title="registerErrors.repeatPassword"></i>
             </div>
 
             <button type="submit" class="btn">Sign Up</button>
@@ -234,7 +383,7 @@ onMounted(() => {
   border-radius: 20px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
   width: 400px;
-  height: 500px;
+  height: 515px;
   padding: 40px;
   position: relative;
   overflow: hidden;
@@ -242,7 +391,7 @@ onMounted(() => {
 }
 
 .auth-container.active {
-  height: 650px;
+  height: 670px;
 }
 
 .auth-container::before {
@@ -280,10 +429,19 @@ onMounted(() => {
   text-align: center;
 }
 
+.register-form-title {
+  margin-bottom: 20px;
+}
+
 /* Login form input styles */
 .login-form .input-group {
   position: relative;
   margin-bottom: 25px;
+}
+
+.login-form .input-group input.error {
+  border: 2px solid #ff4d4f;
+  padding-right: 40px;
 }
 
 .login-form .input-group input {
@@ -329,6 +487,21 @@ onMounted(() => {
 .register-form .input-group {
   position: relative;
   margin-bottom: 25px;
+}
+
+.input-group input.error {
+  border: 2px solid #ff4d4f;
+  padding-right: 40px; /* Make room for the error icon */
+}
+
+.error-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ff4d4f;
+  font-size: 18px;
+  cursor: help;
 }
 
 .register-form .input-group input {
@@ -438,6 +611,12 @@ onMounted(() => {
   transform: translateX(-50px);
 }
 
+.error-message {
+  color: red;
+  font-size: 0.85em;
+  margin-top: 5px;
+}
+
 .auth-container.active .register-form {
   opacity: 1;
   pointer-events: all;
@@ -536,8 +715,20 @@ onMounted(() => {
   color: black;
 }
 .password-strength-meter {
-  margin-bottom: 25px;
+  margin-top: 10px;
   font-size: 14px;
   font-weight: 500;
+}
+
+.password-strength-meter p {
+  margin: 0 0 0 1rem;
+  font-weight: 800;
+  color: rgb(0, 0, 0);
+}
+
+.password-strength-meter span {
+  padding: 2px 10px;
+  border-radius: 5px;
+  color: white;
 }
 </style>
