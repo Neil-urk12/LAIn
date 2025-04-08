@@ -1,20 +1,25 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useAuthStore } from '../stores/auth'
+import { ref } from "vue";
+import type { Ref } from "vue";
+import { useAuthStore } from "../stores/auth";
+import ThemeToggleButton from "@/components/ThemeToggleButton.vue";
 
-const showRegister = ref(false)
-const auth = useAuthStore()
-import { onMounted } from 'vue'
+const showRegister = ref(false);
+const auth = useAuthStore();
+import { onMounted } from "vue";
 
-const isLoading = ref(true)
+const isLoading = ref(true);
+const savedTheme: Ref<string> = ref("light");
 
 onMounted(() => {
-  isLoading.value = false
-})
+  isLoading.value = false;
+  savedTheme.value = localStorage.getItem("theme") || "light";
+  console.log(savedTheme.value);
+});
 </script>
 
 <template>
-  <div v-cloak>
+  <div v-cloak :class="{ dark: savedTheme === 'dark' }">
     <div v-if="isLoading" class="loading-overlay">
       <div class="loader"></div>
     </div>
@@ -22,7 +27,18 @@ onMounted(() => {
       <div class="auth-container" :class="{ active: showRegister }">
         <div class="form-container">
           <form class="form login-form" @submit.prevent="auth.handleLogin">
-            <h2 class="form-title">Welcome Back</h2>
+            <div
+              class="theme-toggle-container"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 20px;
+              "
+            >
+              <h2 class="form-title">Welcome Back</h2>
+              <ThemeToggleButton />
+            </div>
 
             <div class="input-group">
               <input
@@ -31,7 +47,8 @@ onMounted(() => {
                 v-model="auth.loginForm.email"
                 placeholder=" "
                 required
-              >
+                style="color: black"
+              />
               <label for="login-email">Email</label>
             </div>
 
@@ -42,7 +59,7 @@ onMounted(() => {
                 v-model="auth.loginForm.password"
                 placeholder=" "
                 required
-              >
+              />
               <label for="login-password">Password</label>
             </div>
 
@@ -50,7 +67,11 @@ onMounted(() => {
 
             <div class="toggle-form">
               Don't have an account?
-              <button type="button" class="toggle-btn" @click="showRegister = true">
+              <button
+                type="button"
+                class="toggle-btn"
+                @click="showRegister = true"
+              >
                 Sign Up
               </button>
             </div>
@@ -72,7 +93,10 @@ onMounted(() => {
             </div>
           </form>
 
-          <form class="form register-form" @submit.prevent="auth.handleRegister">
+          <form
+            class="form register-form"
+            @submit.prevent="auth.handleRegister"
+          >
             <h2 class="form-title">Create Account</h2>
 
             <div class="input-group">
@@ -82,7 +106,7 @@ onMounted(() => {
                 v-model="auth.registerForm.name"
                 placeholder=" "
                 required
-              >
+              />
               <label for="register-name">Full Name</label>
             </div>
 
@@ -93,7 +117,7 @@ onMounted(() => {
                 v-model="auth.registerForm.email"
                 placeholder=" "
                 required
-              >
+              />
               <label for="register-email">Email</label>
             </div>
 
@@ -104,7 +128,7 @@ onMounted(() => {
                 v-model="auth.registerForm.password"
                 placeholder=" "
                 required
-              >
+              />
               <label for="register-password">Password</label>
             </div>
 
@@ -115,7 +139,7 @@ onMounted(() => {
                 v-model="auth.registerForm.confirmPassword"
                 placeholder=" "
                 required
-              >
+              />
               <label for="register-confirm">Confirm Password</label>
             </div>
 
@@ -123,7 +147,11 @@ onMounted(() => {
 
             <div class="toggle-form">
               Already have an account?
-              <button type="button" class="toggle-btn" @click="showRegister = false">
+              <button
+                type="button"
+                class="toggle-btn"
+                @click="showRegister = false"
+              >
                 Sign In
               </button>
             </div>
@@ -149,7 +177,11 @@ onMounted(() => {
 }
 
 .auth-container {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-dark) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--primary-color-dark) 100%
+  );
   backdrop-filter: blur(10px);
   border-radius: 20px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
@@ -161,7 +193,7 @@ onMounted(() => {
 }
 
 .auth-container::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -50%;
   left: -50%;
@@ -191,7 +223,7 @@ onMounted(() => {
 .form-title {
   font-size: 28px;
   font-weight: 600;
-  margin-bottom: 30px;
+  margin: 0px;
   text-align: center;
 }
 
@@ -222,9 +254,9 @@ onMounted(() => {
 
 .login-form .input-group label {
   position: absolute;
-  top: 12px;
+  top: 14px;
   left: 20px;
-  color: var(--text-dark);
+  color: rgba(0, 0, 0, 0.6);
   font-size: 16px;
   pointer-events: none;
   transition: all 0.3s ease;
@@ -270,7 +302,7 @@ onMounted(() => {
 
 .register-form .input-group label {
   position: absolute;
-  top: 12px;
+  top: 14px;
   left: 20px;
   color: rgba(0, 0, 0, 0.6);
   font-size: 16px;
@@ -395,7 +427,7 @@ onMounted(() => {
 
 .divider::before,
 .divider::after {
-  content: '';
+  content: "";
   flex: 1;
   height: 1px;
   background: rgba(255, 255, 255, 0.3);
@@ -433,7 +465,21 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+/* Dark mode overrides for login form inputs */
+.dark .login-form .input-group input {
+  color: black;
+}
+
+/* Register form input overrides */
+.register-form .input-group input {
+  background: white;
+  color: black;
 }
 </style>
