@@ -11,6 +11,36 @@ import { onMounted } from "vue";
 const isLoading = ref(true);
 const savedTheme: Ref<string> = ref("light");
 
+const registerFullName = ref("");
+const registerEmail = ref("");
+const registerPassword = ref("");
+const registerRepeatPassword = ref("");
+const registerUsername = ref("");
+
+import { computed } from "vue";
+
+const passwordStrength = computed(() => {
+  const password = registerPassword.value;
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+
+  if (score <= 1) return "Weak";
+  if (score === 2) return "Moderate";
+  if (score >= 3) return "Strong";
+  return "";
+});
+
+function handleLogin() {
+  auth.handleLogin();
+}
+
+function handleRegister() {
+  auth.handleRegister();
+}
+
 onMounted(() => {
   isLoading.value = false;
   savedTheme.value = localStorage.getItem("theme") || "light";
@@ -26,7 +56,7 @@ onMounted(() => {
     <div v-else class="auth-page">
       <div class="auth-container" :class="{ active: showRegister }">
         <div class="form-container">
-          <form class="form login-form" @submit.prevent="auth.handleLogin">
+          <form class="form login-form" @submit.prevent="handleLogin">
             <div
               class="theme-toggle-container"
               style="
@@ -95,7 +125,7 @@ onMounted(() => {
 
           <form
             class="form register-form"
-            @submit.prevent="auth.handleRegister"
+            @submit.prevent="handleRegister"
           >
             <h2 class="form-title">Create Account</h2>
 
@@ -103,7 +133,7 @@ onMounted(() => {
               <input
                 type="text"
                 id="register-name"
-                v-model="auth.registerForm.name"
+                v-model="registerFullName"
                 placeholder=" "
                 required
               />
@@ -112,9 +142,20 @@ onMounted(() => {
 
             <div class="input-group">
               <input
+                type="text"
+                id="register-username"
+                v-model="registerUsername"
+                placeholder=" "
+                required
+              />
+              <label for="register-username">Username</label>
+            </div>
+
+            <div class="input-group">
+              <input
                 type="email"
                 id="register-email"
-                v-model="auth.registerForm.email"
+                v-model="registerEmail"
                 placeholder=" "
                 required
               />
@@ -125,18 +166,25 @@ onMounted(() => {
               <input
                 type="password"
                 id="register-password"
-                v-model="auth.registerForm.password"
+                v-model="registerPassword"
                 placeholder=" "
                 required
               />
               <label for="register-password">Password</label>
+            </div>
+            <div
+              v-if="registerPassword"
+              class="password-strength-meter"
+              :style="{ color: passwordStrength === 'Weak' ? 'red' : passwordStrength === 'Moderate' ? 'orange' : 'green' }"
+            >
+              Password Strength: {{ passwordStrength }}
             </div>
 
             <div class="input-group">
               <input
                 type="password"
                 id="register-confirm"
-                v-model="auth.registerForm.confirmPassword"
+                v-model="registerRepeatPassword"
                 placeholder=" "
                 required
               />
@@ -186,10 +234,15 @@ onMounted(() => {
   border-radius: 20px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
   width: 400px;
+  height: 500px;
   padding: 40px;
   position: relative;
   overflow: hidden;
   transition: all 0.5s ease;
+}
+
+.auth-container.active {
+  height: 650px;
 }
 
 .auth-container::before {
@@ -481,5 +534,10 @@ onMounted(() => {
 .register-form .input-group input {
   background: white;
   color: black;
+}
+.password-strength-meter {
+  margin-bottom: 25px;
+  font-size: 14px;
+  font-weight: 500;
 }
 </style>
