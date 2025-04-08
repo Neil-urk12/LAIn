@@ -1,14 +1,17 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import SideBar from '../components/SideBar.vue'
 import StatsCards from '../components/StatsCards.vue'
 import ContinueLearning from '../components/ContinueLearning.vue'
 import LearningPath from '../components/LearningPath.vue'
 import Recommended from '../components/Recommended.vue'
+
+const isSidebarCollapsed = ref(true)
 </script>
 
 <template>
-  <div class="dashboard-container">
-    <SideBar />
+  <div :class="['dashboard-container', { 'sidebar-collapsed': isSidebarCollapsed }]">
+    <SideBar @toggle-collapse="isSidebarCollapsed = $event" />
 
     <main class="main-content">
       <section class="header">
@@ -98,6 +101,11 @@ import Recommended from '../components/Recommended.vue'
   background: #f9fafb;
   min-height: 100vh;
   box-sizing: border-box;
+  transition: margin-left 0.3s ease;
+}
+
+.dashboard-container.sidebar-collapsed .main-content {
+  margin-left: 60px;
 }
 
 .header h1 {
