@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, defineEmits } from 'vue'
 import { BookOpen, LayoutGrid, Calendar, MessageSquare, FileText, CreditCard, Settings } from 'lucide-vue-next'
+import ThemeToggleButton from './ThemeToggleButton.vue'
 
 defineOptions({ name: 'AppSidebar' })
 
@@ -67,6 +68,19 @@ function toggleSidebar() {
       </ul>
     </nav>
 
+    <div class="sidebar-bottom">
+      <div class="appearance" :style="{ justifyContent: isCollapsed ? 'center' : 'space-between' }">
+        <span v-show="!isCollapsed">Appearance</span>
+        <ThemeToggleButton />
+      </div>
+      <div class="user-card">
+        <div class="avatar"></div>
+        <div class="user-info" v-show="!isCollapsed">
+          <div class="name">John Doe</div>
+          <div class="email">john.doe@example.com</div>
+        </div>
+      </div>
+    </div>
   </aside>
 </template>
 
@@ -82,6 +96,9 @@ function toggleSidebar() {
   left: 0;
   transition: width 0.3s ease;
   overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar.collapsed {
@@ -137,5 +154,62 @@ nav li.active {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.appearance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #333;
+}
+
+.theme-toggle {
+  background: #f3f4f6;
+  border: none;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f3f4f6;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  background: #ddd;
+  border-radius: 50%;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.email {
+  font-size: 12px;
+  color: #555;
 }
 </style>

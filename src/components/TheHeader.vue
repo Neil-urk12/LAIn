@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import ThemeToggleButton from './ThemeToggleButton.vue';
 import { RouterLink } from 'vue-router';
 import { Menu, BookOpen } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
@@ -36,6 +37,7 @@ const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
         </ul>
       </nav>
       <div class="header-actions">
+        <ThemeToggleButton />
         <a href="#" class="btn btn-secondary btn-signin">Sign In</a>
         <a href="#" class="btn btn-primary" @click.prevent="handleGetStarted">Get Started</a>
       </div>
@@ -166,5 +168,21 @@ const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
   .mobile-nav-toggle {
     display: block; /* Show hamburger */
   }
+}
+.theme-toggle-btn {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  background: #f3f4f6;
+  border-color: #999;
 }
 </style>
