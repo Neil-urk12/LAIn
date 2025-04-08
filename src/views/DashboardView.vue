@@ -98,7 +98,7 @@ const isSidebarCollapsed = ref(true)
   margin-left: 220px;
   padding: 30px;
   flex: 1;
-  background: #f9fafb;
+  background: var(--color-background);
   min-height: 100vh;
   box-sizing: border-box;
   transition: margin-left 0.3s ease;
@@ -126,7 +126,7 @@ const isSidebarCollapsed = ref(true)
 
 .recent-activity {
   flex: 2;
-  background: #fff;
+  background: var(--color-background-soft);
   border: 1px solid #ddd;
   border-radius: 10px;
   padding: 20px;
@@ -147,14 +147,14 @@ const isSidebarCollapsed = ref(true)
 .tabs button {
   padding: 6px 12px;
   border: none;
-  background: #f3f4f6;
+  background: var(--color-background-mute);
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
 }
 
 .tabs button.active {
-  background: #e5e7eb;
+  background: var(--color-background-soft);
   font-weight: bold;
 }
 
@@ -196,7 +196,7 @@ const isSidebarCollapsed = ref(true)
 
 .account-settings {
   flex: 1;
-  background: #fff;
+  background: var(--color-background-soft);
   border: 1px solid #ddd;
   border-radius: 10px;
   padding: 20px;
@@ -235,13 +235,13 @@ const isSidebarCollapsed = ref(true)
   padding: 8px 12px;
   border: 1px solid #ccc;
   border-radius: 6px;
-  background: #fff;
+  background: var(--color-background-soft);
   cursor: pointer;
   font-size: 14px;
   transition: background 0.2s ease;
 }
 
 .account-settings button:hover {
-  background: #f9f9f9;
+  background: var(--color-background-mute);
 }
 </style>

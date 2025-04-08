@@ -20,6 +20,11 @@
   --container-width: 1440px;
   --spacing-unit: 8px;
   /* Base spacing unit */
+
+  --section-background: #ffffff;
+
+  --hero-gradient-start: #e6f9f2;
+  --hero-gradient-end: #ffffff;
 }
 
 * {
@@ -105,9 +110,9 @@ p {
 }
 
 /* Add extra space between sections */
-.section {
+/* .section {
   margin-top: calc(var(--spacing-unit) * 10);
-}
+} */
 
 .text-center {
   text-align: center;
@@ -155,8 +160,24 @@ p {
   cursor: pointer;
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   font-size: 0.9rem;
-  /* ~14px */
   line-height: 1.25;
+}
+
+html.dark {
+  --bg-white: #181818;
+  --bg-light: #222222;
+  --text-dark: #ffffff;
+  --text-light: #cccccc;
+  --border-color: #444444;
+
+  --footer-dark-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+
+  --space-bg: radial-gradient(white 1px, transparent 1px), black;
+
+  --section-background: #121212;
+
+  --hero-gradient-start: #0f2027;
+  --hero-gradient-end: #2c5364;
 }
 
 .btn-primary {
@@ -229,6 +250,15 @@ p {
 }
 
 /* Responsive Adjustments */
+
+html.dark .features-section,
+html.dark .courses-section,
+html.dark .testimonials-section {
+  background-color: black;
+  background-image: radial-gradient(white 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-repeat: repeat;
+}
 @media (max-width: 768px) {
   h1 {
     font-size: 2rem;

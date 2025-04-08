@@ -33,9 +33,9 @@ import { ArrowRight, Users, BookOpen, Globe } from 'lucide-vue-next';
 
 <style scoped>
 .hero-section {
-  background: linear-gradient(to bottom, #e6f9f2, #ffffff); /* Soft green gradient */
-  padding-top: calc(var(--spacing-unit) * 22);
-  padding-bottom: calc(var(--spacing-unit) * 8);
+  background: linear-gradient(to bottom, var(--hero-gradient-start), var(--hero-gradient-end));
+  padding-top: calc(var(--spacing-unit) * 28);
+  padding-bottom: calc(var(--spacing-unit) * 28);
 }
 
 .hero-container {

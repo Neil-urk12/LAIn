@@ -92,7 +92,7 @@ const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
 }
 
 .main-nav a {
-  color: #000000; /* black text */
+  color: var(--text-dark);
   font-weight: 500;
   text-decoration: none;
   transition: color 0.2s ease;
@@ -149,7 +149,7 @@ const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
 .mobile-nav a {
     display: block;
     padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 3);
-    color: #000000; /* black text */
+    color: var(--text-dark);
     font-weight: 500;
     text-decoration: none;
 }

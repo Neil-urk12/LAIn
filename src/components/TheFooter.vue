@@ -55,8 +55,8 @@ import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-vue-next';
 
 <style scoped>
 .app-footer {
-  background-color: var(--text-dark); /* Dark background for footer */
-  color: #d1d5db; /* Light gray text */
+  background: var(--footer-dark-gradient);
+  color: var(--text-dark);
   padding-top: calc(var(--spacing-unit) * 8);
 }
 
@@ -71,7 +71,7 @@ import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-vue-next';
   display: inline-block;
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--bg-white);
+  color: var(--text-dark);
   text-decoration: none;
   margin-bottom: calc(var(--spacing-unit) * 2);
 }
@@ -79,12 +79,12 @@ import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-vue-next';
 .footer-about p {
   font-size: 0.9rem;
   line-height: 1.5;
-  color: #9ca3af; /* Medium gray */
+  color: var(--text-light);
   margin-bottom: 0;
 }
 
 .footer-links h4 {
-  color: var(--bg-white);
+  color: var(--text-dark);
   font-size: 1rem; /* 16px */
   font-weight: 600;
   margin-bottom: calc(var(--spacing-unit) * 2.5);
@@ -99,7 +99,7 @@ import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-vue-next';
 }
 
 .footer-links a {
-  color: #9ca3af; /* Medium gray */
+  color: var(--text-light);
   text-decoration: none;
   font-size: 0.9rem;
   transition: color 0.2s ease;
@@ -124,7 +124,7 @@ import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-vue-next';
 
 .copyright {
   font-size: 0.85rem;
-  color: #9ca3af;
+  color: var(--text-light);
   margin-bottom: 0;
 }
 
@@ -134,7 +134,7 @@ import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-vue-next';
 }
 
 .social-links a {
-  color: #9ca3af;
+  color: var(--text-light);
   transition: color 0.2s ease;
 }
 

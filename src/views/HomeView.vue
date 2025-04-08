@@ -25,3 +25,9 @@ const TheFooter = defineAsyncComponent(() => import('../components/TheFooter.vue
 <style>
 @import '../assets/main.css';
 </style>
+
+<style>
+.section {
+  background-color: var(--section-background);
+}
+</style>

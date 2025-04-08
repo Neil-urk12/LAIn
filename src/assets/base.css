@@ -84,3 +84,15 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+html.dark:root {
+  --color-background: var(--vt-c-black) !important;
+  --color-background-soft: var(--vt-c-black-soft) !important;
+  --color-background-mute: var(--vt-c-black-mute) !important;
+
+  --color-border: var(--vt-c-divider-dark-2) !important;
+  --color-border-hover: var(--vt-c-divider-dark-1) !important;
+
+  --color-heading: var(--vt-c-text-dark-1) !important;
+  --color-text: var(--vt-c-text-dark-2) !important;
+}
