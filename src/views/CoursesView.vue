@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <main class="main-content">
+  <main style="padding: 30px;">
     <h1>Courses</h1>
     <p>Browse and discover AI courses to enhance your skills</p>
 
@@ -53,10 +53,6 @@
 
 <style scoped>
 /* Main content styling */
-.main-content {
-  flex: 1;
-  padding: 30px;
-}
 
 h1 {
   font-size: 28px;

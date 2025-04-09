@@ -33,10 +33,10 @@ const showSidebar = computed(() => {
 }
 
 .app-container.sidebar-visible .main-content {
-  margin-left: 140px;
+  margin-left: 240px; /* Corrected margin for expanded sidebar */
 }
 
 .app-container.sidebar-visible.sidebar-collapsed .main-content {
-  margin-left: 30px;
+  margin-left: 60px; /* Corrected margin for collapsed sidebar */
 }
 </style>

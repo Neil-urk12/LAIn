@@ -6,7 +6,7 @@ import Recommended from '../components/DashboardView/Recommended.vue'
 </script>
 
 <template>
-  <main class="main-content">
+  <main style="padding: 10px;">
     <section class="header">
       <h1>Welcome back, Cez!</h1>
       <p>Here's what's happening with your learning journey today.</p>
@@ -82,14 +82,6 @@ import Recommended from '../components/DashboardView/Recommended.vue'
 </template>
 
 <style scoped>
-.main-content {
-  padding: 30px;
-  flex: 1;
-  background: var(--color-background);
-  min-height: 100vh;
-  box-sizing: border-box;
-}
-
 .header h1 {
   margin: 0;
   font-size: 24px;
