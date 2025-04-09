@@ -83,7 +83,7 @@ defineOptions({ name: 'LearningPath' })
 
 .learning-path p {
   margin-bottom: 20px;
-  color: #555;
+  color: var(--text-light);
 }
 
 .learning-path ul.timeline {
@@ -104,7 +104,7 @@ defineOptions({ name: 'LearningPath' })
   bottom: 0;
   left: 10px;
   width: 2px;
-  background: #ddd;
+  background: var(--border-color);
 }
 
 .learning-path ul.timeline li {
@@ -125,8 +125,8 @@ defineOptions({ name: 'LearningPath' })
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #ccc;
-  color: #fff;
+  background: var(--text-light);
+  color: var(--bg-white);
   font-size: 12px;
   display: flex;
   align-items: center;
@@ -138,20 +138,20 @@ defineOptions({ name: 'LearningPath' })
 }
 
 .step-icon.completed {
-  background: #34d399;
+  background: var(--primary-color);
 }
 
 .step-icon.in-progress {
-  background: #3b82f6;
+  background: var(--primary-color-dark);
 }
 
 .step-icon.upcoming {
-  background: #ccc;
+  background: var(--text-light);
 }
 
 .learning-path li {
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 15px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -175,23 +175,23 @@ defineOptions({ name: 'LearningPath' })
 }
 
 .learning-path li .badge.completed {
-  background: #d1fae5;
-  color: #059669;
+  background: var(--primary-color);
+  color: var(--bg-white);
 }
 
 .learning-path li .badge.in-progress {
-  background: #bfdbfe;
-  color: #1d4ed8;
+  background: var(--primary-color-dark);
+  color: var(--bg-white);
 }
 
 .learning-path li p {
   margin: 4px 0;
-  color: #555;
+  color: var(--text-light);
 }
 
 .learning-path li a {
   font-size: 14px;
-  color: #059669;
+  color: var(--primary-color);
   text-decoration: none;
   margin-top: 5px;
   display: inline-block;
@@ -200,8 +200,8 @@ defineOptions({ name: 'LearningPath' })
 .learning-path li {
   display: flex;
   gap: 15px;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 15px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -229,12 +229,12 @@ defineOptions({ name: 'LearningPath' })
 }
 
 .badge.completed {
-  background: #d1fae5;
-  color: #059669;
+  background: var(--primary-color);
+  color: var(--bg-white);
 }
 
 .badge.in-progress {
-  background: #fef08a;
-  color: #92400e;
+  background: var(--primary-color-dark);
+  color: var(--bg-white);
 }
 </style>

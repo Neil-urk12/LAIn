@@ -37,7 +37,7 @@ defineOptions({ name: 'RecommendedCourses' })
 
 .recommended p {
   margin-bottom: 20px;
-  color: #555;
+  color: var(--text-light);
 }
 
 .recommended ul {
@@ -52,8 +52,8 @@ defineOptions({ name: 'RecommendedCourses' })
 .recommended li {
   display: flex;
   gap: 10px;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 10px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -62,7 +62,7 @@ defineOptions({ name: 'RecommendedCourses' })
 .thumb {
   width: 50px;
   height: 50px;
-  background: #eee;
+  background: var(--border-color);
   border-radius: 6px;
 }
 
@@ -72,22 +72,23 @@ defineOptions({ name: 'RecommendedCourses' })
 
 .meta {
   font-size: 12px;
-  color: #555;
+  color: var(--text-light);
   margin-top: 4px;
 }
 
 .view-all-btn {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  background: #fff;
+  color: var(--text-dark);
+  background: var(--bg-white);
   cursor: pointer;
   font-size: 14px;
   transition: background 0.2s ease;
 }
 
 .view-all-btn:hover {
-  background: #f9f9f9;
+  background: var(--bg-light);
 }
 </style>

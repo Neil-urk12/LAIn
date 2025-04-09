@@ -7,7 +7,7 @@ const Recommended = defineAsyncComponent(() => import('../components/DashboardVi
 </script>
 
 <template>
-  <main style="padding: 10px;">
+  <main>
     <section class="header">
       <h1>Welcome back, Cez!</h1>
       <p>Here's what's happening with your learning journey today.</p>
@@ -83,6 +83,9 @@ const Recommended = defineAsyncComponent(() => import('../components/DashboardVi
 </template>
 
 <style scoped>
+main {
+  padding: 3rem;
+}
 .header h1 {
   margin: 0;
   font-size: 24px;
@@ -90,7 +93,7 @@ const Recommended = defineAsyncComponent(() => import('../components/DashboardVi
 
 .header p {
   margin: 5px 0 20px;
-  color: #555;
+  color: var(--text-light);
 }
 .bottom-section {
   display: flex;
@@ -102,7 +105,7 @@ const Recommended = defineAsyncComponent(() => import('../components/DashboardVi
 .recent-activity {
   flex: 2;
   background: var(--color-background-soft);
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 20px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -126,6 +129,7 @@ const Recommended = defineAsyncComponent(() => import('../components/DashboardVi
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
+  color: var(--text-dark);
 }
 
 .tabs button.active {
@@ -146,7 +150,7 @@ const Recommended = defineAsyncComponent(() => import('../components/DashboardVi
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 10px;
 }
 
@@ -166,13 +170,13 @@ const Recommended = defineAsyncComponent(() => import('../components/DashboardVi
 
 .activity-details .time {
   font-size: 12px;
-  color: #555;
+  color: var(--text-light);
 }
 
 .account-settings {
   flex: 1;
   background: var(--color-background-soft);
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 20px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -191,7 +195,7 @@ const Recommended = defineAsyncComponent(() => import('../components/DashboardVi
 .account-settings .avatar {
   width: 60px;
   height: 60px;
-  background: #eee;
+  background: var(--border-color);
   border-radius: 50%;
 }
 
@@ -201,13 +205,13 @@ const Recommended = defineAsyncComponent(() => import('../components/DashboardVi
 
 .account-settings .role {
   font-size: 14px;
-  color: #555;
+  color: var(--text-light);
   margin-bottom: 10px;
 }
 
 @media (max-width: 767px) {
   main {
-    padding: 15px;
+    padding: 10px;
   }
 
   .header h1 {
@@ -238,9 +242,10 @@ const Recommended = defineAsyncComponent(() => import('../components/DashboardVi
 .account-settings button {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   background: var(--color-background-soft);
+  color: var(--text-dark);
   cursor: pointer;
   font-size: 14px;
   transition: background 0.2s ease;

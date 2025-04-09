@@ -44,8 +44,8 @@ defineOptions({ name: 'StatsCards' })
 .card {
   flex: 1;
   min-width: 150px;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 12px 16px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -64,7 +64,7 @@ defineOptions({ name: 'StatsCards' })
 
 .label {
   font-size: 14px;
-  color: #555;
+  color: var(--text-light);
   margin-bottom: 8px;
 }
 
@@ -76,12 +76,12 @@ defineOptions({ name: 'StatsCards' })
 }
 
 .badge.active {
-  background: #d1fae5;
-  color: #059669;
+  background: var(--primary-color);
+  color: var(--bg-white);
 }
 .subtext {
   font-size: 12px;
-  color: #555;
+  color: var(--text-light);
   margin-left: 6px;
 }
 .bottom-row {

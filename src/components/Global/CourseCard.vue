@@ -24,8 +24,8 @@ defineOptions({ name: 'CourseCard' })
 
 <style scoped>
 .course-card {
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   overflow: hidden;
   display: flex;
@@ -34,7 +34,7 @@ defineOptions({ name: 'CourseCard' })
 }
 
 .thumbnail {
-  background: #eee;
+  background: var(--border-color);
   height: 150px;
   display: flex;
   align-items: center;
@@ -52,7 +52,7 @@ defineOptions({ name: 'CourseCard' })
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #555;
+  color: var(--text-light);
 }
 
 .badge {
@@ -63,18 +63,18 @@ defineOptions({ name: 'CourseCard' })
 }
 
 .badge.beginner {
-  background: #d1fae5;
-  color: #059669;
+  background: var(--primary-color);
+  color: var(--bg-white);
 }
 
 .badge.intermediate {
-  background: #bfdbfe;
-  color: #2563eb;
+  background: var(--primary-color-dark);
+  color: var(--bg-white);
 }
 
 .badge.advanced {
-  background: #f3e8ff;
-  color: #7c3aed;
+  background: var(--primary-color-dark);
+  color: var(--bg-white);
 }
 
 h3 {
@@ -90,14 +90,14 @@ h3 {
 
 .progress-bar {
   flex: 1;
-  background: #ddd;
+  background: var(--border-color);
   height: 6px;
   border-radius: 3px;
   overflow: hidden;
 }
 
 .progress-fill {
-  background: #000;
+  background: var(--primary-color);
   height: 100%;
 }
 
@@ -106,8 +106,8 @@ h3 {
 }
 
 button {
-  background: #059669;
-  color: #fff;
+  background: var(--primary-color);
+  color: var(--bg-white);
   border: none;
   padding: 8px;
   border-radius: 6px;
@@ -116,6 +116,6 @@ button {
 }
 
 button:hover {
-  background: #047857;
+  background: var(--primary-color-dark);
 }
 </style>

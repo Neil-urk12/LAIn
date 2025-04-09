@@ -90,10 +90,10 @@ function toggleSidebar() {
 <style scoped>
 .sidebar {
   width: 240px;
-  background: #f8f9fa;
+  background: var(--bg-light);
   height: 100vh;
   box-sizing: border-box;
-  border-right: 1px solid #ddd;
+  border-right: 1px solid var(--border-color);
   position: fixed;
   top: 0;
   left: 0;
@@ -144,12 +144,12 @@ nav li {
 }
 
 nav li:hover {
-  background: #e2e6ea;
+  background: var(--section-background);
 }
 
 nav li.active {
-  background: #d1fae5;
-  color: #059669;
+  background: var(--primary-color);
+  color: var(--bg-white);
   font-weight: 600;
 }
 
@@ -161,7 +161,7 @@ nav li.active {
 .sidebar-bottom {
   margin-top: auto;
   padding-top: 20px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -172,12 +172,12 @@ nav li.active {
   align-items: center;
   justify-content: space-between;
   font-size: 14px;
-  color: #333;
+  color: var(--text-dark);
 }
 
 .theme-toggle {
-  background: #f3f4f6;
-  border: none;
+  background: var(--section-background);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 6px;
   cursor: pointer;
@@ -189,7 +189,7 @@ nav li.active {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #f3f4f6;
+  background: var(--section-background);
   padding: 8px;
   border-radius: 8px;
 }
@@ -197,7 +197,7 @@ nav li.active {
 .avatar {
   width: 30px;
   height: 30px;
-  background: #ddd;
+  background: var(--border-color);
   border-radius: 50%;
 }
 
@@ -213,6 +213,6 @@ nav li.active {
 
 .email {
   font-size: 12px;
-  color: #555;
+  color: var(--text-light);
 }
 </style>
