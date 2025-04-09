@@ -2,10 +2,13 @@
 import { ref, reactive, onMounted } from 'vue';
 import SettingsHeader from '@/components/SettingsView/SettingsHeader.vue';
 import SettingsNav from '@/components/SettingsView/SettingsNav.vue';
-import ProfileSection from '@/components/SettingsView/ProfileSection.vue';
-import ProfessionalSection from '@/components/SettingsView/ProfessionalSection.vue';
-import SettingsActions from '@/components/SettingsView/SettingsActions.vue';
 import SettingsSkeleton from '@/components/SettingsView/SettingsSkeleton.vue';
+import ProfileSettingsGroup from '@/components/SettingsView/ProfileSettingsGroup.vue';
+import AccountSettingsSection from '@/components/SettingsView/AccountSettingsSection.vue';
+import AppearanceSection from '@/components/SettingsView/AppearanceSection.vue';
+import PrivacySecuritySection from '@/components/SettingsView/PrivacySecuritySection.vue';
+import BillingSubscriptionSection from '@/components/SettingsView/BillingSubscriptionSection.vue';
+import NotificationPreferencesSection from '@/components/SettingsView/NotificationPreferencesSection.vue';
 
 const navItems = [
   'Profile',
@@ -17,6 +20,7 @@ const navItems = [
 ];
 
 const loading = ref(true);
+const selectedTab = ref(navItems[0]); // Default to the first item ('Profile')
 
 interface UserSettings {
   firstName: string;
@@ -73,17 +77,25 @@ const handleLogout = () => {
 
     <template v-else>
       <SettingsHeader />
-      <SettingsNav :items="navItems" />
+      <SettingsNav :items="navItems" @update:active-tab="selectedTab = $event" />
 
-      <div class="settings-grid">
-        <ProfileSection :initial-data="formData" />
-        <ProfessionalSection :initial-data="formData" />
-      </div>
-
-      <SettingsActions
+      <!-- Conditionally render sections based on selectedTab -->
+      <ProfileSettingsGroup
+        v-if="selectedTab === 'Profile'"
+        :initial-data="formData"
         @save="saveChanges"
         @logout="handleLogout"
       />
+      <AccountSettingsSection v-else-if="selectedTab === 'Account'" />
+      <AppearanceSection v-else-if="selectedTab === 'Appearance'" />
+      <PrivacySecuritySection v-else-if="selectedTab === 'Privacy & Security'" />
+      <BillingSubscriptionSection v-else-if="selectedTab === 'Billing'" />
+      <NotificationPreferencesSection v-else-if="selectedTab === 'Notifications'" />
+
+      <div v-else class="placeholder-section">
+        <p>Content for {{ selectedTab }} coming soon.</p>
+      </div>
+
     </template>
   </div>
 </template>
