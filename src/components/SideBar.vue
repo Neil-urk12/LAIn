@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, defineEmits } from 'vue'
+import { ref, defineEmits, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import { BookOpen, LayoutGrid, Calendar, MessageSquare, FileText, CreditCard, Settings } from 'lucide-vue-next'
-import ThemeToggleButton from './ThemeToggleButton.vue'
+const ThemeToggleButton = defineAsyncComponent(() => import('./ThemeToggleButton.vue'))
 
-defineOptions({ name: 'AppSidebar' })
+defineOptions({ name: 'SideBar' })
 
 const emit = defineEmits<{
   (e: 'toggle-collapse', value: boolean): void
