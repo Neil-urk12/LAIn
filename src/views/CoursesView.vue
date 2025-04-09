@@ -1,4 +1,20 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
+
+const isLoading = ref(true);
+
+onMounted(() => {
+  try {
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  } finally {
+    isLoading.value = false;
+  }
+  // setTimeout(() => {
+  //   isLoading.value = false;
+  // }, 1500); // simulate 1.5s loading delay
+});
 </script>
 
 <template>
@@ -29,24 +45,44 @@
     </div>
 
     <div class="courses-grid">
-      <div class="course-card" v-for="n in 6" :key="n">
-        <div class="course-image"></div>
-        <div class="course-content">
-          <div class="course-header">
-            <span class="badge">Beginner</span>
-            <span class="rating">⭐ 4.8</span>
-          </div>
-          <h3>Course Title</h3>
-          <p>Short description of the course content goes here.</p>
-          <div class="course-footer">
-            <span>10 hours • 24 lessons</span>
-          </div>
-          <div class="course-actions">
-            <span class="price">Free</span>
-            <a href="#">Enroll Now</a>
+      <template v-if="isLoading">
+        <div class="course-card skeleton" v-for="n in 6" :key="'skeleton-' + n">
+          <div class="course-image"></div>
+          <div class="course-content">
+            <div class="course-header">
+              <span class="badge"></span>
+              <span class="rating"></span>
+            </div>
+            <h3></h3>
+            <p></p>
+            <div class="course-footer"></div>
+            <div class="course-actions">
+              <span class="price"></span>
+              <a></a>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
+      <template v-else>
+        <div class="course-card" v-for="n in 6" :key="n">
+          <div class="course-image"></div>
+          <div class="course-content">
+            <div class="course-header">
+              <span class="badge">Beginner</span>
+              <span class="rating">⭐ 4.8</span>
+            </div>
+            <h3>Course Title</h3>
+            <p>Short description of the course content goes here.</p>
+            <div class="course-footer">
+              <span>10 hours • 24 lessons</span>
+            </div>
+            <div class="course-actions">
+              <span class="price">Free</span>
+              <a href="#">Enroll Now</a>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
   </main>
 </template>
@@ -183,4 +219,52 @@ p {
   color: var(--primary-color);
 }
 
+.skeleton .course-image,
+.skeleton .badge,
+.skeleton .rating,
+.skeleton h3,
+.skeleton p,
+.skeleton .course-footer,
+.skeleton .price,
+.skeleton .course-actions a {
+  background-color: #ddd;
+  border-radius: 4px;
+  min-height: 16px;
+  color: transparent;
+}
+
+.skeleton .course-image {
+  height: 150px;
+}
+
+.skeleton .badge,
+.skeleton .rating {
+  width: 50px;
+  height: 20px;
+}
+
+.skeleton h3 {
+  height: 20px;
+  width: 80%;
+}
+
+.skeleton p {
+  height: 40px;
+  width: 100%;
+}
+
+.skeleton .course-footer {
+  height: 16px;
+  width: 60%;
+}
+
+.skeleton .price {
+  height: 20px;
+  width: 40px;
+}
+
+.skeleton .course-actions a {
+  height: 20px;
+  width: 60px;
+}
 </style>
