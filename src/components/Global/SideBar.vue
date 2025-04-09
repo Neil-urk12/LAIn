@@ -56,7 +56,7 @@ function toggleSidebar() {
           <MessageSquare :size="18" color="#059669" />
           <span v-show="!isCollapsed">Messages</span>
         </li>
-        <li>
+        <li :class="{ active: route.path === '/certificates' }" @click="$router.push('/certificates')">
           <FileText :size="18" color="#059669" />
           <span v-show="!isCollapsed">Certificates</span>
         </li>
