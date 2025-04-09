@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 const isLoading = ref(true);
+const showEnrollModal = ref(false);
+const selectedCourse = ref<Course | null>(null);
 
 // Define the structure for a course
 interface Course {
@@ -36,6 +39,35 @@ onMounted(() => {
     isLoading.value = false;
   }
 });
+
+const router = useRouter();
+
+const goToCourseDashboard = (courseId: number) => {
+  router.push({ name: 'course', params: { id: courseId } });
+};
+
+const handleEnrollClick = (event: Event, course: Course) => {
+  event.stopPropagation(); // Prevent triggering the card click
+  if (course.price === 'Free') {
+    selectedCourse.value = course;
+    showEnrollModal.value = true;
+  } else {
+    // Handle paid courses differently (e.g., redirect to payment page)
+    console.log('Redirecting to payment page for:', course.title);
+  }
+};
+
+const confirmEnrollment = () => {
+  if (selectedCourse.value) {
+    showEnrollModal.value = false;
+    goToCourseDashboard(selectedCourse.value.id);
+  }
+};
+
+const closeModal = () => {
+  showEnrollModal.value = false;
+  selectedCourse.value = null;
+};
 </script>
 
 <template>
@@ -86,7 +118,7 @@ onMounted(() => {
       </template>
       <template v-else>
         <!-- Loop through the actual courses data -->
-        <div class="course-card" v-for="course in courses" :key="course.id">
+        <div class="course-card" v-for="course in courses" :key="course.id" @click="goToCourseDashboard(course.id)">
           <div class="course-image" :style="{ backgroundImage: course.imageUrl ? `url(${course.imageUrl})` : 'none' }"></div>
           <div class="course-content">
             <div class="course-header">
@@ -100,11 +132,23 @@ onMounted(() => {
             </div>
             <div class="course-actions">
               <span class="price">{{ typeof course.price === 'number' ? `$${course.price.toFixed(2)}` : course.price }}</span>
-              <a href="#">Enroll Now</a>
+              <a href="#" @click="(e) => handleEnrollClick(e, course)">Enroll Now</a>
             </div>
           </div>
         </div>
       </template>
+    </div>
+
+    <!-- Enrollment Confirmation Modal -->
+    <div v-if="showEnrollModal" class="modal-overlay">
+      <div class="modal">
+        <h2>Enroll in Course</h2>
+        <p v-if="selectedCourse">Would you like to enroll in "{{ selectedCourse.title }}"?</p>
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="closeModal">Cancel</button>
+          <button class="btn-primary" @click="confirmEnrollment">Enroll Now</button>
+        </div>
+      </div>
     </div>
   </main>
 </template>
@@ -180,6 +224,7 @@ p {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  cursor: pointer; /* Add cursor pointer to indicate clickability */
 }
 
 .course-image {
@@ -290,5 +335,73 @@ p {
 .skeleton .course-actions a {
   height: 20px;
   width: 60px;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--bg-white);
+  padding: 24px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal h2 {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  color: var(--text-dark);
+}
+
+.modal p {
+  margin: 0 0 24px 0;
+  color: var(--text-medium);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--bg-white);
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: var(--border-color);
 }
 </style>
