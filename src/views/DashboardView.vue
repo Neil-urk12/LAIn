@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import StatsCards from '../components/DashboardView/StatsCards.vue'
-import ContinueLearning from '../components/DashboardView/ContinueLearning.vue'
-import LearningPath from '../components/DashboardView/LearningPath.vue'
-import Recommended from '../components/DashboardView/Recommended.vue'
+import { defineAsyncComponent } from 'vue'
+const StatsCards = defineAsyncComponent(() => import('../components/DashboardView/StatsCards.vue'))
+const ContinueLearning = defineAsyncComponent(() => import('../components/DashboardView/ContinueLearning.vue'))
+const LearningPath = defineAsyncComponent(() => import('../components/DashboardView/LearningPath.vue'))
+const Recommended = defineAsyncComponent(() => import('../components/DashboardView/Recommended.vue'))
 </script>
 
 <template>
@@ -202,6 +203,36 @@ import Recommended from '../components/DashboardView/Recommended.vue'
   font-size: 14px;
   color: #555;
   margin-bottom: 10px;
+}
+
+@media (max-width: 767px) {
+  main {
+    padding: 15px;
+  }
+
+  .header h1 {
+    font-size: 20px;
+  }
+
+  .bottom-section {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .recent-activity,
+  .account-settings {
+    flex: none;
+    min-width: auto;
+    width: 100%;
+  }
+
+  .account-settings {
+    align-items: flex-start;
+  }
+
+  .account-settings button {
+     max-width: 250px;
+  }
 }
 
 .account-settings button {
