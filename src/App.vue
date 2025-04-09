@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from 'vue-router'
 import { ref, computed } from 'vue'
-import SideBar from './components/SideBar.vue'
+import SideBar from './components/Global/SideBar.vue'
 
 const route = useRoute()
 const isSidebarCollapsed = ref(true)

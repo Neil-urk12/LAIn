@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import StatsCards from '../components/StatsCards.vue'
-import ContinueLearning from '../components/ContinueLearning.vue'
-import LearningPath from '../components/LearningPath.vue'
-import Recommended from '../components/Recommended.vue'
+import StatsCards from '../components/DashboardView/StatsCards.vue'
+import ContinueLearning from '../components/DashboardView/ContinueLearning.vue'
+import LearningPath from '../components/DashboardView/LearningPath.vue'
+import Recommended from '../components/DashboardView/Recommended.vue'
 </script>
 
 <template>

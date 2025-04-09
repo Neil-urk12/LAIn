@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import CourseCard from './CourseCard.vue'
+import CourseCard from '../Global/CourseCard.vue'
 
 defineOptions({ name: 'ContinueLearning' })
 </script>

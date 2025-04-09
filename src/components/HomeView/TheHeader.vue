@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import ThemeToggleButton from './ThemeToggleButton.vue';
+import ThemeToggleButton from './Global/ThemeToggleButton.vue';
 import { RouterLink } from 'vue-router';
 import { Menu, BookOpen } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
+import { useAuthStore } from '../../stores/auth';
 
 const isMobileMenuOpen = ref(false);
 

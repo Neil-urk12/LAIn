@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import type { Ref } from "vue";
 import { useAuthStore } from "../stores/auth";
-import ThemeToggleButton from "@/components/ThemeToggleButton.vue";
+import ThemeToggleButton from "@/components/Global/ThemeToggleButton.vue";
 
 const showRegister = ref(false);
 const auth = useAuthStore();
