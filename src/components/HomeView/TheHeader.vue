@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import ThemeToggleButton from './Global/ThemeToggleButton.vue';
+import { ref, defineAsyncComponent } from 'vue';
+const ThemeToggleButton = defineAsyncComponent(() => import('../Global/ThemeToggleButton.vue'));
 import { RouterLink } from 'vue-router';
 import { Menu, BookOpen } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';

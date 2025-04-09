@@ -1,3 +1,23 @@
+<script setup lang="ts">
+import { ref, defineEmits } from 'vue';
+
+const props = defineProps<{
+  items: string[]
+}>();
+
+const emit = defineEmits<{
+  (e: 'update:activeTab', value: string): void
+}>();
+
+const activeTab = ref(0);
+
+const setActiveTab = (index: number) => {
+  const newActiveTabName = props.items[index];
+  activeTab.value = index;
+  emit('update:activeTab', newActiveTabName);
+};
+</script>
+
 <template>
   <nav class="settings-mini-nav">
     <a
@@ -11,20 +31,6 @@
     </a>
   </nav>
 </template>
-
-<script setup lang="ts">
-import { ref } from 'vue';
-
-defineProps<{
-  items: string[]
-}>();
-
-const activeTab = ref(0);
-
-const setActiveTab = (index: number) => {
-  activeTab.value = index;
-};
-</script>
 
 <style scoped>
 .settings-mini-nav {

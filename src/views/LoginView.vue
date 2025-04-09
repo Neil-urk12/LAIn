@@ -731,4 +731,108 @@ onMounted(() => {
   border-radius: 5px;
   color: white;
 }
+
+@media (max-width: 600px) {
+  .auth-page {
+    padding: 20px;
+  }
+
+  .auth-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    height: auto;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .auth-container.active {
+    height: 520px;
+  }
+
+  .form-title {
+    font-size: 24px;
+  }
+
+  .login-form .input-group input,
+  .register-form .input-group input {
+    padding: 12px 18px;
+    font-size: 15px;
+  }
+
+  .login-form .input-group label,
+  .register-form .input-group label {
+     top: 12px;
+     font-size: 15px;
+  }
+
+  .login-form .input-group input:focus + label,
+  .login-form .input-group input:not(:placeholder-shown) + label,
+  .register-form .input-group input:focus + label,
+  .register-form .input-group input:not(:placeholder-shown) + label {
+    top: -20px;
+    font-size: 13px;
+  }
+
+  .btn {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .social-login {
+    margin-top: 20px;
+  }
+
+  .social-icon {
+    width: 35px;
+    height: 35px;
+    margin: 0 8px;
+  }
+
+  .social-icon i {
+    font-size: 16px;
+  }
+
+  .divider {
+    margin: 15px 0;
+  }
+
+  .toggle-form {
+    font-size: 13px;
+    margin-top: 15px;
+  }
+
+  .theme-toggle-container {
+    margin-bottom: 15px !important;
+  }
+
+  .password-strength-meter p {
+    margin: 0 0 0 0.5rem;
+    font-size: 13px;
+  }
+
+  .password-strength-meter span {
+    padding: 1px 8px;
+  }
+
+  .error-icon {
+    right: 12px;
+    font-size: 16px;
+  }
+  /* Reduce margins for register form on mobile */
+  .register-form .input-group {
+    margin-bottom: 18px;
+  }
+
+  .register-form .btn {
+    margin-top: 5px;
+  }
+
+  .register-form-title {
+    margin-bottom: 15px;
+  }
+
+  .input-group input.error {
+    padding-right: 35px;
+  }
+}
 </style>
