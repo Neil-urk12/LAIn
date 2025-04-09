@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
-import SettingsHeader from '@/components/SettingsView/SettingsHeader.vue';
-import SettingsNav from '@/components/SettingsView/SettingsNav.vue';
-import SettingsSkeleton from '@/components/SettingsView/SettingsSkeleton.vue';
-import ProfileSettingsGroup from '@/components/SettingsView/ProfileSettingsGroup.vue';
-import AccountSettingsSection from '@/components/SettingsView/AccountSettingsSection.vue';
-import AppearanceSection from '@/components/SettingsView/AppearanceSection.vue';
-import PrivacySecuritySection from '@/components/SettingsView/PrivacySecuritySection.vue';
-import BillingSubscriptionSection from '@/components/SettingsView/BillingSubscriptionSection.vue';
-import NotificationPreferencesSection from '@/components/SettingsView/NotificationPreferencesSection.vue';
+import { ref, reactive, onMounted, defineAsyncComponent } from 'vue';
+
+const SettingsHeader = defineAsyncComponent(() => import('@/components/SettingsView/SettingsHeader.vue'));
+const SettingsNav = defineAsyncComponent(() => import('@/components/SettingsView/SettingsNav.vue'));
+const SettingsSkeleton = defineAsyncComponent(() => import('@/components/SettingsView/SettingsSkeleton.vue'));
+const ProfileSettingsGroup = defineAsyncComponent(() => import('@/components/SettingsView/ProfileSettingsGroup.vue'));
+const AccountSettingsSection = defineAsyncComponent(() => import('@/components/SettingsView/AccountSettingsSection.vue'));
+const AppearanceSection = defineAsyncComponent(() => import('@/components/SettingsView/AppearanceSection.vue'));
+const PrivacySecuritySection = defineAsyncComponent(() => import('@/components/SettingsView/PrivacySecuritySection.vue'));
+const BillingSubscriptionSection = defineAsyncComponent(() => import('@/components/SettingsView/BillingSubscriptionSection.vue'));
+const NotificationPreferencesSection = defineAsyncComponent(() => import('@/components/SettingsView/NotificationPreferencesSection.vue'));
 
 const navItems = [
   'Profile',
@@ -75,27 +76,28 @@ const handleLogout = () => {
   <div class="settings-page container">
     <SettingsSkeleton v-if="loading" />
 
-    <template v-else>
-      <SettingsHeader />
-      <SettingsNav :items="navItems" @update:active-tab="selectedTab = $event" />
+    <template v-else-if="!loading">
+      <div v-show="!loading">
+        <SettingsHeader />
+        <SettingsNav :items="navItems" @update:active-tab="selectedTab = $event" />
 
-      <!-- Conditionally render sections based on selectedTab -->
-      <ProfileSettingsGroup
-        v-if="selectedTab === 'Profile'"
-        :initial-data="formData"
-        @save="saveChanges"
-        @logout="handleLogout"
-      />
-      <AccountSettingsSection v-else-if="selectedTab === 'Account'" />
-      <AppearanceSection v-else-if="selectedTab === 'Appearance'" />
-      <PrivacySecuritySection v-else-if="selectedTab === 'Privacy & Security'" />
-      <BillingSubscriptionSection v-else-if="selectedTab === 'Billing'" />
-      <NotificationPreferencesSection v-else-if="selectedTab === 'Notifications'" />
+        <!-- Show/hide sections based on selectedTab -->
+        <ProfileSettingsGroup
+          v-show="selectedTab === 'Profile'"
+          :initial-data="formData"
+          @save="saveChanges"
+          @logout="handleLogout"
+        />
+        <AccountSettingsSection v-show="selectedTab === 'Account'" />
+        <AppearanceSection v-show="selectedTab === 'Appearance'" />
+        <PrivacySecuritySection v-show="selectedTab === 'Privacy & Security'" />
+        <BillingSubscriptionSection v-show="selectedTab === 'Billing'" />
+        <NotificationPreferencesSection v-show="selectedTab === 'Notifications'" />
 
-      <div v-else class="placeholder-section">
-        <p>Content for {{ selectedTab }} coming soon.</p>
+        <div v-show="!['Profile', 'Account', 'Appearance', 'Privacy & Security', 'Billing', 'Notifications'].includes(selectedTab)" class="placeholder-section">
+          <p>Content for {{ selectedTab }} coming soon.</p>
+        </div>
       </div>
-
     </template>
   </div>
 </template>
