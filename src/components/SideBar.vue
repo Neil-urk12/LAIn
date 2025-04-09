@@ -64,7 +64,7 @@ function toggleSidebar() {
           <CreditCard :size="18" color="#059669" />
           <span v-show="!isCollapsed">Billing</span>
         </li>
-        <li>
+        <li :class="{ active: route.path === '/settings' }" @click="$router.push('/settings')">
           <Settings :size="18" color="#059669" />
           <span v-show="!isCollapsed">Settings</span>
         </li>
