@@ -3,17 +3,38 @@ import { ref, onMounted } from 'vue';
 
 const isLoading = ref(true);
 
+// Define the structure for a course
+interface Course {
+  id: number;
+  title: string;
+  description: string;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  rating: number;
+  duration: number; // hours
+  lessons: number;
+  price: string | number;
+  imageUrl?: string; // Optional image URL
+}
+
+// Dummy course data
+const courses = ref<Course[]>([
+  { id: 1, title: 'Introduction to AI', description: 'Learn the fundamentals of Artificial Intelligence.', level: 'Beginner', rating: 4.5, duration: 8, lessons: 15, price: 'Free', imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=AI+Intro' },
+  { id: 2, title: 'Machine Learning Basics', description: 'Explore core concepts of Machine Learning algorithms.', level: 'Beginner', rating: 4.8, duration: 12, lessons: 24, price: 49.99, imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=ML+Basics' },
+  { id: 3, title: 'Deep Learning Specialization', description: 'Dive deep into neural networks and deep learning.', level: 'Intermediate', rating: 4.7, duration: 20, lessons: 30, price: 99.99, imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=Deep+Learning' },
+  { id: 4, title: 'Natural Language Processing', description: 'Understand how computers process human language.', level: 'Intermediate', rating: 4.6, duration: 15, lessons: 28, price: 79.99, imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=NLP' },
+  { id: 5, title: 'Computer Vision Fundamentals', description: 'Learn how machines "see" and interpret images.', level: 'Advanced', rating: 4.9, duration: 18, lessons: 35, price: 129.99, imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=Comp+Vision' },
+  { id: 6, title: 'Reinforcement Learning Explained', description: 'Master the concepts of agents learning through rewards.', level: 'Advanced', rating: 4.8, duration: 22, lessons: 40, price: 149.99, imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=RL+Explained' },
+]);
+
 onMounted(() => {
   try {
-
+    console.log('Fetching data...');
   } catch (error) {
     console.error('Error fetching data:', error);
+     isLoading.value = false; // Ensure loading stops on error
   } finally {
     isLoading.value = false;
   }
-  // setTimeout(() => {
-  //   isLoading.value = false;
-  // }, 1500); // simulate 1.5s loading delay
 });
 </script>
 
@@ -64,20 +85,21 @@ onMounted(() => {
         </div>
       </template>
       <template v-else>
-        <div class="course-card" v-for="n in 6" :key="n">
-          <div class="course-image"></div>
+        <!-- Loop through the actual courses data -->
+        <div class="course-card" v-for="course in courses" :key="course.id">
+          <div class="course-image" :style="{ backgroundImage: course.imageUrl ? `url(${course.imageUrl})` : 'none' }"></div>
           <div class="course-content">
             <div class="course-header">
-              <span class="badge">Beginner</span>
-              <span class="rating">⭐ 4.8</span>
+              <span class="badge">{{ course.level }}</span>
+              <span class="rating">⭐ {{ course.rating }}</span>
             </div>
-            <h3>Course Title</h3>
-            <p>Short description of the course content goes here.</p>
+            <h3>{{ course.title }}</h3>
+            <p>{{ course.description }}</p>
             <div class="course-footer">
-              <span>10 hours • 24 lessons</span>
+              <span>{{ course.duration }} hours • {{ course.lessons }} lessons</span>
             </div>
             <div class="course-actions">
-              <span class="price">Free</span>
+              <span class="price">{{ typeof course.price === 'number' ? `$${course.price.toFixed(2)}` : course.price }}</span>
               <a href="#">Enroll Now</a>
             </div>
           </div>
@@ -161,7 +183,9 @@ p {
 }
 
 .course-image {
-  background: var(--border-color);
+  background-color: var(--border-color); /* Fallback color */
+  background-size: cover;
+  background-position: center;
   height: 150px;
 }
 
