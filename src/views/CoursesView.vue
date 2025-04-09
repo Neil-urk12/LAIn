@@ -60,7 +60,7 @@ h1 {
 }
 
 p {
-  color: #666;
+  color: var(--text-light);
   margin-bottom: 20px;
 }
 
@@ -74,16 +74,17 @@ p {
 .search-input {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
 .filters select,
 .filter-btn {
   padding: 8px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
+  color: var(--text-dark);
   border-radius: 6px;
-  background: #fff;
+  background: var(--bg-white);
   cursor: pointer;
 }
 
@@ -97,14 +98,15 @@ p {
 .tabs button {
   padding: 8px 16px;
   border: none;
-  background: #f3f4f6;
+  background: var(--bg-light);
+  color: var(--text-dark);
   border-radius: 20px;
   cursor: pointer;
 }
 
 .tabs button.active {
-  background: #059669;
-  color: #fff;
+  background: var(--primary-color);
+  color: var(--bg-white);
 }
 
 .courses-grid {
@@ -114,8 +116,8 @@ p {
 }
 
 .course-card {
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   overflow: hidden;
   display: flex;
@@ -123,7 +125,7 @@ p {
 }
 
 .course-image {
-  background: #eee;
+  background: var(--border-color);
   height: 150px;
 }
 
@@ -141,8 +143,8 @@ p {
 }
 
 .badge {
-  background: #d1fae5;
-  color: #059669;
+  background: var(--primary-color);
+  color: var(--bg-white);
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 12px;
@@ -159,13 +161,13 @@ p {
 
 .course-content p {
   font-size: 14px;
-  color: #555;
+  color: var(--text-light);
   flex-grow: 1;
 }
 
 .course-footer {
   font-size: 12px;
-  color: #777;
+  color: var(--text-light);
 }
 
 .course-actions {
@@ -178,7 +180,7 @@ p {
 
 .price {
   font-weight: bold;
-  color: #059669;
+  color: var(--primary-color);
 }
 
 </style>
