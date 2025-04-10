@@ -39,6 +39,12 @@ const router = createRouter({
       name: "certificates",
       component: () => import("../views/CertificatesView.vue")
     },
+    {
+      path: "/courses/:id/enroll",
+      name: "Enrollment",
+      component: () => import("../views/EnrollmentView.vue"),
+      props: true
+    },
   ],
 });
 

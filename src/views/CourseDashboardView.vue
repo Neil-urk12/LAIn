@@ -8,14 +8,19 @@ const course = ref({
   title: 'AI Fundamentals: Getting Started',
   level: 'Beginner',
   description: 'A beginner-friendly introduction to artificial intelligence concepts and applications.',
-  duration: 10, // hours
+  duration: 10,
   lessons: 24,
   lastUpdated: 'September 2023',
   rating: 4.6,
   reviews: 3250,
   instructor: {
     name: 'Dr. Toma Sigma',
-    // avatarUrl: 'path/to/avatar.jpg' // Add avatar if available
+    title: 'AI Educator & Researcher',
+    rating: 4.8,
+    students: 65000,
+    courses: 5,
+    bio: 'Dr. TOma Ligma specializes in making complex AI concepts accessible to beginners. With a Ph.D. in Computer Science and 8 years of teaching experience, she has helped thousands of students take their first steps into the world of artificial intelligence. Her passion is demystifying AI and helping people from all backgrounds understand this transformative technology.', // Added bio
+    // avatarUrl: 'path/to/avatar.jpg'
   },
   price: 'Free Access',
   about: 'This free course provides a comprehensive introduction to artificial intelligence for absolute beginners. You\'ll learn the basic concepts, terminology, and applications of AI without requiring any prior technical knowledge. Through engaging lectures and simple examples, you\'ll gain a solid foundation in AI that will prepare you for more advanced courses in the field.',
@@ -50,6 +55,22 @@ const course = ref({
       { id: 4, title: 'Machine Learning with Python', level: 'Beginner', rating: 4.7, duration: 18, lessons: 24, price: 'Free', imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=ML+Python+Rel' },
       { id: 5, title: 'AI Ethics and Governance', level: 'Intermediate', rating: 4.5, duration: 18, lessons: 24, price: 79.99, imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=AI+Ethics+Rel' },
   ],
+  reviewsData: { // Added reviews data structure
+      averageRating: 4.6,
+      totalReviews: 3250,
+      distribution: [
+          { stars: 5, percentage: 70 },
+          { stars: 4, percentage: 20 },
+          { stars: 3, percentage: 7 },
+          { stars: 2, percentage: 2 },
+          { stars: 1, percentage: 1 },
+      ],
+      comments: [
+          { id: 1, name: 'Jan Cez Rosalijos', rating: 5, date: '1 month ago', text: 'Perfect introduction to AI for someone with no technical background. Dr. Zhang explains everything in such a clear way that even complex concepts become easy to understand.' },
+          { id: 2, name: 'Jan Doe', rating: 5, date: '2 months ago', text: 'I took this course to understand what AI actually is beyond the buzzwords. It delivered exactly what I needed - a solid foundation without overwhelming me with technical details.' },
+          { id: 3, name: 'Standik', rating: 4, date: '3 weeks ago', text: 'Great introductory course! I especially enjoyed the sections on AI applications in different industries. Would have liked a bit more interactive elements, but overall very satisfied.' },
+      ]
+  },
   headerImageUrl: 'https://via.placeholder.com/1200x300/DDD/CCC?text=Course+Header+Background'
 });
 
@@ -73,17 +94,8 @@ const formatReviews = (num: number) => {
 
 const enrollCourse = () => {
   if (course.value.price === 'Free Access') {
-    const confirmed = confirm(`Enroll in this free course: "${course.value.title}"?`);
-    if (confirmed) {
-      console.log(`Enrolled in FREE course ID: ${course.value.id} - ${course.value.title}`);
-      // TODO: Add actual enrollment logic here (e.g., API call, update user state)
-
-      // Redirect to the main dashboard after confirming enrollment
-      router.push('/dashboard');
-      alert(`Successfully enrolled in "${course.value.title}"! Redirecting to dashboard.`);
-    } else {
-      console.log(`Enrollment cancelled for course ID: ${course.value.id}`);
-    }
+    // Navigate to the Enrollment page for free courses
+    router.push({ name: 'Enrollment', params: { id: course.value.id } });
   } else {
     // Placeholder for paid course enrollment logic
     console.log(`Attempting to enroll in PAID course ID: ${course.value.id}`);
@@ -162,17 +174,104 @@ const enrollCourse = () => {
               </ul>
             </section>
           </div>
-          <div v-if="activeTab === 'Curriculum'">
-            <!-- Curriculum content goes here -->
-            <p>Curriculum details coming soon...</p>
+          <div v-if="activeTab === 'Curriculum'" class="curriculum-section">
+            <h2>Course Curriculum</h2>
+            <p class="curriculum-summary">4 modules • {{ course.lessons }} lessons • {{ course.duration }} hours total</p>
+            <div class="module-list">
+              <div class="module-item">
+                <div class="module-header">
+                  <div class="module-info">
+                    <h3>Module 1: Introduction to AI</h3>
+                    <span>5 lessons • 2 hours</span>
+                  </div>
+                  <button class="expand-button">⌄</button>
+                </div>
+                <!-- Module content (lessons) would go here -->
+              </div>
+              <div class="module-item">
+                <div class="module-header">
+                  <div class="module-info">
+                    <h3>Module 2: AI Concepts and Terminology</h3>
+                    <span>5 lessons • 3 hours</span>
+                  </div>
+                  <button class="expand-button">⌄</button>
+                </div>
+              </div>
+              <div class="module-item">
+                <div class="module-header">
+                  <div class="module-info">
+                    <h3>Module 3: AI Applications</h3>
+                    <span>5 lessons • 3 hours</span>
+                  </div>
+                  <button class="expand-button">⌄</button>
+                </div>
+              </div>
+              <div class="module-item">
+                <div class="module-header">
+                  <div class="module-info">
+                    <h3>Module 4: The Future of AI</h3>
+                    <span>4 lessons • 2 hours</span>
+                  </div>
+                  <button class="expand-button">⌄</button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div v-if="activeTab === 'Instructor'">
-            <!-- Instructor content goes here -->
-             <p>Instructor details coming soon...</p>
+          <div v-if="activeTab === 'Instructor'" class="instructor-section">
+            <h2>About the Instructor</h2>
+            <div class="instructor-layout">
+              <div class="instructor-profile">
+                <div class="instructor-avatar-large placeholder-avatar"></div>
+                <h3>{{ course.instructor.name }}</h3>
+                <p class="instructor-title">{{ course.instructor.title }}</p>
+                <div class="instructor-stats">
+                  <span>⭐ {{ course.instructor.rating }} Instructor Rating</span>
+                  <span>👥 {{ formatReviews(course.instructor.students) }} Students</span>
+                  <span>📚 {{ course.instructor.courses }} Courses</span>
+                </div>
+              </div>
+              <div class="instructor-bio">
+                <p>{{ course.instructor.bio }}</p>
+              </div>
+            </div>
           </div>
-          <div v-if="activeTab === 'Reviews'">
-            <!-- Reviews content goes here -->
-             <p>Reviews coming soon...</p>
+          <div v-if="activeTab === 'Reviews'" class="reviews-section">
+            <h2>Student Reviews</h2>
+            <div class="reviews-summary">
+              <div class="average-rating">
+                <span class="rating-value">{{ course.reviewsData.averageRating.toFixed(1) }}</span>
+                <div class="stars">
+                  <!-- Display stars based on averageRating -->
+                   <span v-for="n in 5" :key="'avg-star-' + n" :class="{ 'filled': n <= Math.round(course.reviewsData.averageRating) }">⭐</span>
+                </div>
+                <span class="total-reviews">({{ formatReviews(course.reviewsData.totalReviews) }} reviews)</span>
+              </div>
+              <div class="rating-distribution">
+                <div v-for="dist in course.reviewsData.distribution" :key="'dist-' + dist.stars" class="distribution-bar">
+                  <span class="star-label">{{ dist.stars }} stars</span>
+                  <div class="bar-container">
+                    <div class="bar" :style="{ width: dist.percentage + '%' }"></div>
+                  </div>
+                  <span class="percentage">{{ dist.percentage }}%</span>
+                </div>
+              </div>
+            </div>
+            <div class="review-list">
+              <div v-for="comment in course.reviewsData.comments" :key="comment.id" class="review-item">
+                 <div class="review-author">
+                    <span class="placeholder-avatar small-avatar"></span>
+                    <div class="author-info">
+                        <strong>{{ comment.name }}</strong>
+                         <div class="stars small-stars">
+                            <span v-for="n in 5" :key="'comment-star-' + comment.id + '-' + n" :class="{ 'filled': n <= comment.rating }">⭐</span>
+                        </div>
+                    </div>
+                    <span class="review-date">{{ comment.date }}</span>
+                 </div>
+                 <p class="review-text">{{ comment.text }}</p>
+              </div>
+            </div>
+            <button class="load-more-button">Load More Reviews</button>
           </div>
         </div>
       </div>
@@ -575,6 +674,281 @@ const enrollCourse = () => {
     font-size: 16px;
 }
 
+/* Curriculum Section Styles */
+.curriculum-section {
+  margin-bottom: 30px; /* Consistent with other sections */
+}
+
+.curriculum-section h2 {
+  font-size: 20px;
+  margin-bottom: 8px; /* Reduced margin */
+  color: var(--text-dark);
+}
+
+.curriculum-summary {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-bottom: 20px;
+}
+
+.module-list {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden; /* Ensures border radius applies to children */
+}
+
+.module-item {
+  border-bottom: 1px solid var(--border-color);
+}
+.module-item:last-child {
+  border-bottom: none;
+}
+
+.module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  cursor: pointer; /* Indicate it's clickable/expandable */
+  background-color: var(--bg-white); /* Ensure background */
+}
+.module-header:hover {
+    background-color: var(--bg-light);
+}
+
+.module-info h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: var(--text-dark);
+}
+
+.module-info span {
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+.expand-button {
+  background: none;
+  border: none;
+  font-size: 24px; /* Adjust size as needed */
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 0 5px;
+  transition: transform 0.2s ease;
+}
+/* Add rotation for expanded state if needed later */
+/* .module-item.expanded .expand-button { transform: rotate(180deg); } */
+
+/* Instructor Section Styles */
+.instructor-section {
+  margin-bottom: 30px;
+}
+.instructor-section h2 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: var(--text-dark);
+}
+.instructor-layout {
+  display: flex;
+  gap: 30px;
+}
+.instructor-profile {
+  flex: 1;
+  text-align: center;
+}
+.instructor-avatar-large {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  margin: 0 auto 15px auto;
+  display: block;
+}
+.instructor-profile h3 {
+  font-size: 18px;
+  margin: 0 0 5px 0;
+  color: var(--text-dark);
+}
+.instructor-title {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-bottom: 15px;
+}
+.instructor-stats {
+  font-size: 13px;
+  color: var(--text-medium);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  text-align: left;
+  width: fit-content;
+  margin: 0 auto;
+}
+.instructor-stats span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.instructor-bio {
+  flex: 2.5;
+}
+.instructor-bio p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-medium);
+  margin: 0;
+}
+
+/* Reviews Section Styles */
+.reviews-section {
+  margin-bottom: 30px;
+}
+.reviews-section h2 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: var(--text-dark);
+}
+.reviews-summary {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+.average-rating {
+  flex: 1;
+  text-align: center;
+  border-right: 1px solid var(--border-color);
+  padding-right: 30px;
+}
+.rating-value {
+  font-size: 48px;
+  font-weight: bold;
+  color: var(--text-dark);
+  display: block;
+  margin-bottom: 5px;
+}
+.stars {
+  color: #facc15;
+  margin-bottom: 5px;
+  font-size: 18px;
+}
+.stars span {
+    color: var(--border-color);
+}
+.stars span.filled {
+    color: #facc15;
+}
+.total-reviews {
+  font-size: 14px;
+  color: var(--text-light);
+}
+.rating-distribution {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+}
+.distribution-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.star-label {
+  font-size: 13px;
+  color: var(--text-light);
+  width: 60px;
+  text-align: right;
+}
+.bar-container {
+  flex-grow: 1;
+  height: 8px;
+  background-color: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bar {
+  height: 100%;
+  background-color: #facc15;
+  border-radius: 4px;
+}
+.percentage {
+  font-size: 13px;
+  color: var(--text-light);
+  width: 35px;
+  text-align: right;
+}
+
+.review-list {
+  margin-bottom: 20px;
+}
+.review-item {
+  border-bottom: 1px solid var(--border-color);
+  padding: 20px 0;
+}
+.review-item:last-child {
+  border-bottom: none;
+}
+.review-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    position: relative;
+}
+.placeholder-avatar.small-avatar {
+    width: 40px;
+    height: 40px;
+}
+.author-info {
+    flex-grow: 1;
+}
+.author-info strong {
+    font-size: 15px;
+    color: var(--text-dark);
+    display: block;
+    margin-bottom: 3px;
+}
+.stars.small-stars {
+    font-size: 14px;
+}
+.review-date {
+    font-size: 13px;
+    color: var(--text-light);
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+.review-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-medium);
+  margin: 0;
+}
+
+.load-more-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-white);
+  color: var(--primary-color);
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.load-more-button:hover {
+  background-color: var(--bg-light);
+}
+
+
 /* Responsive Adjustments (Optional) */
 @media (max-width: 992px) {
     .main-content-area {
@@ -608,6 +982,70 @@ const enrollCourse = () => {
     .courses-grid {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
+    .module-header {
+        padding: 12px 15px;
+    }
+    .module-info h3 {
+        font-size: 15px;
+    }
+    .instructor-layout {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .instructor-profile {
+        text-align: left;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .instructor-avatar-large {
+        width: 80px;
+        height: 80px;
+        margin: 0;
+    }
+    .instructor-profile h3 {
+        font-size: 16px;
+        margin-bottom: 2px;
+    }
+    .instructor-title {
+        margin-bottom: 8px;
+    }
+    .instructor-stats {
+        margin: 0;
+        gap: 5px;
+        font-size: 12px;
+    }
+    .reviews-summary {
+        flex-direction: column;
+        gap: 20px;
+        padding: 15px;
+    }
+    .average-rating {
+        border-right: none;
+        padding-right: 0;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 20px;
+    }
+    .rating-value {
+        font-size: 40px;
+    }
+    .review-author {
+        gap: 8px;
+    }
+    .placeholder-avatar.small-avatar {
+        width: 35px;
+        height: 35px;
+    }
+    .review-date {
+        position: static;
+        margin-top: 4px;
+        font-size: 12px;
+    }
+    .author-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }
 
 @media (max-width: 576px) {
@@ -617,7 +1055,7 @@ const enrollCourse = () => {
     .header-content h1 {
         font-size: 24px;
     }
-     .header-content .description {
+    .header-content .description {
         font-size: 14px;
     }
     .header-content .meta {
@@ -631,14 +1069,14 @@ const enrollCourse = () => {
         gap: 0;
         justify-content: space-around;
     }
-     .tabs button {
+    .tabs button {
         padding: 8px 10px;
         font-size: 13px;
     }
-    .tab-content h2 {
+    .tab-content h2, .curriculum-section h2, .instructor-section h2, .reviews-section h2 {
         font-size: 18px;
     }
-     .tab-content p, .tab-content ul {
+    .tab-content p, .tab-content ul, .curriculum-summary, .module-info span, .instructor-bio p, .review-text {
         font-size: 14px;
     }
     .sidebar-widget {
@@ -647,6 +1085,44 @@ const enrollCourse = () => {
     .related-courses h2, .ready-to-start h2 {
         font-size: 18px;
     }
+    .module-header {
+        padding: 10px 12px;
+    }
+    .module-info h3 {
+        font-size: 14px;
+    }
+    .expand-button {
+        font-size: 20px;
+    }
+    .instructor-avatar-large {
+        width: 60px;
+        height: 60px;
+    }
+    .instructor-profile h3 {
+        font-size: 15px;
+    }
+    .instructor-title {
+        font-size: 13px;
+    }
+    .instructor-stats {
+        font-size: 11px;
+    }
+    .rating-value {
+        font-size: 36px;
+    }
+    .stars {
+        font-size: 16px;
+    }
+    .total-reviews {
+        font-size: 13px;
+    }
+    .star-label, .percentage {
+        font-size: 12px;
+    }
+    .star-label { width: 50px; }
+    .percentage { width: 30px; }
+    .author-info strong { font-size: 14px; }
+    .stars.small-stars { font-size: 12px; }
+    .review-date { font-size: 11px; }
 }
-
 </style>
