@@ -11,6 +11,7 @@ const emit = defineEmits<{
 }>()
 
 const isCollapsed = ref(true)
+const mobileOpen = ref(false)
 
 const route = useRoute()
 
@@ -18,18 +19,34 @@ function toggleSidebar() {
   isCollapsed.value = !isCollapsed.value
   emit('toggle-collapse', isCollapsed.value)
 }
+
+function toggleMobileSidebar() {
+  mobileOpen.value = !mobileOpen.value
+  isCollapsed.value = !isCollapsed.value
+  emit('toggle-collapse', isCollapsed.value)
+}
 </script>
 
 <template>
-  <aside :class="['sidebar', { collapsed: isCollapsed }]" :style="{ padding: isCollapsed ? '5px' : '20px' }">
-    <div class="logo">
+  <!-- Mobile Hamburger Button -->
+  <button class="mobile-hamburger" @click="toggleMobileSidebar" aria-label="Toggle sidebar">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+      <path d="M3 6h18M3 12h18M3 18h18" stroke="#059669" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
+  <aside
+    :class="['sidebar', { collapsed: isCollapsed, 'mobile-open': mobileOpen }]"
+    :style="{ padding: isCollapsed ? '5px' : '5px' }"
+  >
+    <div class="logo" :style="{ padding: isCollapsed ? '5px' : '1rem', marginBottom: isCollapsed ? '10px' : '0px' }">
       <BookOpen v-show="!isCollapsed" :size="20" color="#059669" style="margin-right: 6px;" />
       <span v-show="!isCollapsed">LAIn</span>
-      <button class="toggle-btn" @click="toggleSidebar">
+      <button class="toggle-btn" @click="toggleSidebar" aria-label="Collapse sidebar">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
+          width="28"
+          height="28"
           viewBox="0 0 24 24"
           :style="{ transform: isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)', marginTop: isCollapsed ? '10px' : '0px', marginRight: isCollapsed ? '10px' : '0px' }"
         >
@@ -97,15 +114,64 @@ function toggleSidebar() {
   position: fixed;
   top: 0;
   left: 0;
-  transition: width 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-
   display: flex;
   flex-direction: column;
+  z-index: 1000;
 }
 
+/* Collapsed sidebar on desktop */
 .sidebar.collapsed {
   width: 60px;
+}
+
+/* Mobile sidebar overlay */
+.sidebar.mobile-open {
+  transform: translateX(0);
+}
+
+/* Hamburger button hidden on desktop */
+.mobile-hamburger {
+  display: none;
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1100;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 240px;
+    position: fixed;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: var(--bg-light);
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  }
+
+  .sidebar.collapsed {
+    width: 240px; /* ignore collapse on mobile */
+  }
+
+  .mobile-hamburger {
+    display: block;
+  }
+
+  .logo {
+    margin-top: 1.5rem;
+  }
+
+  /* Hide the arrow icon inside toggle button on mobile */
+  .toggle-btn svg {
+    display: none;
+  }
 }
 
 .logo {
@@ -114,7 +180,7 @@ function toggleSidebar() {
   justify-content: space-between;
   font-weight: bold;
   font-size: 20px;
-  margin-bottom: 30px;
+  padding: 1rem;
 }
 
 .toggle-btn {
@@ -158,6 +224,7 @@ nav li.active {
   height: 18px;
   flex-shrink: 0;
 }
+
 .sidebar-bottom {
   margin-top: auto;
   padding-top: 20px;

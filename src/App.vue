@@ -1,20 +1,32 @@
 <script setup lang="ts">
-import { RouterView, useRoute } from 'vue-router'
-import { ref, computed } from 'vue'
-import SideBar from './components/Global/SideBar.vue'
+import { RouterView, useRoute } from "vue-router";
+import { ref, computed } from "vue";
+import SideBar from "./components/Global/SideBar.vue";
 
-const route = useRoute()
-const isSidebarCollapsed = ref(true)
+const route = useRoute();
+const isSidebarCollapsed = ref(true);
 
 const showSidebar = computed(() => {
-  const hiddenRoutes = ['home', 'login']
-  return !hiddenRoutes.includes(route.name as string)
-})
+  const hiddenRoutes = ["home", "login"];
+  return !hiddenRoutes.includes(route.name as string);
+});
 </script>
 
 <template>
-  <div :class="['app-container', { 'sidebar-visible': showSidebar, 'sidebar-collapsed': isSidebarCollapsed }]">
-    <SideBar v-if="showSidebar" @toggle-collapse="isSidebarCollapsed = $event" />
+  <div
+    :class="[
+      'app-container',
+      {
+        'sidebar-visible': showSidebar,
+        'sidebar-collapsed': isSidebarCollapsed,
+      },
+    ]"
+  >
+    <SideBar
+      class="overlaybar"
+      v-if="showSidebar"
+      @toggle-collapse="isSidebarCollapsed = $event"
+    />
     <main class="main-content">
       <RouterView />
     </main>
@@ -31,12 +43,24 @@ const showSidebar = computed(() => {
   transition: margin-left 0.3s ease;
   margin-left: 0;
 }
+.overlaybar {
+  z-index: 10000;
+}
 
 .app-container.sidebar-visible .main-content {
-  margin-left: 240px; /* Corrected margin for expanded sidebar */
+  margin-left: 240px;
 }
 
 .app-container.sidebar-visible.sidebar-collapsed .main-content {
-  margin-left: 60px; /* Corrected margin for collapsed sidebar */
+  margin-left: 60px;
+}
+
+@media screen and (max-width: 768px) {
+  .app-container.sidebar-visible.sidebar-collapsed .main-content {
+    margin-left: 0px;
+  }
+  .app-container.sidebar-visible .main-content {
+    margin-left: 0px;
+  }
 }
 </style>
