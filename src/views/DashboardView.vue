@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue'
-const StatsCards = defineAsyncComponent(() => import('../components/DashboardView/StatsCards.vue'))
-const ContinueLearning = defineAsyncComponent(() => import('../components/DashboardView/ContinueLearning.vue'))
-const LearningPath = defineAsyncComponent(() => import('../components/DashboardView/LearningPath.vue'))
-const Recommended = defineAsyncComponent(() => import('../components/DashboardView/Recommended.vue'))
+import { defineAsyncComponent } from "vue";
+const StatsCards = defineAsyncComponent(
+  () => import("../components/DashboardView/StatsCards.vue"),
+);
+const ContinueLearning = defineAsyncComponent(
+  () => import("../components/DashboardView/ContinueLearning.vue"),
+);
+const LearningPath = defineAsyncComponent(
+  () => import("../components/DashboardView/LearningPath.vue"),
+);
+const Recommended = defineAsyncComponent(
+  () => import("../components/DashboardView/Recommended.vue"),
+);
 </script>
 
 <template>
@@ -33,14 +41,18 @@ const Recommended = defineAsyncComponent(() => import('../components/DashboardVi
           <li>
             <span class="icon">📘</span>
             <div class="activity-details">
-              <p>Completed lesson 5 in Introduction to Artificial Intelligence</p>
+              <p>
+                Completed lesson 5 in Introduction to Artificial Intelligence
+              </p>
               <span class="time">Today, 10:30 AM</span>
             </div>
           </li>
           <li>
             <span class="icon">🏆</span>
             <div class="activity-details">
-              <p>Earned 'Fast Learner' badge for completing 3 lessons in a day</p>
+              <p>
+                Earned 'Fast Learner' badge for completing 3 lessons in a day
+              </p>
               <span class="time">Yesterday, 3:45 PM</span>
             </div>
           </li>
@@ -61,7 +73,9 @@ const Recommended = defineAsyncComponent(() => import('../components/DashboardVi
           <li>
             <span class="icon">📘</span>
             <div class="activity-details">
-              <p>Submitted project: Image Classification with Neural Networks</p>
+              <p>
+                Submitted project: Image Classification with Neural Networks
+              </p>
               <span class="time">1 week ago</span>
             </div>
           </li>
@@ -108,7 +122,7 @@ main {
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 20px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .recent-activity h3 {
@@ -179,7 +193,7 @@ main {
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 20px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -211,7 +225,7 @@ main {
 
 @media (max-width: 767px) {
   main {
-    padding: 10px;
+    padding: 45px 10px;
   }
 
   .header h1 {
@@ -235,7 +249,7 @@ main {
   }
 
   .account-settings button {
-     max-width: 250px;
+    max-width: 250px;
   }
 }
 

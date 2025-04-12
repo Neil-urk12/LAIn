@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
 const isLoading = ref(true);
 const showEnrollModal = ref(false);
@@ -11,7 +11,7 @@ interface Course {
   id: number;
   title: string;
   description: string;
-  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  level: "Beginner" | "Intermediate" | "Advanced";
   rating: number;
   duration: number; // hours
   lessons: number;
@@ -21,20 +21,80 @@ interface Course {
 
 // Dummy course data
 const courses = ref<Course[]>([
-  { id: 1, title: 'Introduction to AI', description: 'Learn the fundamentals of Artificial Intelligence.', level: 'Beginner', rating: 4.5, duration: 8, lessons: 15, price: 'Free', imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=AI+Intro' },
-  { id: 2, title: 'Machine Learning Basics', description: 'Explore core concepts of Machine Learning algorithms.', level: 'Beginner', rating: 4.8, duration: 12, lessons: 24, price: 49.99, imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=ML+Basics' },
-  { id: 3, title: 'Deep Learning Specialization', description: 'Dive deep into neural networks and deep learning.', level: 'Intermediate', rating: 4.7, duration: 20, lessons: 30, price: 99.99, imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=Deep+Learning' },
-  { id: 4, title: 'Natural Language Processing', description: 'Understand how computers process human language.', level: 'Intermediate', rating: 4.6, duration: 15, lessons: 28, price: 79.99, imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=NLP' },
-  { id: 5, title: 'Computer Vision Fundamentals', description: 'Learn how machines "see" and interpret images.', level: 'Advanced', rating: 4.9, duration: 18, lessons: 35, price: 129.99, imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=Comp+Vision' },
-  { id: 6, title: 'Reinforcement Learning Explained', description: 'Master the concepts of agents learning through rewards.', level: 'Advanced', rating: 4.8, duration: 22, lessons: 40, price: 149.99, imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=RL+Explained' },
+  {
+    id: 1,
+    title: "Introduction to AI",
+    description: "Learn the fundamentals of Artificial Intelligence.",
+    level: "Beginner",
+    rating: 4.5,
+    duration: 8,
+    lessons: 15,
+    price: "Free",
+    imageUrl: "https://via.placeholder.com/300x150/EEE/DDD?text=AI+Intro",
+  },
+  {
+    id: 2,
+    title: "Machine Learning Basics",
+    description: "Explore core concepts of Machine Learning algorithms.",
+    level: "Beginner",
+    rating: 4.8,
+    duration: 12,
+    lessons: 24,
+    price: 49.99,
+    imageUrl: "https://via.placeholder.com/300x150/EEE/DDD?text=ML+Basics",
+  },
+  {
+    id: 3,
+    title: "Deep Learning Specialization",
+    description: "Dive deep into neural networks and deep learning.",
+    level: "Intermediate",
+    rating: 4.7,
+    duration: 20,
+    lessons: 30,
+    price: 99.99,
+    imageUrl: "https://via.placeholder.com/300x150/EEE/DDD?text=Deep+Learning",
+  },
+  {
+    id: 4,
+    title: "Natural Language Processing",
+    description: "Understand how computers process human language.",
+    level: "Intermediate",
+    rating: 4.6,
+    duration: 15,
+    lessons: 28,
+    price: 79.99,
+    imageUrl: "https://via.placeholder.com/300x150/EEE/DDD?text=NLP",
+  },
+  {
+    id: 5,
+    title: "Computer Vision Fundamentals",
+    description: 'Learn how machines "see" and interpret images.',
+    level: "Advanced",
+    rating: 4.9,
+    duration: 18,
+    lessons: 35,
+    price: 129.99,
+    imageUrl: "https://via.placeholder.com/300x150/EEE/DDD?text=Comp+Vision",
+  },
+  {
+    id: 6,
+    title: "Reinforcement Learning Explained",
+    description: "Master the concepts of agents learning through rewards.",
+    level: "Advanced",
+    rating: 4.8,
+    duration: 22,
+    lessons: 40,
+    price: 149.99,
+    imageUrl: "https://via.placeholder.com/300x150/EEE/DDD?text=RL+Explained",
+  },
 ]);
 
 onMounted(() => {
   try {
-    console.log('Fetching data...');
+    console.log("Fetching data...");
   } catch (error) {
-    console.error('Error fetching data:', error);
-     isLoading.value = false; // Ensure loading stops on error
+    console.error("Error fetching data:", error);
+    isLoading.value = false; // Ensure loading stops on error
   } finally {
     isLoading.value = false;
   }
@@ -43,17 +103,17 @@ onMounted(() => {
 const router = useRouter();
 
 const goToCourseDashboard = (courseId: number) => {
-  router.push({ name: 'course', params: { id: courseId } });
+  router.push({ name: "course", params: { id: courseId } });
 };
 
 const handleEnrollClick = (event: Event, course: Course) => {
   event.stopPropagation(); // Prevent triggering the card click
-  if (course.price === 'Free') {
+  if (course.price === "Free") {
     selectedCourse.value = course;
     showEnrollModal.value = true;
   } else {
     // Handle paid courses differently (e.g., redirect to payment page)
-    console.log('Redirecting to payment page for:', course.title);
+    console.log("Redirecting to payment page for:", course.title);
   }
 };
 
@@ -71,7 +131,7 @@ const closeModal = () => {
 </script>
 
 <template>
-  <main style="padding: 30px;">
+  <main>
     <h1>Courses</h1>
     <p>Browse and discover AI courses to enhance your skills</p>
 
@@ -118,8 +178,20 @@ const closeModal = () => {
       </template>
       <template v-else>
         <!-- Loop through the actual courses data -->
-        <div class="course-card" v-for="course in courses" :key="course.id" @click="goToCourseDashboard(course.id)">
-          <div class="course-image" :style="{ backgroundImage: course.imageUrl ? `url(${course.imageUrl})` : 'none' }"></div>
+        <div
+          class="course-card"
+          v-for="course in courses"
+          :key="course.id"
+          @click="goToCourseDashboard(course.id)"
+        >
+          <div
+            class="course-image"
+            :style="{
+              backgroundImage: course.imageUrl
+                ? `url(${course.imageUrl})`
+                : 'none',
+            }"
+          ></div>
           <div class="course-content">
             <div class="course-header">
               <span class="badge">{{ course.level }}</span>
@@ -128,11 +200,20 @@ const closeModal = () => {
             <h3>{{ course.title }}</h3>
             <p>{{ course.description }}</p>
             <div class="course-footer">
-              <span>{{ course.duration }} hours • {{ course.lessons }} lessons</span>
+              <span
+                >{{ course.duration }} hours •
+                {{ course.lessons }} lessons</span
+              >
             </div>
             <div class="course-actions">
-              <span class="price">{{ typeof course.price === 'number' ? `$${course.price.toFixed(2)}` : course.price }}</span>
-              <a href="#" @click="(e) => handleEnrollClick(e, course)">Enroll Now</a>
+              <span class="price">{{
+                typeof course.price === "number"
+                  ? `$${course.price.toFixed(2)}`
+                  : course.price
+              }}</span>
+              <a href="#" @click="(e) => handleEnrollClick(e, course)"
+                >Enroll Now</a
+              >
             </div>
           </div>
         </div>
@@ -143,10 +224,14 @@ const closeModal = () => {
     <div v-if="showEnrollModal" class="modal-overlay">
       <div class="modal">
         <h2>Enroll in Course</h2>
-        <p v-if="selectedCourse">Would you like to enroll in "{{ selectedCourse.title }}"?</p>
+        <p v-if="selectedCourse">
+          Would you like to enroll in "{{ selectedCourse.title }}"?
+        </p>
         <div class="modal-actions">
           <button class="btn-secondary" @click="closeModal">Cancel</button>
-          <button class="btn-primary" @click="confirmEnrollment">Enroll Now</button>
+          <button class="btn-primary" @click="confirmEnrollment">
+            Enroll Now
+          </button>
         </div>
       </div>
     </div>
@@ -155,6 +240,9 @@ const closeModal = () => {
 
 <style scoped>
 /* Main content styling */
+main {
+  padding: 40px 16px;
+}
 
 h1 {
   font-size: 28px;
