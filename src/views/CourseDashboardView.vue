@@ -1,78 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import courseData from '../mockdata/courses.json';
 
-// Dummy data - replace with actual data fetching based on route param
-const course = ref({
-  id: 1,
-  title: 'AI Fundamentals: Getting Started',
-  level: 'Beginner',
-  description: 'A beginner-friendly introduction to artificial intelligence concepts and applications.',
-  duration: 10,
-  lessons: 24,
-  lastUpdated: 'September 2023',
-  rating: 4.6,
-  reviews: 3250,
-  instructor: {
-    name: 'Dr. Toma Sigma',
-    title: 'AI Educator & Researcher',
-    rating: 4.8,
-    students: 65000,
-    courses: 5,
-    bio: 'Dr. TOma Ligma specializes in making complex AI concepts accessible to beginners. With a Ph.D. in Computer Science and 8 years of teaching experience, she has helped thousands of students take their first steps into the world of artificial intelligence. Her passion is demystifying AI and helping people from all backgrounds understand this transformative technology.', // Added bio
-    // avatarUrl: 'path/to/avatar.jpg'
-  },
-  price: 'Free Access',
-  about: 'This free course provides a comprehensive introduction to artificial intelligence for absolute beginners. You\'ll learn the basic concepts, terminology, and applications of AI without requiring any prior technical knowledge. Through engaging lectures and simple examples, you\'ll gain a solid foundation in AI that will prepare you for more advanced courses in the field.',
-  whatYoullLearn: [
-    'Understand what artificial intelligence is and how it works',
-    'Recognize different types of AI applications in everyday life',
-    'Learn the basic terminology used in AI and machine learning',
-    'Explore the ethical considerations of AI implementation',
-    'Discover career paths and opportunities in the AI field',
-    'Prepare for more advanced AI and machine learning courses'
-  ],
-  requirements: [
-    'No prior knowledge of AI or programming required',
-    'Basic computer literacy',
-    'Curiosity and willingness to learn'
-  ],
-  whoIsThisFor: [
-    'Complete beginners interested in understanding AI',
-    'Business professionals wanting to understand AI applications',
-    'Students considering a career in AI or data science',
-    'Anyone curious about how AI is changing our world'
-  ],
-  includes: [
-    '8 hours on-demand video',
-    '10 articles',
-    '15 downloadable resources',
-    'Access to community forum',
-    'Certificate of completion'
-  ],
-  relatedCourses: [
-      { id: 3, title: 'Introduction to Artificial Intelligence', level: 'Beginner', rating: 4.8, duration: 28, lessons: 36, price: 49.99, imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=AI+Intro+Rel' },
-      { id: 4, title: 'Machine Learning with Python', level: 'Beginner', rating: 4.7, duration: 18, lessons: 24, price: 'Free', imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=ML+Python+Rel' },
-      { id: 5, title: 'AI Ethics and Governance', level: 'Intermediate', rating: 4.5, duration: 18, lessons: 24, price: 79.99, imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=AI+Ethics+Rel' },
-  ],
-  reviewsData: { // Added reviews data structure
-      averageRating: 4.6,
-      totalReviews: 3250,
-      distribution: [
-          { stars: 5, percentage: 70 },
-          { stars: 4, percentage: 20 },
-          { stars: 3, percentage: 7 },
-          { stars: 2, percentage: 2 },
-          { stars: 1, percentage: 1 },
-      ],
-      comments: [
-          { id: 1, name: 'Jan Cez Rosalijos', rating: 5, date: '1 month ago', text: 'Perfect introduction to AI for someone with no technical background. Dr. Zhang explains everything in such a clear way that even complex concepts become easy to understand.' },
-          { id: 2, name: 'Jan Doe', rating: 5, date: '2 months ago', text: 'I took this course to understand what AI actually is beyond the buzzwords. It delivered exactly what I needed - a solid foundation without overwhelming me with technical details.' },
-          { id: 3, name: 'Standik', rating: 4, date: '3 weeks ago', text: 'Great introductory course! I especially enjoyed the sections on AI applications in different industries. Would have liked a bit more interactive elements, but overall very satisfied.' },
-      ]
-  },
-  headerImageUrl: 'https://via.placeholder.com/1200x300/DDD/CCC?text=Course+Header+Background'
-});
+// Load course data from mock file - replace with actual data fetching based on route param
+const course = ref(courseData);
 
 const activeTab = ref('Overview');
 const route = useRoute();
