@@ -27,5 +27,8 @@ export const useAuthStore = defineStore("auth", {
   },
   getters: {
     isAuthenticated: (state) => state.authenticated,
+    getName: (state) => state.user?.name,
+    getUser: (state) => state.user,
+    getEmail: (state) => state.user?.email,
   },
 });
