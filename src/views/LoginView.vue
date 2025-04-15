@@ -1,12 +1,26 @@
 <script setup lang="ts">
-import { ref } from "vue";
+// Vue imports
+import { ref, computed, onMounted } from "vue";
 import type { Ref } from "vue";
+import { useRouter } from "vue-router";
+
+// External imports
+import { useConvexMutation } from "@convex-vue/core";
+import { api } from "../../convex/_generated/api";
+
+// Local imports
+import type { User } from '../models/interfaces'
 import { useAuthStore } from "../stores/auth";
 import ThemeToggleButton from "@/components/Global/ThemeToggleButton.vue";
 
+// Convex mutations
+const createUserMutation = useConvexMutation(api.myFunctions.createUser);
+const loginMutation = useConvexMutation(api.myFunctions.loginUser);
+
+// Component state
 const showRegister = ref(false);
 const auth = useAuthStore();
-import { onMounted } from "vue";
+const router = useRouter()
 
 const isLoading = ref(true);
 const savedTheme: Ref<string> = ref("light");
@@ -16,6 +30,10 @@ const registerEmail = ref("");
 const registerPassword = ref("");
 const registerRepeatPassword = ref("");
 const registerUsername = ref("");
+
+const loginEmail = ref("");
+const loginPassword = ref("");
+
 
 // Validation error states
 const loginErrors = ref<{ email: string; password: string }>({
@@ -51,7 +69,7 @@ function validateEmail(email: string): boolean {
     "tempmail.com",
     "10minutemail.com",
     "guerrillamail.com",
-    "yopmail.com"
+    "yopmail.com",
   ];
 
   if (disposableDomains.includes(domain)) {
@@ -71,7 +89,7 @@ function validateEmail(email: string): boolean {
     "icloud.com",
     "mac.com",
     "company.com",
-    "business.com"
+    "business.com",
   ];
 
   return allowedDomains.includes(domain);
@@ -92,15 +110,16 @@ function validateLoginForm(): boolean {
   loginErrors.value.email = "";
   loginErrors.value.password = "";
 
-  if (!auth.loginForm.email) {
+  if (!loginEmail.value) {
     loginErrors.value.email = "Email is required.";
     valid = false;
-  } else if (!validateEmail(auth.loginForm.email)) {
-    loginErrors.value.email = "Email must be from an allowed provider (e.g., Gmail, Outlook, Yahoo, etc.).";
+  } else if (!validateEmail(loginEmail.value)) {
+    loginErrors.value.email =
+      "Email must be from an allowed provider (e.g., Gmail, Outlook, Yahoo, etc.).";
     valid = false;
   }
 
-  if (!auth.loginForm.password) {
+  if (!loginPassword.value) {
     loginErrors.value.password = "Password is required.";
     valid = false;
   }
@@ -130,7 +149,8 @@ function validateRegisterForm(): boolean {
     registerErrors.value.email = "Email is required.";
     valid = false;
   } else if (!validateEmail(registerEmail.value)) {
-    registerErrors.value.email = "Email must be from an allowed provider (e.g., Gmail, Outlook, Yahoo, etc.).";
+    registerErrors.value.email =
+      "Email must be from an allowed provider (e.g., Gmail, Outlook, Yahoo, etc.).";
     valid = false;
   }
 
@@ -154,8 +174,6 @@ function validateRegisterForm(): boolean {
   return valid;
 }
 
-import { computed } from "vue";
-
 const passwordStrength = computed(() => {
   const password = registerPassword.value;
   let score = 0;
@@ -170,15 +188,96 @@ const passwordStrength = computed(() => {
   return "";
 });
 
-function handleLogin() {
+async function handleLogin() {
   if (validateLoginForm()) {
-    auth.handleLogin();
+    try {
+      const result = await loginMutation.mutate({
+        email: loginEmail.value,
+        password: loginPassword.value
+      });
+
+      if (result && result.loggedIn) {
+        const user: User = {
+          id: '',
+          email: loginEmail.value,
+          name: '',
+          username: '',
+          password: '',
+          role: 'user',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          token: ''
+        };
+
+        // Update auth store
+        auth.setUser(user, '');
+        auth.setAuth(true);
+
+        // Clear form
+        loginEmail.value = '';
+        loginPassword.value = '';
+        loginErrors.value = { email: '', password: '' };
+
+        // Navigate to dashboard
+        router.push('/dashboard');
+        console.log("Login successful!", user);
+      }
+    } catch (error) {
+      // Handle specific error cases
+      let errorMessage = 'Login failed. Please try again.';
+      console.log("Login failed:", error);
+      if (error instanceof Error) {
+        if (error.message.includes('Invalid email or password')) {
+          errorMessage = 'Invalid email or password.';
+        }
+      }
+
+      // Set error message in login form
+      loginErrors.value = {
+        email: errorMessage,
+        password: errorMessage
+      };
+    }
   }
 }
 
-function handleRegister() {
+async function handleRegister() {
   if (validateRegisterForm()) {
-    auth.handleRegister();
+    try {
+      const timestamp = new Date().toISOString();
+      const result = await createUserMutation.mutate({
+        id: '',
+        email: registerEmail.value,
+        name: registerFullName.value,
+        username: registerUsername.value,
+        hashedPassword: registerPassword.value,
+        role: 'user',
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        token: ''
+      });
+
+      if (result) {
+        // result from createUser is the document ID
+        const user: User = {
+          id: result,
+          email: registerEmail.value,
+          name: registerFullName.value,
+          username: registerUsername.value,
+          password: '',
+          role: 'user',
+          createdAt: timestamp,
+          updatedAt: timestamp,
+          token: ''
+        };
+
+        auth.setUser(user, '');
+        showRegister.value = false;
+        console.log("Registration successful!", user);
+      }
+    } catch (error) {
+      console.error("Registration failed:", error);
+    }
   }
 }
 
@@ -215,27 +314,35 @@ onMounted(() => {
               <input
                 type="email"
                 id="login-email"
-                v-model="auth.loginForm.email"
+                v-model="loginEmail"
                 placeholder=" "
                 required
                 style="color: black"
-                :class="{ 'error': loginErrors.email }"
+                :class="{ error: loginErrors.email }"
               />
               <label for="login-email">Email</label>
-              <i v-if="loginErrors.email" class="fas fa-exclamation-circle error-icon" :title="loginErrors.email"></i>
+              <i
+                v-if="loginErrors.email"
+                class="fas fa-exclamation-circle error-icon"
+                :title="loginErrors.email"
+              ></i>
             </div>
 
             <div class="input-group">
               <input
                 type="password"
                 id="login-password"
-                v-model="auth.loginForm.password"
+                v-model="loginPassword"
                 placeholder=" "
                 required
-                :class="{ 'error': loginErrors.password }"
+                :class="{ error: loginErrors.password }"
               />
               <label for="login-password">Password</label>
-              <i v-if="loginErrors.password" class="fas fa-exclamation-circle error-icon" :title="loginErrors.password"></i>
+              <i
+                v-if="loginErrors.password"
+                class="fas fa-exclamation-circle error-icon"
+                :title="loginErrors.password"
+              ></i>
             </div>
 
             <button type="submit" class="btn">Sign In</button>
@@ -268,10 +375,7 @@ onMounted(() => {
             </div>
           </form>
 
-          <form
-            class="form register-form"
-            @submit.prevent="handleRegister"
-          >
+          <form class="form register-form" @submit.prevent="handleRegister">
             <h2 class="form-title register-form-title">Create Account</h2>
 
             <div class="input-group">
@@ -280,10 +384,14 @@ onMounted(() => {
                 id="register-name"
                 v-model="registerFullName"
                 placeholder=" "
-                :class="{ 'error': registerErrors.fullName }"
+                :class="{ error: registerErrors.fullName }"
               />
               <label for="register-name">Full Name</label>
-              <i v-if="registerErrors.fullName" class="fas fa-exclamation-circle error-icon" :title="registerErrors.fullName"></i>
+              <i
+                v-if="registerErrors.fullName"
+                class="fas fa-exclamation-circle error-icon"
+                :title="registerErrors.fullName"
+              ></i>
             </div>
 
             <div class="input-group">
@@ -292,10 +400,14 @@ onMounted(() => {
                 id="register-username"
                 v-model="registerUsername"
                 placeholder=" "
-                :class="{ 'error': registerErrors.username }"
+                :class="{ error: registerErrors.username }"
               />
               <label for="register-username">Username</label>
-              <i v-if="registerErrors.username" class="fas fa-exclamation-circle error-icon" :title="registerErrors.username"></i>
+              <i
+                v-if="registerErrors.username"
+                class="fas fa-exclamation-circle error-icon"
+                :title="registerErrors.username"
+              ></i>
             </div>
 
             <div class="input-group">
@@ -304,10 +416,14 @@ onMounted(() => {
                 id="register-email"
                 v-model="registerEmail"
                 placeholder=" "
-                :class="{ 'error': registerErrors.email }"
+                :class="{ error: registerErrors.email }"
               />
               <label for="register-email">Email</label>
-              <i v-if="registerErrors.email" class="fas fa-exclamation-circle error-icon" :title="registerErrors.email"></i>
+              <i
+                v-if="registerErrors.email"
+                class="fas fa-exclamation-circle error-icon"
+                :title="registerErrors.email"
+              ></i>
             </div>
 
             <div class="input-group">
@@ -316,15 +432,29 @@ onMounted(() => {
                 id="register-password"
                 v-model="registerPassword"
                 placeholder=" "
-                :class="{ 'error': registerErrors.password }"
+                :class="{ error: registerErrors.password }"
               />
               <label for="register-password">Password</label>
-              <i v-if="registerErrors.password" class="fas fa-exclamation-circle error-icon" :title="registerErrors.password"></i>
-              <div
-                v-show="registerPassword"
-                class="password-strength-meter"
-              >
-                <p>Password Strength: <span :style="{ background: passwordStrength === 'Weak' ? '#8b0000' : passwordStrength === 'Moderate' ? 'orange' : 'green' }">{{ passwordStrength }}</span></p>
+              <i
+                v-if="registerErrors.password"
+                class="fas fa-exclamation-circle error-icon"
+                :title="registerErrors.password"
+              ></i>
+              <div v-show="registerPassword" class="password-strength-meter">
+                <p>
+                  Password Strength:
+                  <span
+                    :style="{
+                      background:
+                        passwordStrength === 'Weak'
+                          ? '#8b0000'
+                          : passwordStrength === 'Moderate'
+                            ? 'orange'
+                            : 'green',
+                    }"
+                    >{{ passwordStrength }}</span
+                  >
+                </p>
               </div>
             </div>
 
@@ -334,10 +464,14 @@ onMounted(() => {
                 id="register-confirm"
                 v-model="registerRepeatPassword"
                 placeholder=" "
-                :class="{ 'error': registerErrors.repeatPassword }"
+                :class="{ error: registerErrors.repeatPassword }"
               />
               <label for="register-confirm">Confirm Password</label>
-              <i v-if="registerErrors.repeatPassword" class="fas fa-exclamation-circle error-icon" :title="registerErrors.repeatPassword"></i>
+              <i
+                v-if="registerErrors.repeatPassword"
+                class="fas fa-exclamation-circle error-icon"
+                :title="registerErrors.repeatPassword"
+              ></i>
             </div>
 
             <button type="submit" class="btn">Sign Up</button>
@@ -491,7 +625,7 @@ onMounted(() => {
 
 .input-group input.error {
   border: 2px solid #ff4d4f;
-  padding-right: 40px; /* Make room for the error icon */
+  padding-right: 40px;
 }
 
 .error-icon {
@@ -761,8 +895,8 @@ onMounted(() => {
 
   .login-form .input-group label,
   .register-form .input-group label {
-     top: 12px;
-     font-size: 15px;
+    top: 12px;
+    font-size: 15px;
   }
 
   .login-form .input-group input:focus + label,

@@ -5,28 +5,27 @@ export const useAuthStore = defineStore("auth", {
   state: () => ({
     user: null as User | null,
     token: null as string | null,
-    isAuthenticated: false,
+    authenticated: false,
   }),
   actions: {
     setUser(user: User, token: string) {
       this.user = user;
       this.token = token;
-      this.isAuthenticated = true;
+      this.authenticated = true;
     },
     logout() {
       this.user = null;
       this.token = null;
-      this.isAuthenticated = false;
+      this.authenticated = false;
     },
     socialLogin(provider: string) {
       console.log(`Social login with ${provider}`);
-      // Here you can add actual social login logic
     },
     setAuth(isAuthenticated: boolean) {
-      this.isAuthenticated = isAuthenticated;
+      this.authenticated = isAuthenticated;
     },
   },
   getters: {
-    isAuthenticated: (state) => state.isAuthenticated,
+    isAuthenticated: (state) => state.authenticated,
   },
 });
