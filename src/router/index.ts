@@ -45,6 +45,16 @@ const router = createRouter({
       component: () => import("../views/EnrollmentView.vue"),
       props: true
     },
+    {
+      path: "/about",
+      name: "about",
+      component: () => import("../views/AboutView.vue")
+    },
+    {
+      path: "/admin",
+      name: "admin",
+      component: () => import("../views/AdminView.vue")
+    },
   ],
 });
 

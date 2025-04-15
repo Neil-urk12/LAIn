@@ -7,7 +7,7 @@ const route = useRoute();
 const isSidebarCollapsed = ref(true);
 
 const showSidebar = computed(() => {
-  const hiddenRoutes = ["home", "login"];
+  const hiddenRoutes = ["home", "login", "about", "admin"];
   return !hiddenRoutes.includes(route.name as string);
 });
 </script>
