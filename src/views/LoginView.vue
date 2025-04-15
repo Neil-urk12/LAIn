@@ -5,17 +5,13 @@ import type { Ref } from "vue";
 import { useRouter } from "vue-router";
 
 // External imports
-import { useConvexMutation } from "@convex-vue/core";
-import { api } from "../../convex/_generated/api";
+import { pb } from "../pocketbase/pocketbase"
 
 // Local imports
 import type { User } from '../models/interfaces'
 import { useAuthStore } from "../stores/auth";
 import ThemeToggleButton from "@/components/Global/ThemeToggleButton.vue";
-
-// Convex mutations
-const createUserMutation = useConvexMutation(api.myFunctions.createUser);
-const loginMutation = useConvexMutation(api.myFunctions.loginUser);
+import type { OTPResponse } from "pocketbase";
 
 // Component state
 const showRegister = ref(false);
@@ -127,112 +123,50 @@ function validateLoginForm(): boolean {
   return valid;
 }
 
-function validateRegisterForm(): boolean {
-  let valid = true;
-  registerErrors.value.fullName = "";
-  registerErrors.value.username = "";
-  registerErrors.value.email = "";
-  registerErrors.value.password = "";
-  registerErrors.value.repeatPassword = "";
-
-  if (!registerFullName.value) {
-    registerErrors.value.fullName = "Full name is required.";
-    valid = false;
-  }
-
-  if (!registerUsername.value) {
-    registerErrors.value.username = "Username is required.";
-    valid = false;
-  }
-
-  if (!registerEmail.value) {
-    registerErrors.value.email = "Email is required.";
-    valid = false;
-  } else if (!validateEmail(registerEmail.value)) {
-    registerErrors.value.email =
-      "Email must be from an allowed provider (e.g., Gmail, Outlook, Yahoo, etc.).";
-    valid = false;
-  }
-
-  if (!registerPassword.value) {
-    registerErrors.value.password = "Password is required.";
-    valid = false;
-  } else if (!validatePasswordComplexity(registerPassword.value)) {
-    registerErrors.value.password =
-      "Password must be at least 8 characters, include uppercase, number, and special character.";
-    valid = false;
-  }
-
-  if (!registerRepeatPassword.value) {
-    registerErrors.value.repeatPassword = "Please confirm your password.";
-    valid = false;
-  } else if (registerPassword.value !== registerRepeatPassword.value) {
-    registerErrors.value.repeatPassword = "Passwords do not match.";
-    valid = false;
-  }
-
+function validateRegisterForm() {
+  const { valid, errors } = auth.validateRegisterForm({
+    fullName: registerFullName.value,
+    username: registerUsername.value,
+    email: registerEmail.value,
+    password: registerPassword.value,
+    repeatPassword: registerRepeatPassword.value
+  });
+  registerErrors.value = errors;
   return valid;
 }
 
-const passwordStrength = computed(() => {
-  const password = registerPassword.value;
-  let score = 0;
-  if (password.length >= 8) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[0-9]/.test(password)) score++;
-  if (/[^A-Za-z0-9]/.test(password)) score++;
+const passwordStrength = computed(() => auth.passwordStrength(registerPassword.value));
 
-  if (score <= 1) return "Weak";
-  if (score === 2) return "Moderate";
-  if (score >= 3) return "Strong";
-  return "";
-});
+// MFA/OTP state
+const mfaId = ref("");
+const otpId = ref("");
 
 async function handleLogin() {
   if (validateLoginForm()) {
     try {
-      const result = await loginMutation.mutate({
-        email: loginEmail.value,
-        password: loginPassword.value
-      });
-
-      if (result && result.loggedIn) {
-        const user: User = {
-          id: '',
-          email: loginEmail.value,
-          name: '',
-          username: '',
-          password: '',
-          role: 'user',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          token: ''
-        };
-
-        // Update auth store
-        auth.setUser(user, '');
-        auth.setAuth(true);
-
-        // Clear form
-        loginEmail.value = '';
-        loginPassword.value = '';
-        loginErrors.value = { email: '', password: '' };
-
-        // Navigate to dashboard
-        router.push('/dashboard');
-        console.log("Login successful!", user);
+      const result = await auth.loginWithMFA(loginEmail.value, loginPassword.value);
+      if (result.mfaRequired) {
+        mfaId.value = result.mfaId ?? "";
+        otpId.value = result.otpId ?? "";
+        otpEmail.value = loginEmail.value;
+        otpError.value = "";
+        otpValue.value = "";
+        otpLoading.value = false;
+        showOtpModal.value = true;
+        return;
       }
-    } catch (error) {
-      // Handle specific error cases
+      // Success, no MFA required
+      loginEmail.value = '';
+      loginPassword.value = '';
+      loginErrors.value = { email: '', password: '' };
+      router.push('/dashboard');
+    } catch (error: any) {
       let errorMessage = 'Login failed. Please try again.';
-      console.log("Login failed:", error);
       if (error instanceof Error) {
         if (error.message.includes('Invalid email or password')) {
           errorMessage = 'Invalid email or password.';
         }
       }
-
-      // Set error message in login form
       loginErrors.value = {
         email: errorMessage,
         password: errorMessage
@@ -242,54 +176,99 @@ async function handleLogin() {
 }
 
 async function handleRegister() {
-  if (validateRegisterForm()) {
-    try {
-      const timestamp = new Date().toISOString();
-      const result = await createUserMutation.mutate({
-        id: '',
-        email: registerEmail.value,
-        name: registerFullName.value,
-        username: registerUsername.value,
-        hashedPassword: registerPassword.value,
-        role: 'user',
-        createdAt: timestamp,
-        updatedAt: timestamp,
-        token: ''
-      });
+  try {
+    if (!validateRegisterForm()) return;
+    await auth.register({
+      email: registerEmail.value,
+      password: registerPassword.value,
+      name: registerFullName.value,
+      username: registerUsername.value,
+      role: 'student',
+    });
 
-      if (result) {
-        // result from createUser is the document ID
-        const user: User = {
-          id: result,
-          email: registerEmail.value,
-          name: registerFullName.value,
-          username: registerUsername.value,
-          password: '',
-          role: 'user',
-          createdAt: timestamp,
-          updatedAt: timestamp,
-          token: ''
-        };
+    auth.requestEmailOTP(registerEmail.value, "register");
 
-        auth.setUser(user, '');
-        showRegister.value = false;
-        console.log("Registration successful!", user);
-      }
-    } catch (error) {
-      console.error("Registration failed:", error);
-    }
+    otpEmail.value = registerEmail.value;
+    showOtpModal.value = true;
+    otpValue.value = "";
+    otpError.value = "";
+    canResendOtp.value = true;
+    if (otpResendTimeout) clearTimeout(otpResendTimeout);
+  } catch (error: any) {
+    console.error("Registration failed:", error);
+    alert(error?.message || 'Registration failed');
   }
+}
+
+// OTP modal state and logic
+const showOtpModal = ref(false);
+const otpValue = ref("");
+const otpError = ref("");
+const otpLoading = ref(false);
+const otpEmail = ref("");
+let otpResendTimeout: ReturnType<typeof setTimeout> | null = null;
+const canResendOtp = ref(true);
+
+async function verifyOtp() {
+  otpLoading.value = true;
+  otpError.value = "";
+  try {
+    if (!auth.verifyEmailOTP(otpValue.value, "register")) {
+      throw new Error("Invalid OTP");
+    }
+
+    showOtpModal.value = false;
+    // Clear OTP/MFA state
+    mfaId.value = "";
+    otpId.value = "";
+    otpValue.value = "";
+    otpError.value = "";
+    alert("Login successful! You are now logged in.");
+    router.push('/dashboard');
+  } catch (err: any) {
+    otpError.value = err?.message || "Invalid OTP. Please try again.";
+  } finally {
+    otpLoading.value = false;
+  }
+}
+
+async function resendOtp() {
+  canResendOtp.value = false;
+  otpError.value = "";
+  try {
+    //TODO: Implement OTP resend logic and rate limiting soon :)
+    await pb.collection('users').requestVerification(otpEmail.value);
+  } catch (err: any) {
+    otpError.value = err?.message || "Failed to resend OTP.";
+  }
+  // Allow resend after 30 seconds
+  otpResendTimeout = setTimeout(() => {
+    canResendOtp.value = true;
+  }, 30000);
 }
 
 onMounted(() => {
   isLoading.value = false;
   savedTheme.value = localStorage.getItem("theme") || "light";
-  console.log(savedTheme.value);
 });
 </script>
 
 <template>
   <div v-cloak :class="{ dark: savedTheme === 'dark' }">
+    <!-- OTP Verification Modal -->
+    <div v-if="showOtpModal" class="otp-modal-overlay">
+      <div class="otp-modal">
+        <h3>Verify your email</h3>
+        <p>We sent a one-time password (OTP) to <b>{{ otpEmail }}</b>. Please enter it below.</p>
+        <input v-model="otpValue" maxlength="6" placeholder="Enter OTP" class="otp-input" :disabled="otpLoading" />
+        <button @click="verifyOtp" :disabled="otpLoading || otpValue.length !== 6" class="btn btn-primary">Verify</button>
+        <div v-if="otpError" class="otp-error">{{ otpError }}</div>
+        <button @click="resendOtp" :disabled="!canResendOtp || otpLoading" class="btn btn-secondary resend-btn">
+          Resend OTP
+        </button>
+        <div v-if="!canResendOtp" class="otp-info">You can resend OTP in a few seconds...</div>
+      </div>
+    </div>
     <div v-if="isLoading" class="loading-overlay">
       <div class="loader"></div>
     </div>
@@ -494,6 +473,55 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.otp-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+.otp-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+  min-width: 320px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.otp-modal h3 {
+  margin-bottom: 0.5rem;
+}
+.otp-modal p {
+  margin-bottom: 1.5rem;
+}
+.otp-input {
+  font-size: 1.5rem;
+  letter-spacing: 0.4rem;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 1rem;
+  width: 180px;
+  text-align: center;
+}
+.otp-error {
+  color: #d32f2f;
+  margin-bottom: 1rem;
+}
+.otp-info {
+  color: #888;
+  margin-top: 0.5rem;
+  font-size: 0.95em;
+}
+.resend-btn {
+  margin-top: 0.5rem;
+}
+
 .auth-page {
   background-color: var(--bg-white);
   background-image: url("data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><g fill='none' stroke='%23e5e7eb' stroke-width='1'><path d='M0 0 L100 0 L100 100 L0 100 Z'/><path d='M0 0 L100 100'/><path d='M100 0 L0 100'/></g></svg>");
