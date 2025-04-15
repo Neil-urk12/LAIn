@@ -1,66 +1,32 @@
 import { defineStore } from "pinia";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  token: string;
-}
-
-interface LoginForm {
-  email: string;
-  password: string;
-}
-
-interface RegisterForm {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
+import type { User } from "../models/interfaces";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     user: null as User | null,
     token: null as string | null,
-    loginForm: {
-      email: "",
-      password: "",
-    } as LoginForm,
-    registerForm: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    } as RegisterForm,
+    isAuthenticated: false,
   }),
   actions: {
-    login(user: User, token: string) {
+    setUser(user: User, token: string) {
       this.user = user;
       this.token = token;
+      this.isAuthenticated = true;
     },
     logout() {
       this.user = null;
       this.token = null;
-    },
-    handleLogin() {
-      console.log("Login submitted:", this.loginForm);
-      // Here you can add actual login API call logic
-    },
-    handleRegister() {
-      if (this.registerForm.password !== this.registerForm.confirmPassword) {
-        alert("Passwords do not match!");
-        return;
-      }
-      console.log("Register submitted:", this.registerForm);
-      // Here you can add actual registration API call logic
+      this.isAuthenticated = false;
     },
     socialLogin(provider: string) {
       console.log(`Social login with ${provider}`);
       // Here you can add actual social login logic
     },
+    setAuth(isAuthenticated: boolean) {
+      this.isAuthenticated = isAuthenticated;
+    },
   },
   getters: {
-    isAuthenticated: (state) => !!state.user && !!state.token,
+    isAuthenticated: (state) => state.isAuthenticated,
   },
 });
