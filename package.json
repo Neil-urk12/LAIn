@@ -13,10 +13,8 @@
     "lint": "eslint . --fix"
   },
   "dependencies": {
-    "@convex-vue/core": "^0.0.4",
     "@types/bun": "^1.2.9",
     "@vueuse/core": "^13.1.0",
-    "convex": "^1.23.0",
     "lucide-vue-next": "^0.487.0",
     "pinia": "^3.0.1",
     "pocketbase": "^0.25.2",
