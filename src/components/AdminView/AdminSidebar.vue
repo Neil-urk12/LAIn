@@ -5,8 +5,12 @@
     </div>
     <nav class="sidebar-nav">
       <ul>
-        <li v-for="item in navigation" :key="item.name" :class="{ 'active': item.active }">
-          <a href="#">
+        <li
+          v-for="item in navigation"
+          :key="item.name"
+          :class="{ 'active': item.active }"
+        >
+          <a href="#" @click.prevent="handleNavClick(item.view)">
             <component :is="item.icon" class="nav-icon" />
             <span>{{ item.name }}</span>
           </a>
@@ -26,13 +30,20 @@
 <script setup lang="ts">
 import type { Component } from 'vue';
 
+const emit = defineEmits(['nav-click']);
+
 defineProps<{
   navigation: Array<{
     name: string;
     icon: Component;
     active: boolean;
+    view: string;
   }>;
 }>();
+
+const handleNavClick = (view: string) => {
+  emit('nav-click', view);
+};
 </script>
 
 <style scoped>
