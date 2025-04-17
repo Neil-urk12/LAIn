@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, defineAsyncComponent } from 'vue';
+import { useSettingsStore } from '@/stores/settings';
+
+const settingsStore = useSettingsStore();
 
 const SettingsHeader = defineAsyncComponent(() => import('@/components/SettingsView/SettingsHeader.vue'));
 const SettingsNav = defineAsyncComponent(() => import('@/components/SettingsView/SettingsNav.vue'));
@@ -20,73 +23,27 @@ const navItems = [
   'Billing'
 ];
 
-const loading = ref(true);
 const selectedTab = ref(navItems[0]); // Default to the first item ('Profile')
 
-interface UserSettings {
-  firstName: string;
-  lastName: string;
-  email: string;
-  username: string;
-  bio: string;
-  jobTitle: string;
-  company: string;
-  website: string;
-  linkedin: string;
-}
-
-const initialData = ref<UserSettings | null>(null);
-const formData = reactive<UserSettings>({
-  firstName: 'John',
-  lastName: 'Doe',
-  email: 'john.doe@example.com',
-  username: 'johndoe',
-  bio: 'AI enthusiast and lifelong learner. Currently exploring deep learning and natural language processing.',
-  jobTitle: 'Software Engineer',
-  company: 'Tech Solutions Inc.',
-  website: '',
-  linkedin: '',
-});
-
 onMounted(() => {
-  // Simulate loading delay
-  setTimeout(() => {
-    loading.value = false;
-  }, 1500);
-
-  // Store initial data
-  initialData.value = JSON.parse(JSON.stringify(formData));
+  settingsStore.initSettings();
 });
-
-const saveChanges = () => {
-  console.log('Saving changes:', formData);
-  if (initialData.value) {
-    initialData.value = JSON.parse(JSON.stringify(formData));
-  }
-  alert('Changes saved!');
-};
-
-const handleLogout = () => {
-  console.log('Logging out...');
-  alert('Logged out!');
-};
 </script>
 
 <template>
   <div class="settings-page container">
-    <SettingsSkeleton v-if="loading" />
+    <SettingsSkeleton v-if="settingsStore.loading" />
 
-    <template v-else-if="!loading">
-      <div v-show="!loading">
+    <template v-else-if="!settingsStore.loading">
+      <div v-show="!settingsStore.loading">
         <SettingsHeader />
         <SettingsNav :items="navItems" @update:active-tab="selectedTab = $event" />
 
         <!-- Show/hide sections based on selectedTab -->
         <ProfileSettingsGroup
           v-show="selectedTab === 'Profile'"
-          :initial-data="formData"
-          @save="saveChanges"
-          @logout="handleLogout"
+          @save="settingsStore.saveSettings"
+          @logout="settingsStore.logout"
         />
         <AccountSettingsSection v-show="selectedTab === 'Account'" />
         <AppearanceSection v-show="selectedTab === 'Appearance'" />

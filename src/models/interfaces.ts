@@ -5,10 +5,31 @@ export interface User {
   username: string;
   password?: string;
   role: string;
+  emailVisibility: boolean;
+  linkedIn?: string;
+  website?: string;
+  company?: string
+  position?: string;
+  bio?: string;
+  profilePicture?: string;
+  verified: boolean;
   createdAt: string;
   updatedAt: string;
   token?: string;
 }
+
+export interface UserSettings {
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string;
+  bio: string;
+  jobTitle: string;
+  company: string;
+  website: string;
+  linkedin: string;
+}
+
 
 export interface TempUser {
   id: string;

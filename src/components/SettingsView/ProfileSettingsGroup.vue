@@ -1,38 +1,12 @@
 <script setup lang="ts">
-import { reactive, defineProps, defineEmits } from 'vue';
+// No props needed; using settingsStore directly
+defineProps<{}>();
+import { defineOptions } from 'vue';
+import { useSettingsStore } from '@/stores/settings';
 
-// Combined Interface from Profile and Professional
-interface ProfileSettingsData {
-  // Profile
-  firstName: string;
-  lastName: string;
-  email: string;
-  username: string;
-  bio: string;
-  // Professional
-  jobTitle: string;
-  company: string;
-  website: string;
-  linkedin: string;
-}
-
-// Props expecting the combined data structure
-const props = defineProps<{
-  initialData: ProfileSettingsData
-}>();
-
-// Emits from SettingsActions
-const emit = defineEmits<{
-  (e: 'save'): void
-  (e: 'logout'): void
-}>();
-
-// Reactive form data using the combined structure from props
-const formData = reactive<ProfileSettingsData>({ ...props.initialData });
-
-// Methods from SettingsActions
-const onSave = () => emit('save');
-const onLogout = () => emit('logout');
+const settingsStore = useSettingsStore();
+const onSave = settingsStore.saveSettings;
+const onLogout = settingsStore.logout;
 
 defineOptions({ name: 'ProfileSettingsGroup' });
 
@@ -59,24 +33,24 @@ defineOptions({ name: 'ProfileSettingsGroup' });
           <div class="form-row">
             <div class="form-field">
               <label for="firstName">First name</label>
-              <input id="firstName" type="text" v-model="formData.firstName" class="input-field" />
+              <input id="firstName" type="text" v-model="settingsStore.formData.firstName" class="input-field" />
             </div>
             <div class="form-field">
               <label for="lastName">Last name</label>
-              <input id="lastName" type="text" v-model="formData.lastName" class="input-field" />
+              <input id="lastName" type="text" v-model="settingsStore.formData.lastName" class="input-field" />
             </div>
           </div>
           <div class="form-field">
             <label for="email">Email address</label>
-            <input id="email" type="email" v-model="formData.email" class="input-field" />
+            <input id="email" type="email" v-model="settingsStore.formData.email" class="input-field" />
           </div>
           <div class="form-field">
             <label for="username">Username</label>
-            <input id="username" type="text" v-model="formData.username" class="input-field" />
+            <input id="username" type="text" v-model="settingsStore.formData.username" class="input-field" />
           </div>
           <div class="form-field">
             <label for="bio">Bio</label>
-            <textarea id="bio" rows="3" v-model="formData.bio" class="input-field"></textarea>
+            <textarea id="bio" rows="3" v-model="settingsStore.formData.bio" class="input-field"></textarea>
           </div>
         </div>
       </section>
@@ -91,20 +65,20 @@ defineOptions({ name: 'ProfileSettingsGroup' });
           <div class="form-row">
             <div class="form-field">
               <label for="jobTitle">Job title</label>
-              <input id="jobTitle" type="text" v-model="formData.jobTitle" class="input-field" />
+              <input id="jobTitle" type="text" v-model="settingsStore.formData.jobTitle" class="input-field" />
             </div>
             <div class="form-field">
               <label for="company">Company/Organization</label>
-              <input id="company" type="text" v-model="formData.company" class="input-field" />
+              <input id="company" type="text" v-model="settingsStore.formData.company" class="input-field" />
             </div>
           </div>
           <div class="form-field">
             <label for="website">Website</label>
-            <input id="website" type="url" v-model="formData.website" placeholder="https://example.com" class="input-field" />
+            <input id="website" type="url" v-model="settingsStore.formData.website" placeholder="https://example.com" class="input-field" />
           </div>
           <div class="form-field">
             <label for="linkedin">LinkedIn</label>
-            <input id="linkedin" type="url" v-model="formData.linkedin" placeholder="https://linkedin.com/in/username" class="input-field" />
+            <input id="linkedin" type="url" v-model="settingsStore.formData.linkedin" placeholder="https://linkedin.com/in/username" class="input-field" />
           </div>
 
           <div class="form-actions professional-actions">
@@ -127,8 +101,6 @@ defineOptions({ name: 'ProfileSettingsGroup' });
 
   </div>
 </template>
-
-
 
 <style scoped>
 /* Wrapper for the entire group */
