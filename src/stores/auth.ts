@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import type { User } from "../models/interfaces";
+import type { User, TempUser } from "../models/interfaces";
 import { pb } from "../pocketbase/pocketbase";
 import type { OTPResponse } from "pocketbase";
 
@@ -51,55 +51,31 @@ export const useAuthStore = defineStore("auth", {
       return true
     },
     async verifyEmailOTP(otp: string, type: string) {
-      if (type === "register") {
-        if (!this.result || !this.result.otpId) {
-          throw new Error("OTP ID is missing. Please request an OTP first.");
-        }
-        const authData = await pb.collection('users').authWithOTP(this.result.otpId, otp);
+      if (type !== "login") return false
 
-        // Update verified status
-        await pb.collection('users').update(authData.record.id, {
-          verified: true
-        });
-
-        const user: User = {
-          id: authData.record.id,
-          email: authData.record.email,
-          name: authData.record.name,
-          username: authData.record.username,
-          role: authData.record.role,
-          createdAt: authData.record.created,
-          updatedAt: authData.record.updated,
-          token: authData.token,
-        }
-
-        this.setUser(user, authData.token);
-        return true
-      } else if (type === "login") {
-        if (!this.loginOtp || !this.loginOtp.otpId) {
-          throw new Error("OTP ID is missing. Please request an OTP first.");
-        }
-        const authData = await pb.collection('users').authWithOTP(this.loginOtp.otpId, otp);
-
-        // Update verified status
-        await pb.collection('users').update(authData.record.id, {
-          verified: true
-        });
-
-        const user: User = {
-          id: authData.record.id,
-          email: authData.record.email,
-          name: authData.record.name,
-          username: authData.record.username,
-          role: authData.record.role,
-          createdAt: authData.record.created,
-          updatedAt: authData.record.updated,
-          token: authData.token,
-        }
-        this.setUser(user, authData.token);
-        return true
+      if (!this.loginOtp || !this.loginOtp.otpId) {
+        throw new Error("OTP ID is missing. Please request an OTP first.");
       }
-      return false
+
+      const authData = await pb.collection('users').authWithOTP(this.loginOtp.otpId, otp);
+
+      // Update verified status
+      await pb.collection('users').update(authData.record.id, {
+        verified: true
+      });
+
+      const user: User = {
+        id: authData.record.id,
+        email: authData.record.email,
+        name: authData.record.name,
+        username: authData.record.username,
+        role: authData.record.role,
+        createdAt: authData.record.created,
+        updatedAt: authData.record.updated,
+        token: authData.token,
+      }
+      this.setUser(user, authData.token);
+      return true
     },
     setUser(user: User, token: string) {
       this.user = user;
@@ -113,16 +89,103 @@ export const useAuthStore = defineStore("auth", {
       this.authenticated = false;
     },
     socialLogin(provider: string) {
-      console.log(`Social login with ${provider}`);
+      console.log(provider);
+      // Social login functionality will be implemented later
     },
     setAuth(isAuthenticated: boolean) {
       this.authenticated = isAuthenticated;
     },
-    // Simple login with email and password (no MFA/OTP)
     async loginWithMFA(email: string, password: string) {
       try {
         pb.authStore.clear();
-        const authData = await pb.collection('users').authWithPassword(email, password);
+        // Try to authenticate with email and password
+        await pb.collection('users').authWithPassword(email.trim(), password.trim());
+
+        const record = pb.authStore.record;
+        const userData = {
+          id: record?.id || "",
+          email: record?.email || "",
+          name: record?.name || "",
+          username: record?.username || "",
+          role: record?.role || ""
+        };
+        pb.authStore.clear();
+
+        // Request OTP for the second factor
+        const result = await pb.collection('users').requestOTP(email);
+
+        // Return that MFA is required with the OTP ID
+        return {
+          mfaRequired: true,
+          otpId: result.otpId,
+          email: email,
+          mfaId: null, // No mfaId in this case since we're forcing MFA
+          // Store user info for later use after OTP verification
+          tempUser: {
+            id: userData.id,
+            email: userData.email,
+            name: userData.name,
+            username: userData.username,
+            role: userData.role,
+          }
+        };
+      } catch (error: unknown) {
+        const err = error as { response?: { mfaId?: string } };
+        const mfaId = err.response?.mfaId;
+        if (mfaId) {
+          // Request OTP for the second factor
+          const result = await pb.collection('users').requestOTP(email);
+
+          return {
+            mfaRequired: true,
+            otpId: result.otpId,
+            email: email,
+            mfaId: mfaId,
+            tempUser: {
+              id: "", // Will be filled after OTP verification
+              email: email,
+              name: "",
+              username: "",
+              role: "",
+            }
+          };
+        }
+
+        // If it's not an MFA error, rethrow
+        throw error;
+      }
+    },
+    async requestOTP(email: string) {
+      return await pb.collection('users').requestOTP(email);
+    },
+    async verifyOTP(otpId: string, code: string, _tempUser: TempUser, mfaId: string | null = null) {
+      try {
+        // Verify the OTP with or without mfaId
+        let authData;
+
+        try {
+          if (mfaId) {
+            // If we have an mfaId, use it in the auth call
+            authData = await pb.collection('users').authWithOTP(otpId, code, { mfaId });
+          } else {
+            // Otherwise just use the OTP
+            authData = await pb.collection('users').authWithOTP(otpId, code);
+          }
+        } catch (authError) {
+          // Try a direct login as a fallback
+          try {
+            // Get the email from tempUser
+            const email = _tempUser.email;
+            // Try to authenticate with the OTP as password
+            authData = await pb.collection('users').authWithPassword(email, code);
+
+          } catch (_directAuthError) {
+            console.error("Direct login failed:", _directAuthError);
+            throw authError
+          }
+        }
+
+        // Create the user object with the data from the authentication
         const user: User = {
           id: authData.record.id,
           email: authData.record.email,
@@ -133,39 +196,14 @@ export const useAuthStore = defineStore("auth", {
           updatedAt: authData.record.updated,
           token: authData.token,
         };
-        pb.authStore.save(authData.token, authData.record)
+
+        // Set the user in the store
         this.setUser(user, authData.token);
-        return { mfaRequired: false, user };
+        return user;
       } catch (error) {
-        // OTP/MFA logic commented out
-        /*
-        const mfaId = (error as ClientResponseError)?.response?.mfaId;
-        if (mfaId) {
-          // Request OTP if MFA required
-          const result = await pb.collection('users').requestOTP(email);
-          return { mfaRequired: true, mfaId, otpId: result.otpId };
-        }
-        */
+
         throw error;
       }
-    },
-    async requestOTP(email: string) {
-      return await pb.collection('users').requestOTP(email);
-    },
-    async verifyOTP(otpId: string, code: string, mfaId: string) {
-      const authData = await pb.collection('users').authWithOTP(otpId, code, { mfaId });
-      const user: User = {
-        id: authData.record.id,
-        email: authData.record.email,
-        name: authData.record.name,
-        username: authData.record.username,
-        role: authData.record.role,
-        createdAt: authData.record.created,
-        updatedAt: authData.record.updated,
-        token: authData.token,
-      };
-      this.setUser(user, authData.token);
-      return user;
     },
     getDefaultLoginErrors() {
       return { email: "", password: "" };
@@ -302,9 +340,8 @@ export const useAuthStore = defineStore("auth", {
           "role": role
         };
 
-        const record = await pb.collection('users').create(data);
+        await pb.collection('users').create(data);
 
-        console.log("record", record);
       } catch (error: unknown) {
         throw error;
       }

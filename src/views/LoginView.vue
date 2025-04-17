@@ -10,6 +10,7 @@ import { pb } from "../pocketbase/pocketbase"
 // Local imports
 import { useAuthStore } from "../stores/auth";
 import ThemeToggleButton from "@/components/Global/ThemeToggleButton.vue";
+import type { TempUser } from "@/models/interfaces";
 
 // Component state
 const showRegister = ref(false);
@@ -27,7 +28,6 @@ const registerUsername = ref("");
 
 const loginEmail = ref("");
 const loginPassword = ref("");
-
 
 // Validation error states
 const loginErrors = ref<{ email: string; password: string }>({
@@ -49,95 +49,42 @@ const registerErrors = ref<{
   repeatPassword: "",
 });
 
-// Email format validation with allowed domains
-function validateEmail(email: string): boolean {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!re.test(email)) {
-    return false;
-  }
-
-  const domain = email.split("@")[1].toLowerCase();
-
-  const disposableDomains = [
-    "mailinator.com",
-    "tempmail.com",
-    "10minutemail.com",
-    "guerrillamail.com",
-    "yopmail.com",
-  ];
-
-  if (disposableDomains.includes(domain)) {
-    return false;
-  }
-
-  const allowedDomains = [
-    "gmail.com",
-    "googlemail.com",
-    "outlook.com",
-    "hotmail.com",
-    "msn.com",
-    "yahoo.com",
-    "yahoo.co.uk",
-    "yahoo.fr",
-    "protonmail.com",
-    "icloud.com",
-    "mac.com",
-    "company.com",
-    "business.com",
-  ];
-
-  return allowedDomains.includes(domain);
-}
-
-function validateLoginForm(): boolean {
-  let valid = true;
-  loginErrors.value.email = "";
-  loginErrors.value.password = "";
-
-  if (!loginEmail.value) {
-    loginErrors.value.email = "Email is required.";
-    valid = false;
-  } else if (!validateEmail(loginEmail.value)) {
-    loginErrors.value.email =
-      "Email must be from an allowed provider (e.g., Gmail, Outlook, Yahoo, etc.).";
-    valid = false;
-  }
-
-  if (!loginPassword.value) {
-    loginErrors.value.password = "Password is required.";
-    valid = false;
-  }
-
-  return valid;
-}
-
-function validateRegisterForm(): boolean {
-  const { valid, errors } = auth.validateRegisterForm({
-    fullName: registerFullName.value,
-    username: registerUsername.value,
-    email: registerEmail.value,
-    password: registerPassword.value,
-    repeatPassword: registerRepeatPassword.value
-  });
-  registerErrors.value = errors;
-  return valid;
-}
-
 const passwordStrength = computed(() => auth.passwordStrength(registerPassword.value));
 
-// MFA/OTP state - commented out for now
-/*
-const mfaId = ref("");
+// MFA/OTP state for login
 const otpId = ref("");
-*/
+const mfaId = ref<string | null>(null);
+const tempUser = ref<TempUser | null>(null);
 
 async function handleLogin() {
-  if (validateLoginForm()) {
-    try {
-      // Just authenticate directly without OTP
-      await auth.loginWithMFA(loginEmail.value, loginPassword.value);
+  const { valid, errors } = auth.validateLoginForm({
+    email: loginEmail.value,
+    password: loginPassword.value
+  });
+  loginErrors.value = errors;
 
-      // Success, direct login
+  if (valid) {
+    try {
+      // First step of MFA: email/password authentication
+      const result = await auth.loginWithMFA(loginEmail.value, loginPassword.value);
+
+      if (result.mfaRequired) {
+        // Store data for OTP verification
+        otpId.value = result.otpId;
+        otpEmail.value = result.email;
+        mfaId.value = result.mfaId;
+        tempUser.value = result.tempUser as TempUser;
+
+        // Show OTP modal for second factor
+        otpValue.value = "";
+        otpError.value = "";
+        otpLoading.value = false;
+        showOtpModal.value = true;
+        return;
+      }
+
+      // This should not happen with our current implementation
+      // but keeping it as a fallback
       loginEmail.value = '';
       loginPassword.value = '';
       loginErrors.value = { email: '', password: '' };
@@ -159,7 +106,15 @@ async function handleLogin() {
 
 async function handleRegister() {
   try {
-    if (!validateRegisterForm()) return;
+    const { valid, errors } = auth.validateRegisterForm({
+      fullName: registerFullName.value,
+      username: registerUsername.value,
+      email: registerEmail.value,
+      password: registerPassword.value,
+      repeatPassword: registerRepeatPassword.value
+    });
+    registerErrors.value = errors;
+    if (!valid) return;
     await auth.register({
       email: registerEmail.value,
       password: registerPassword.value,
@@ -169,9 +124,8 @@ async function handleRegister() {
       role: 'student',
     });
 
-    // auth.requestEmailOTP(registerEmail.value, "register");
-    const result = await pb.collection("users").requestVerification(registerEmail.value);
-    console.log(result, "verification result");
+    // Request email verification
+    await pb.collection("users").requestVerification(registerEmail.value);
 
     // Store email for display in success message
     otpEmail.value = registerEmail.value;
@@ -188,44 +142,60 @@ async function handleRegister() {
     registerErrors.value = auth.getDefaultRegisterErrors();
 
   } catch (error: unknown) {
-    console.error("Registration failed:", error);
+
     alert(error instanceof Error ? error.message : 'Registration failed');
   }
 }
 
-// Registration success modal state
 const showSuccessModal = ref(false);
 
-// OTP modal state and logic - commented out for now
-/*
+// OTP modal state and logic for login
 const showOtpModal = ref(false);
 const otpValue = ref("");
 const otpError = ref("");
 const otpLoading = ref(false);
-*/
-const otpEmail = ref(""); // Keep this for the success modal
-/*
-let otpResendTimeout: ReturnType<typeof setTimeout> | null = null;
+const otpEmail = ref(""); // Used for both login OTP and registration success
+// For tracking OTP resend timeout
+const otpResendTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 const canResendOtp = ref(true);
 
 async function verifyOtp() {
   otpLoading.value = true;
   otpError.value = "";
   try {
-    if (!auth.verifyEmailOTP(otpValue.value, "register")) {
-      throw new Error("Invalid OTP");
+    // Verify OTP for login
+    if (!tempUser.value) {
+      throw new Error("User data is missing. Please try logging in again.");
     }
+
+    await auth.verifyOTP(otpId.value, otpValue.value, tempUser.value, mfaId.value);
 
     showOtpModal.value = false;
     // Clear OTP/MFA state
-    mfaId.value = "";
     otpId.value = "";
     otpValue.value = "";
     otpError.value = "";
-    alert("Login successful! You are now logged in.");
+    mfaId.value = null;
+    tempUser.value = null;
+
+    // Clear login form
+    loginEmail.value = '';
+    loginPassword.value = '';
+    loginErrors.value = { email: '', password: '' };
+
     router.push('/dashboard');
   } catch (err: unknown) {
-    otpError.value = err instanceof Error ? err.message : "Invalid OTP. Please try again.";
+    if (err instanceof Error) {
+      if (err.message.includes('Invalid token')) {
+        otpError.value = "Invalid OTP code. Please check and try again.";
+      } else if (err.message.includes('Missing required')) {
+        otpError.value = "Missing required information. Please try logging in again.";
+      } else {
+        otpError.value = err.message;
+      }
+    } else {
+      otpError.value = "Invalid OTP. Please try again.";
+    }
   } finally {
     otpLoading.value = false;
   }
@@ -235,17 +205,16 @@ async function resendOtp() {
   canResendOtp.value = false;
   otpError.value = "";
   try {
-    //TODO: Implement OTP resend logic and rate limiting soon :)
-    await pb.collection('users').requestVerification(otpEmail.value);
+    // Request a new OTP
+    await pb.collection('users').requestOTP(otpEmail.value);
   } catch (err: unknown) {
     otpError.value = err instanceof Error ? err.message : "Failed to resend OTP.";
   }
-  // Allow resend after 30 seconds
-  otpResendTimeout = setTimeout(() => {
+
+  otpResendTimeout.value = setTimeout(() => {
     canResendOtp.value = true;
   }, 30000);
 }
-*/
 
 onMounted(() => {
   isLoading.value = false;
@@ -255,14 +224,13 @@ onMounted(() => {
 
 <template>
   <div v-cloak :class="{ dark: savedTheme === 'dark' }">
-    <!-- OTP Verification Modal (for login only) - Commented out for now -->
-    <!--
+    <!-- OTP Verification Modal (for login only) -->
     <div v-if="showOtpModal" class="otp-modal-overlay">
       <div class="otp-modal">
-        <h3>Verify your email</h3>
-        <p>We sent a one-time password (OTP) to <b>{{ otpEmail }}</b>. Please enter it below.</p>
-        <input v-model="otpValue" maxlength="6" placeholder="Enter OTP" class="otp-input" :disabled="otpLoading" />
-        <button @click="verifyOtp" :disabled="otpLoading || otpValue.length !== 6" class="btn btn-primary">Verify</button>
+        <h3>Two-Factor Authentication</h3>
+        <p>We sent a one-time password (OTP) to <b>{{ otpEmail }}</b>. Please enter it below to complete login.</p>
+        <input v-model="otpValue" maxlength="9" placeholder="Enter OTP" class="otp-input" :disabled="otpLoading" />
+        <button @click="verifyOtp" :disabled="otpLoading || otpValue.length < 4" class="btn btn-primary">Verify</button>
         <div v-if="otpError" class="otp-error">{{ otpError }}</div>
         <button @click="resendOtp" :disabled="!canResendOtp || otpLoading" class="btn btn-secondary resend-btn">
           Resend OTP
@@ -270,7 +238,6 @@ onMounted(() => {
         <div v-if="!canResendOtp" class="otp-info">You can resend OTP in a few seconds...</div>
       </div>
     </div>
-    -->
 
     <!-- Registration Success Modal -->
     <div v-if="showSuccessModal" class="otp-modal-overlay">
@@ -512,12 +479,12 @@ onMounted(() => {
 }
 .otp-input {
   font-size: 1.5rem;
-  letter-spacing: 0.4rem;
+  letter-spacing: 0.3rem;
   padding: 0.7rem 1.2rem;
   border-radius: 8px;
   border: 1px solid #ccc;
   margin-bottom: 1rem;
-  width: 180px;
+  width: 240px;
   text-align: center;
 }
 .otp-error {

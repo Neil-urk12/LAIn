@@ -3,14 +3,21 @@ export interface User {
   email: string;
   name: string;
   username: string;
-  password?: string; // Optional for security
+  password?: string;
   role: string;
   createdAt: string;
   updatedAt: string;
-  token?: string; // Optional, as token is usually handled separately
+  token?: string;
 }
 
-// PocketBase authentication response interface
+export interface TempUser {
+  id: string;
+  email: string;
+  name: string;
+  username: string;
+  role: string;
+}
+
 export interface AuthResponse {
   token: string;
   record: User;
