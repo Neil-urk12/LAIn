@@ -9,10 +9,10 @@
           experts. Learn at your own pace and build the future.
         </p>
         <div class="hero-actions">
-          <a href="#" class="btn btn-primary icon-link">
+          <a href="#" class="btn btn-primary icon-link" @click.prevent="handleExploreCoursesClick">
             Explore Courses <ArrowRight :size="18" />
           </a>
-          <a href="#" class="btn btn-secondary">View Demo</a>
+          <a href="#" class="btn btn-secondary" @click.prevent="handleViewDemoClick">View Demo</a>
         </div>
         <div class="hero-stats">
           <span><Users :size="16" /> 2 Students</span>
@@ -29,6 +29,27 @@
 
 <script setup lang="ts">
 import { ArrowRight, Users, BookOpen, Globe } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../../stores/auth';
+
+const router = useRouter();
+const auth = useAuthStore();
+
+const handleExploreCoursesClick = () => {
+  if (auth.isAuthenticated) {
+    router.push('/dashboard');
+  } else {
+    router.push('/login');
+  }
+};
+
+const handleViewDemoClick = () => {
+  if (auth.isAuthenticated) {
+    router.push('/dashboard');
+  } else {
+    router.push('/login');
+  }
+};
 </script>
 
 <style scoped>

@@ -38,7 +38,8 @@ const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
       </nav>
       <div class="header-actions">
         <ThemeToggleButton />
-        <a href="#" class="btn btn-secondary btn-signin">Sign In</a>
+        <a v-if="!auth.isAuthenticated" href="#" class="btn btn-secondary btn-signin" @click.prevent="router.push('/login')">Sign In</a>
+        <RouterLink v-else to="/dashboard" class="btn btn-secondary btn-signin">Dashboard</RouterLink>
         <a href="#" class="btn btn-primary" @click.prevent="handleGetStarted">Get Started</a>
       </div>
       <button class="mobile-nav-toggle" @click="toggleMobileMenu" aria-label="Toggle menu">
@@ -51,8 +52,9 @@ const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
           <li><RouterLink to="/about">About</RouterLink></li>
           <li><RouterLink to="/pricing">Pricing</RouterLink></li>
           <li><RouterLink to="/blog">Blog</RouterLink></li>
-          <li><RouterLink to="/signin" class="btn btn-secondary">Sign In</RouterLink></li>
-          <li><RouterLink to="/get-started" class="btn btn-primary">Get Started</RouterLink></li>
+          <li v-if="!auth.isAuthenticated"><a href="#" @click.prevent="router.push('/login')" class="btn btn-secondary">Sign In</a></li>
+          <li v-else><RouterLink to="/dashboard" class="btn btn-secondary">Dashboard</RouterLink></li>
+          <li><a href="#" @click.prevent="handleGetStarted" class="btn btn-primary">Get Started</a></li>
         </ul>
       </nav>
   </header>

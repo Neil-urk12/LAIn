@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// No props needed; using settingsStore directly
-defineProps<{}>();
 import { defineOptions } from 'vue';
 import { useSettingsStore } from '@/stores/settings';
 

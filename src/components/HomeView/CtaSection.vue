@@ -6,13 +6,26 @@
         Join thousands of students already learning AI with LAIn. Get started
         today with a free trial.
       </p>
-      <a href="#" class="btn btn-primary btn-lg">Start Free Trial <ArrowRight :size="20" /></a>
+      <a href="#" class="btn btn-primary btn-lg" @click.prevent="handleStartFreeTrialClick">Start Free Trial <ArrowRight :size="20" /></a>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import { ArrowRight } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../../stores/auth';
+
+const router = useRouter();
+const auth = useAuthStore();
+
+const handleStartFreeTrialClick = () => {
+  if (auth.isAuthenticated) {
+    router.push('/dashboard');
+  } else {
+    router.push('/login');
+  }
+};
 </script>
 
 <style scoped>

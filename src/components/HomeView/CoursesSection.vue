@@ -26,7 +26,7 @@
             </p>
             <div class="course-footer">
               <span><BookOpen :size="16" /> 24 lessons</span>
-              <a href="#" class="icon-link">
+              <a href="#" class="icon-link" @click.prevent="handleLearnMoreClick">
                 Learn more <ArrowRight :size="16" />
               </a>
             </div>
@@ -48,7 +48,7 @@
             </p>
             <div class="course-footer">
               <span><BookOpen :size="16" /> 36 lessons</span>
-              <a href="#" class="icon-link">
+              <a href="#" class="icon-link" @click.prevent="handleLearnMoreClick">
                 Learn more <ArrowRight :size="16" />
               </a>
             </div>
@@ -70,7 +70,7 @@
             </p>
             <div class="course-footer">
               <span><BookOpen :size="16" /> 42 lessons</span>
-              <a href="#" class="icon-link">
+              <a href="#" class="icon-link" @click.prevent="handleLearnMoreClick">
                 Learn more <ArrowRight :size="16" />
               </a>
             </div>
@@ -78,7 +78,7 @@
         </div>
       </div>
       <div class="view-all-courses text-center">
-        <a href="#" class="btn btn-primary">View All Courses</a>
+        <a href="#" class="btn btn-primary" @click.prevent="handleViewAllCoursesClick">View All Courses</a>
       </div>
     </div>
   </section>
@@ -86,6 +86,27 @@
 
 <script setup lang="ts">
 import { BookOpen, ArrowRight, Image as ImageIcon } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../../stores/auth';
+
+const router = useRouter();
+const auth = useAuthStore();
+
+const handleViewAllCoursesClick = () => {
+  if (auth.isAuthenticated) {
+    router.push('/dashboard');
+  } else {
+    router.push('/login');
+  }
+};
+
+const handleLearnMoreClick = () => {
+  if (auth.isAuthenticated) {
+    router.push('/dashboard');
+  } else {
+    router.push('/login');
+  }
+};
 </script>
 
 <style scoped>

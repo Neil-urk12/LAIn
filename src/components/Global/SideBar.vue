@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineEmits, defineAsyncComponent } from 'vue'
+import { ref, defineEmits, defineAsyncComponent, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { BookOpen, LayoutGrid, Calendar, MessageSquare, FileText, CreditCard, Settings } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
@@ -16,6 +16,9 @@ const mobileOpen = ref(false)
 
 const authStore = useAuthStore()
 const route = useRoute()
+
+const name = computed(() => authStore.getName)
+const email = computed(() => authStore.getEmail)
 
 function toggleSidebar() {
   isCollapsed.value = !isCollapsed.value
@@ -96,12 +99,12 @@ function toggleMobileSidebar() {
         <ThemeToggleButton />
       </div>
       <div class="user-card">
-        <div class="avatar"></div>
-        <div class="user-info" v-show="!isCollapsed">
-          <div class="name"> {{ authStore.getName }} </div>
-          <div class="email"> {{ authStore.getEmail }} </div>
-        </div>
-      </div>
+  <div class="avatar"></div>
+  <div class="user-info" v-show="!isCollapsed">
+          <div class="name"> {{ name }} </div>
+          <div class="email"> {{ email }} </div>
+  </div>
+</div>
     </div>
   </aside>
 </template>

@@ -2,7 +2,7 @@
   <footer class="app-footer">
     <div class="container footer-container">
       <div class="footer-about">
-        <a href="#" class="footer-logo">LAIn</a>
+        <a href="#" @click.prevent="handleLinkClick('/')" class="footer-logo">LAIn</a>
         <p>
           The leading platform for AI education and skill development.
         </p>
@@ -10,28 +10,28 @@
       <div class="footer-links">
         <h4>Platform</h4>
         <ul>
-          <li><a href="#">Courses</a></li>
-          <li><a href="#">Pricing</a></li>
-          <li><a href="#">For Teams</a></li>
-          <li><a href="#">Enterprise</a></li>
+          <li><a href="#" @click.prevent="handleLinkClick('/courses')">Courses</a></li>
+          <li><a href="#" @click.prevent="handleLinkClick('/pricing')">Pricing</a></li>
+          <li><a href="#" @click.prevent="handleLinkClick('/teams')">For Teams</a></li>
+          <li><a href="#" @click.prevent="handleLinkClick('/enterprise')">Enterprise</a></li>
         </ul>
       </div>
       <div class="footer-links">
         <h4>Resources</h4>
         <ul>
-          <li><a href="#">Blog</a></li>
-          <li><a href="#">Documentation</a></li>
-          <li><a href="#">Community</a></li>
-          <li><a href="#">Events</a></li>
+          <li><a href="#" @click.prevent="handleLinkClick('/blog')">Blog</a></li>
+          <li><a href="#" @click.prevent="handleLinkClick('/documentation')">Documentation</a></li>
+          <li><a href="#" @click.prevent="handleLinkClick('/community')">Community</a></li>
+          <li><a href="#" @click.prevent="handleLinkClick('/events')">Events</a></li>
         </ul>
       </div>
       <div class="footer-links">
         <h4>Company</h4>
         <ul>
-          <li><a href="#">About Us</a></li>
-          <li><a href="#">Careers</a></li>
-          <li><a href="#">Contact</a></li>
-          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#" @click.prevent="handleLinkClick('/about')">About Us</a></li>
+          <li><a href="#" @click.prevent="handleLinkClick('/careers')">Careers</a></li>
+          <li><a href="#" @click.prevent="handleLinkClick('/contact')">Contact</a></li>
+          <li><a href="#" @click.prevent="handleLinkClick('/privacy')">Privacy Policy</a></li>
         </ul>
       </div>
     </div>
@@ -51,6 +51,19 @@
 
 <script setup lang="ts">
 import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../../stores/auth';
+
+const router = useRouter();
+const auth = useAuthStore();
+
+const handleLinkClick = (route: string) => {
+  if (auth.isAuthenticated) {
+    router.push('/dashboard');
+  } else {
+    router.push('/login');
+  }
+};
 </script>
 
 <style scoped>
