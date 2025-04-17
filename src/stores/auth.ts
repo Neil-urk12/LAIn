@@ -12,7 +12,38 @@ export const useAuthStore = defineStore("auth", {
     loginOtp: null as OTPResponse | null,
   }),
   actions: {
-    async requestEmailOTP(email : string, type: string) {
+    async initAuth() {
+      // Check if PocketBase has an active session
+      if (pb.authStore.isValid) {
+        try {
+          const token = pb.authStore.token;
+
+          // Get the current user data by refreshing the auth
+          const authData = await pb.collection('users').authRefresh();
+
+          if (authData && authData.record) {
+            const user: User = {
+              id: authData.record.id,
+              email: authData.record.email,
+              name: authData.record.name,
+              username: authData.record.username,
+              role: authData.record.role,
+              createdAt: authData.record.created,
+              updatedAt: authData.record.updated,
+              token: token,
+            };
+            this.setUser(user, token);
+            return true;
+          }
+        } catch (error) {
+          console.error('Error initializing auth state:', error);
+          // Clear invalid auth state
+          pb.authStore.clear();
+        }
+      }
+      return false;
+    },
+    async requestEmailOTP(email: string, type: string) {
       if (type === "register")
         this.result = await pb.collection('users').requestOTP(email);
       else if (type === "login")
@@ -26,6 +57,11 @@ export const useAuthStore = defineStore("auth", {
         }
         const authData = await pb.collection('users').authWithOTP(this.result.otpId, otp);
 
+        // Update verified status
+        await pb.collection('users').update(authData.record.id, {
+          verified: true
+        });
+
         const user: User = {
           id: authData.record.id,
           email: authData.record.email,
@@ -36,6 +72,7 @@ export const useAuthStore = defineStore("auth", {
           updatedAt: authData.record.updated,
           token: authData.token,
         }
+
         this.setUser(user, authData.token);
         return true
       } else if (type === "login") {
@@ -43,6 +80,11 @@ export const useAuthStore = defineStore("auth", {
           throw new Error("OTP ID is missing. Please request an OTP first.");
         }
         const authData = await pb.collection('users').authWithOTP(this.loginOtp.otpId, otp);
+
+        // Update verified status
+        await pb.collection('users').update(authData.record.id, {
+          verified: true
+        });
 
         const user: User = {
           id: authData.record.id,
@@ -65,6 +107,7 @@ export const useAuthStore = defineStore("auth", {
       this.authenticated = true;
     },
     logout() {
+      pb.authStore.clear();
       this.user = null;
       this.token = null;
       this.authenticated = false;
@@ -75,9 +118,10 @@ export const useAuthStore = defineStore("auth", {
     setAuth(isAuthenticated: boolean) {
       this.authenticated = isAuthenticated;
     },
-    // MFA/OTP login flow
+    // Simple login with email and password (no MFA/OTP)
     async loginWithMFA(email: string, password: string) {
       try {
+        pb.authStore.clear();
         const authData = await pb.collection('users').authWithPassword(email, password);
         const user: User = {
           id: authData.record.id,
@@ -89,25 +133,25 @@ export const useAuthStore = defineStore("auth", {
           updatedAt: authData.record.updated,
           token: authData.token,
         };
-
-
-        // this.setUser(user, authData.token);
+        pb.authStore.save(authData.token, authData.record)
+        this.setUser(user, authData.token);
         return { mfaRequired: false, user };
-      } catch (error: any) {
-        const mfaId = error?.response?.mfaId;
+      } catch (error) {
+        // OTP/MFA logic commented out
+        /*
+        const mfaId = (error as ClientResponseError)?.response?.mfaId;
         if (mfaId) {
           // Request OTP if MFA required
           const result = await pb.collection('users').requestOTP(email);
           return { mfaRequired: true, mfaId, otpId: result.otpId };
         }
+        */
         throw error;
       }
     },
-
     async requestOTP(email: string) {
       return await pb.collection('users').requestOTP(email);
     },
-
     async verifyOTP(otpId: string, code: string, mfaId: string) {
       const authData = await pb.collection('users').authWithOTP(otpId, code, { mfaId });
       const user: User = {
@@ -123,7 +167,6 @@ export const useAuthStore = defineStore("auth", {
       this.setUser(user, authData.token);
       return user;
     },
-
     getDefaultLoginErrors() {
       return { email: "", password: "" };
     },
@@ -136,7 +179,6 @@ export const useAuthStore = defineStore("auth", {
         repeatPassword: ""
       };
     },
-
     validateRegisterForm({ fullName, username, email, password, repeatPassword }: { fullName: string; username: string; email: string; password: string; repeatPassword: string }) {
       let valid = true;
       const errors = {
@@ -178,7 +220,6 @@ export const useAuthStore = defineStore("auth", {
       }
       return { valid, errors };
     },
-
     validateEmail(email: string): boolean {
       const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!re.test(email)) {
@@ -212,7 +253,6 @@ export const useAuthStore = defineStore("auth", {
       ];
       return allowedDomains.includes(domain);
     },
-
     validatePasswordComplexity(password: string): boolean {
       return (
         password.length >= 8 &&
@@ -221,7 +261,6 @@ export const useAuthStore = defineStore("auth", {
         /[^A-Za-z0-9]/.test(password)
       );
     },
-
     passwordStrength(password: string): string {
       let score = 0;
       if (password.length >= 8) score++;
@@ -233,7 +272,6 @@ export const useAuthStore = defineStore("auth", {
       if (score >= 3) return "Strong";
       return "";
     },
-
     validateLoginForm({ email, password }: { email: string; password: string }) {
       let valid = true;
       const errors = this.getDefaultLoginErrors();
@@ -250,19 +288,24 @@ export const useAuthStore = defineStore("auth", {
       }
       return { valid, errors };
     },
-
-    async register({ email, password, name, username, role = 'student' }: { email: string; password: string; name: string; username: string; role?: string }) {
+    async register({ email, password, passwordConfirm, name, username, role = 'student' }: { email: string; password: string; passwordConfirm: string; name: string; username: string; role?: string }) {
       try {
-        await pb.collection('users').create({
-          email,
-          password,
-          passwordConfirm: password,
-          name,
-          username,
-          role,
-        });
-        // return data;
-      } catch (error: any) {
+        pb.authStore.clear();
+        const data = {
+          "password": password,
+          "passwordConfirm": passwordConfirm,
+          "name": name,
+          "username": username,
+          "email": email,
+          "emailVisibility": true,
+          "verified": false,
+          "role": role
+        };
+
+        const record = await pb.collection('users').create(data);
+
+        console.log("record", record);
+      } catch (error: unknown) {
         throw error;
       }
     },
