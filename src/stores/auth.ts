@@ -61,14 +61,16 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-    async initAuth() {
+    async initAuth(retries = 3, delay = 1000) {
       // Check if PocketBase has an active session
       if (pb.authStore.isValid) {
         try {
           const token = pb.authStore.token;
 
-          // Get the current user data by refreshing the auth
-          const authData = await pb.collection('users').authRefresh();
+          const authData = await pb.collection('users').authRefresh({
+            requestKey: null,
+            timeout: 10000
+          });
 
           if (authData && authData.record) {
             const user: User = {
@@ -94,8 +96,11 @@ export const useAuthStore = defineStore("auth", {
           }
         } catch (error) {
           console.error('Error initializing auth state:', error);
-          // Clear invalid auth state
-          pb.authStore.clear();
+          if (retries > 0) {
+            setTimeout(() => this.initAuth(retries - 1, delay * 2), delay);
+          } else {
+            this.logout();
+          }
         }
       }
       return false;
