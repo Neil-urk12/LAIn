@@ -193,8 +193,6 @@ export const useAuthStore = defineStore("auth", {
     async createSessionRecord() {
       if (!this.user || !this.user.id || !this.token) return;
 
-
-
       try {
         const deviceInfo = this.getDeviceInfo()
         const encryptedIp = await this.getIpAddress()

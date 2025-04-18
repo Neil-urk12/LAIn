@@ -5,7 +5,7 @@ import { BookOpen, LayoutGrid, Calendar, MessageSquare, FileText, CreditCard, Se
 import { useAuthStore } from '@/stores/auth'
 const ThemeToggleButton = defineAsyncComponent(() => import('./ThemeToggleButton.vue'))
 
-defineOptions({ name: 'SideBar' })
+defineOptions({ name: 'SideBar', inheritAttrs: false })
 
 const emit = defineEmits<{
   (e: 'toggle-collapse', value: boolean): void
