@@ -193,33 +193,38 @@ export const useAuthStore = defineStore("auth", {
     async createSessionRecord() {
       if (!this.user || !this.user.id || !this.token) return;
 
-      try {
-        const existingSession = await pb.collection('sessions').getList(1, 1, {
-          filter: `userId = "${this.user.id}" && token = "${this.token}"`
-        });
-        if (existingSession.items.length === 0) {
-          const ipAddress = await this.getIpAddress();
 
-          const data = {
+
+      try {
+        const deviceInfo = this.getDeviceInfo()
+        const encryptedIp = await this.getIpAddress()
+
+        const existingSessions = await pb.collection('sessions').getList(1, 1, {
+          filter: `userId = "${this.user.id}" && deviceInfo = "${deviceInfo}" && token = "${this.token}"`,
+        });
+
+        if (existingSessions.items.length > 0) {
+          await pb.collection('sessions').update(existingSessions.items[0].id, {
+            lastActive: new Date().toISOString()
+          });
+          return
+        }
+
+        await pb.collection('sessions').create(
+          {
             "userId": this.user.id,
             "deviceInfo": this.getDeviceInfo(),
-            "ipAddress": ipAddress,
+            "ipAddress": encryptedIp,
             "lastActive": new Date().toISOString(),
             "token": this.token,
             "isActive": true
           }
-          await pb.collection('sessions').create(data);
-        } else {
-          await pb.collection('sessions').update(existingSession.items[0].id, {
-            lastActive: new Date().toISOString()
-          });
-        }
+        );
       } catch (error) {
         console.error('Failed to create/update session record:', error);
         // Log more detailed error information
-        if (error instanceof Error) {
+        if (error instanceof Error)
           console.error('Error details:', error.message);
-        }
       }
     },
 
