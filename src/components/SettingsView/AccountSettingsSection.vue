@@ -1,27 +1,82 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import { pb } from '@/pocketbase/pocketbase';
+
+const auth = useAuthStore();
 
 // Change Password fields
 const currentPassword = ref('');
 const newPassword = ref('');
 const confirmPassword = ref('');
+const passwordError = ref('');
+const isUpdatingPassword = ref(false);
 
-function updatePassword() {
+async function updatePassword() {
+  // Reset error message
+  passwordError.value = '';
+
+  // Validate all fields are filled
   if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
-    alert('Please fill in all password fields.');
+    passwordError.value = 'Please fill in all password fields.';
     return;
   }
+
+  // Validate new passwords match
   if (newPassword.value !== confirmPassword.value) {
-    alert('New passwords do not match.');
+    passwordError.value = 'New passwords do not match.';
     return;
   }
-  alert('Password updated successfully (dummy).');
-  currentPassword.value = '';
-  newPassword.value = '';
-  confirmPassword.value = '';
+
+  // Validate password complexity
+  if (!auth.validatePasswordComplexity(newPassword.value)) {
+    passwordError.value = 'Password must be at least 8 characters, include uppercase, number, and special character.';
+    return;
+  }
+
+  // Get current user
+  const user = auth.getUser;
+  if (!user || !user.id) {
+    passwordError.value = 'You must be logged in to change your password.';
+    return;
+  }
+
+  try {
+    isUpdatingPassword.value = true;
+
+    // Update password using PocketBase API
+    await pb.collection('users').update(user.id, {
+      oldPassword: currentPassword.value,
+      password: newPassword.value,
+      passwordConfirm: confirmPassword.value
+    });
+
+    // Clear form fields on success
+    currentPassword.value = '';
+    newPassword.value = '';
+    confirmPassword.value = '';
+
+    // Show success message
+    alert('Password updated successfully!');
+  } catch (error) {
+    console.error('Password update error:', error);
+    if (error instanceof Error) {
+      // Check if it's an incorrect password error
+      if (error.message.includes('Wrong password')) {
+        passwordError.value = 'Current password is incorrect.';
+      } else {
+        passwordError.value = error.message || 'Failed to update password. Please try again.';
+      }
+    } else {
+      passwordError.value = 'Failed to update password. Please try again.';
+    }
+  } finally {
+    isUpdatingPassword.value = false;
+  }
 }
 
-// Two-Factor Authentication toggle
+// Two-Factor Authentication toggle - commented out for now
+/*
 const twoFactorEnabled = ref(false);
 
 function toggleTwoFactor() {
@@ -32,6 +87,7 @@ function toggleTwoFactor() {
 function setup2FA() {
   alert('Set up 2FA flow started (dummy).');
 }
+*/
 
 // Dummy active sessions
 const sessions = ref([
@@ -85,15 +141,24 @@ function deleteAccount() {
       <div class="form-field">
         <label for="newPassword">New password</label>
         <input id="newPassword" type="password" class="input-field" v-model="newPassword" />
+        <div v-if="newPassword" class="password-strength">
+          <span>Strength: </span>
+          <span :class="auth.passwordStrength(newPassword).toLowerCase()">{{ auth.passwordStrength(newPassword) }}</span>
+        </div>
       </div>
       <div class="form-field">
         <label for="confirmPassword">Confirm new password</label>
         <input id="confirmPassword" type="password" class="input-field" v-model="confirmPassword" />
       </div>
-      <button class="btn btn-secondary update-password-btn" @click="updatePassword">Update Password</button>
+      <div v-if="passwordError" class="error-message">{{ passwordError }}</div>
+      <button class="btn btn-secondary update-password-btn" @click="updatePassword" :disabled="isUpdatingPassword">
+        <span v-if="isUpdatingPassword">Updating...</span>
+        <span v-else>Update Password</span>
+      </button>
     </section>
 
-    <!-- Two-Factor Authentication Section -->
+    <!-- Two-Factor Authentication Section - Hidden for now -->
+    <!--
     <section class="settings-section">
       <div class="section-header">
         <h2>Two-Factor Authentication</h2>
@@ -108,6 +173,7 @@ function deleteAccount() {
       </div>
       <button class="btn btn-secondary" @click="setup2FA">Set Up 2FA</button>
     </section>
+    -->
 
     <!-- Active Sessions Section -->
     <section class="settings-section">
@@ -189,6 +255,32 @@ function deleteAccount() {
   border-radius: 1rem;
   padding: 2rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: rgba(220, 53, 69, 0.1);
+  border-radius: 0.25rem;
+}
+
+.password-strength {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.password-strength .weak {
+  color: #dc3545;
+}
+
+.password-strength .moderate {
+  color: #ffc107;
+}
+
+.password-strength .strong {
+  color: #28a745;
 }
 
 .section-header {
