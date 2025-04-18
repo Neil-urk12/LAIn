@@ -203,7 +203,7 @@ export const useAuthStore = defineStore("auth", {
         const encryptedIp = await this.getIpAddress()
 
         const existingSessions = await pb.collection('sessions').getList(1, 1, {
-          filter: `userId = "${this.user.id}" && deviceInfo = "${deviceInfo}" && token = "${this.token}"`,
+          filter: `userId = "${this.user.id}" && deviceInfo = "${deviceInfo}"`,
         });
 
         if (existingSessions.items.length > 0) {
@@ -229,8 +229,8 @@ export const useAuthStore = defineStore("auth", {
         if (error instanceof Error)
           console.error('Error details:', error.message);
       }
-    },
 
+    },
     async setUser(user: User, token: string) {
       this.user = user;
       this.token = token;
