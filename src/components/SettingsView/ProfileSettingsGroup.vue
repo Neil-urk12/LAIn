@@ -1,10 +1,20 @@
 <script setup lang="ts">
 import { defineOptions } from 'vue';
 import { useSettingsStore } from '@/stores/settings';
+import router from '@/router';
+import { useAuthStore } from '@/stores/auth';
 
 const settingsStore = useSettingsStore();
 const onSave = settingsStore.saveSettings;
-const onLogout = settingsStore.logout;
+const onLogout = async () => {
+  try {
+    await useAuthStore().logout()
+    router.push('/login');
+  } catch (error) {
+    console.error('Logout failed:', error);
+    router.push('/login');
+  }
+}
 
 defineOptions({ name: 'ProfileSettingsGroup' });
 

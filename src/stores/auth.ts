@@ -1,7 +1,10 @@
 import { defineStore } from "pinia";
-import type { User, TempUser } from "../models/interfaces";
+import type { User, TempUser, Session } from "../models/interfaces";
 import { pb } from "../pocketbase/pocketbase";
 import type { OTPResponse } from "pocketbase";
+import CryptoJS from 'crypto-js';
+
+const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY;
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
@@ -12,6 +15,52 @@ export const useAuthStore = defineStore("auth", {
     loginOtp: null as OTPResponse | null,
   }),
   actions: {
+    encryptData(data: string): string {
+      if (data === 'Unknown') return data;
+
+      try {
+        const encrypted = CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString();
+        return encrypted;
+      } catch (error) {
+        console.error('Encryption failed:', error);
+        return data;
+      }
+    },
+    decryptData(encryptedData: string): string {
+      if (encryptedData === 'Unknown') return encryptedData;
+
+      try {
+        const decrypted = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY);
+        return decrypted.toString(CryptoJS.enc.Utf8);
+      } catch (error) {
+        console.error('Decryption failed:', error);
+        return encryptedData;
+      }
+    },
+    async getSessionWithDecryptedIp(sessionId: string): Promise<Session | null> {
+      try {
+        const record = await pb.collection('sessions').getOne(sessionId);
+        if (record) {
+          const session: Session = {
+            id: record.id,
+            userId: record.userId,
+            deviceInfo: record.deviceInfo,
+            ipAddress: record.ipAddress ? this.decryptData(record.ipAddress) : 'Unknown',
+            lastActive: record.lastActive,
+            token: record.token,
+            isActive: record.isActive,
+            created: record.created,
+            updated: record.updated
+          };
+          return session;
+        }
+        return null;
+      } catch (error) {
+        console.error('Failed to get session:', error);
+        return null;
+      }
+    },
+
     async initAuth() {
       // Check if PocketBase has an active session
       if (pb.authStore.isValid) {
@@ -81,12 +130,147 @@ export const useAuthStore = defineStore("auth", {
       this.setUser(user, authData.token);
       return true
     },
-    setUser(user: User, token: string) {
+    // Function to get device information for session tracking
+    getDeviceInfo() {
+      if (typeof navigator === 'undefined') return 'Unknown device';
+
+      const ua = navigator.userAgent;
+      let browserName = "Unknown";
+      let osName = "Unknown";
+
+      // Detect browser
+      if (ua.indexOf("Firefox") > -1) {
+        browserName = "Firefox";
+      } else if (ua.indexOf("Opera") > -1 || ua.indexOf("OPR") > -1) {
+        browserName = "Opera";
+      } else if (ua.indexOf("Edge") > -1 || ua.indexOf("Edg") > -1) {
+        browserName = "Edge";
+      } else if (ua.indexOf("Chrome") > -1) {
+        browserName = "Chrome";
+      } else if (ua.indexOf("Safari") > -1) {
+        browserName = "Safari";
+      }
+
+      // Detect OS
+      if (ua.indexOf("Windows") > -1) {
+        osName = "Windows";
+      } else if (ua.indexOf("Mac") > -1) {
+        osName = "MacOS";
+      } else if (ua.indexOf("Linux") > -1) {
+        osName = "Linux";
+      } else if (ua.indexOf("Android") > -1) {
+        osName = "Android";
+      } else if (ua.indexOf("iPhone") > -1 || ua.indexOf("iPad") > -1) {
+        osName = "iOS";
+      }
+
+      return `${browserName} on ${osName}`;
+    },
+
+    // Function to get the client's IP address and encrypt it
+    async getIpAddress() {
+      try {
+        // Using a public IP API service to get the client's IP address
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        const ipAddress = data.ip;
+
+        // Encrypt the IP address before returning it
+        return this.encryptData(ipAddress);
+      } catch (error) {
+        console.error('Failed to retrieve IP address:', error);
+        return 'Unknown';
+      }
+    },
+
+    // Create a session record for the current user
+    async createSessionRecord() {
+      if (!this.user || !this.user.id || !this.token) return;
+
+      try {
+        const existingSession = await pb.collection('sessions').getList(1, 1, {
+          filter: `userId = "${this.user.id}" && token = "${this.token}"`
+        });
+        if (existingSession.items.length === 0) {
+          const ipAddress = await this.getIpAddress();
+
+          const data = {
+            "userId": this.user.id,
+            "deviceInfo": this.getDeviceInfo(),
+            "ipAddress": ipAddress,
+            "lastActive": new Date().toISOString(),
+            "token": this.token,
+            "isActive": true
+          }
+          await pb.collection('sessions').create(data);
+        } else {
+          await pb.collection('sessions').update(existingSession.items[0].id, {
+            lastActive: new Date().toISOString()
+          });
+        }
+      } catch (error) {
+        console.error('Failed to create/update session record:', error);
+        // Log more detailed error information
+        if (error instanceof Error) {
+          console.error('Error details:', error.message);
+        }
+      }
+    },
+
+    async setUser(user: User, token: string) {
       this.user = user;
       this.token = token;
       this.authenticated = true;
+
+      // Create a session record after setting the user
+      await this.createSessionRecord();
     },
-    logout() {
+    // Get all sessions for the current user with decrypted IP addresses
+    async getUserSessions(): Promise<Session[]> {
+      if (!this.user || !this.user.id) return [];
+
+      try {
+        const records = await pb.collection('sessions').getList(1, 100, {
+          filter: `userId = "${this.user.id}"`
+        });
+
+        // Convert records to Session objects with decrypted IP addresses
+        return records.items.map(record => ({
+          id: record.id,
+          userId: record.userId,
+          deviceInfo: record.deviceInfo,
+          ipAddress: record.ipAddress ? this.decryptData(record.ipAddress) : 'Unknown',
+          lastActive: record.lastActive,
+          token: record.token,
+          isActive: record.isActive,
+          created: record.created,
+          updated: record.updated
+        }));
+      } catch (error) {
+        console.error('Failed to get user sessions:', error);
+        return [];
+      }
+    },
+
+    async logout() {
+      // Mark the current session as inactive before clearing auth
+      if (this.user && this.user.id && this.token) {
+        try {
+          const existingSession = await pb.collection('sessions').getList(1, 1, {
+            filter: `userId = "${this.user.id}" && token = "${this.token}"`
+          });
+
+          if (existingSession.items.length > 0) {
+            await pb.collection('sessions').update(existingSession.items[0].id, {
+              isActive: false  // Using boolean value
+            });
+          }
+        } catch (error) {
+          console.error('Failed to update session on logout:', error);
+        }
+      }
+
+      // Clear auth state
       pb.authStore.clear();
       this.user = null;
       this.token = null;
@@ -203,8 +387,8 @@ export const useAuthStore = defineStore("auth", {
           token: authData.token,
         };
 
-        // Set the user in the store
-        this.setUser(user, authData.token);
+        // Set the user in the store (this will also create a session record)
+        await this.setUser(user, authData.token);
         return user;
       } catch (error) {
 

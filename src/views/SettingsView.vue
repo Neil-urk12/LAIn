@@ -43,7 +43,6 @@ onMounted(() => {
         <ProfileSettingsGroup
           v-show="selectedTab === 'Profile'"
           @save="settingsStore.saveSettings"
-          @logout="settingsStore.logout"
         />
         <AccountSettingsSection v-show="selectedTab === 'Account'" />
         <AppearanceSection v-show="selectedTab === 'Appearance'" />

@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { useAuthStore } from '@/stores/auth';
-import router from '@/router';
 import { pb } from '@/pocketbase/pocketbase';
 import type { UserSettings } from '@/models/interfaces';
 
@@ -75,11 +74,6 @@ export const useSettingsStore = defineStore('settings', {
         console.error(e);
         alert('Failed to save changes.');
       }
-    },
-    logout() {
-      const authStore = useAuthStore();
-      authStore.logout();
-      router.push('/login');
     },
   },
 });

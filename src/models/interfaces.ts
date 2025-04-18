@@ -81,3 +81,15 @@ export interface Certificates {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface Session {
+  id: string;
+  userId: string;
+  deviceInfo: string;
+  ipAddress: string;
+  lastActive: string;
+  token: string;
+  isActive: boolean;
+  created?: string;
+  updated?: string;
+}

@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { pb } from '@/pocketbase/pocketbase';
 
 const auth = useAuthStore();
 
-// Change Password fields
 const currentPassword = ref('');
 const newPassword = ref('');
 const confirmPassword = ref('');
@@ -13,7 +12,6 @@ const passwordError = ref('');
 const isUpdatingPassword = ref(false);
 
 async function updatePassword() {
-  // Reset error message
   passwordError.value = '';
 
   // Validate all fields are filled
@@ -89,20 +87,94 @@ function setup2FA() {
 }
 */
 
-// Dummy active sessions
-const sessions = ref([
-  { id: 1, device: 'Chrome on Windows', current: true, lastActive: 'Now' },
-  { id: 2, device: 'Safari on iPhone', current: false, lastActive: '2 hours ago' },
-  { id: 3, device: 'Firefox on MacBook', current: false, lastActive: 'Yesterday' },
-]);
+// Define UI session interface (extends the model Session interface with UI-specific properties)
+interface UISession {
+  id: string;
+  device: string;
+  current: boolean;
+  lastActive: string;
+}
 
-function logoutSession(sessionId: number) {
+// Active sessions
+const sessions = ref<UISession[]>([]);
+const isLoadingSessions = ref(true);
+const sessionError = ref('');
+
+// Use the device detection from auth store
+
+// Format the last active time in a human-readable format
+function formatLastActive(timestamp: string) {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+
+  // Simple implementation
+  if (diffMs < 60000) return 'Just now';
+  if (diffMs < 3600000) return `${Math.floor(diffMs / 60000)} minutes ago`;
+  if (diffMs < 86400000) return `${Math.floor(diffMs / 3600000)} hours ago`;
+  if (diffMs < 604800000) return `${Math.floor(diffMs / 86400000)} days ago`;
+  return date.toLocaleDateString();
+}
+
+// Fetch active sessions
+async function fetchSessions() {
+  const user = auth.getUser;
+  if (!user || !user.id) return;
+
+  isLoadingSessions.value = true;
+  sessionError.value = '';
+
+  try {
+    // Get sessions from PocketBase
+    const result = await pb.collection('sessions').getList(1, 50, {
+      filter: `userId = "${user.id}" && isActive = true`,
+      sort: '-lastActive'
+    });
+
+    // Format sessions for display
+    sessions.value = result.items.map(session => ({
+      id: session.id,
+      device: session.deviceInfo || 'Unknown device',
+      current: session.token === auth.token,
+      lastActive: formatLastActive(session.lastActive)
+    }));
+  } catch (error) {
+    console.error('Failed to fetch sessions:', error);
+    sessionError.value = 'Failed to load active sessions. Please try again.';
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+    }
+  } finally {
+    isLoadingSessions.value = false;
+  }
+}
+
+// Use the session creation from auth store
+
+// Log out a specific session
+async function logoutSession(sessionId: string) {
+  // Check if it's the current session
   if (sessions.value.find(s => s.id === sessionId)?.current) {
-    alert('Cannot log out of current session.');
+    alert('Cannot log out of current session. Use the logout button instead.');
     return;
   }
-  sessions.value = sessions.value.filter(s => s.id !== sessionId);
-  alert('Logged out of session (dummy).');
+
+  try {
+    // Update the session in PocketBase to mark it as inactive
+    await pb.collection('sessions').update(sessionId, {
+      isActive: false  // Using boolean value
+    });
+
+    // Remove from local list
+    sessions.value = sessions.value.filter(s => s.id !== sessionId);
+    alert('Session logged out successfully.');
+  } catch (error) {
+    console.error('Failed to log out session:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+    }
+    alert('Failed to log out session. Please try again.');
+  }
 }
 
 // Dummy connected accounts
@@ -125,6 +197,11 @@ function deleteAccount() {
     alert('Account deleted (dummy).');
   }
 }
+
+// Load sessions when component mounts
+onMounted(() => {
+  fetchSessions();
+});
 </script>
 
 <template>
@@ -180,10 +257,26 @@ function deleteAccount() {
       <div class="section-header">
         <h2>Active Sessions</h2>
       </div>
-      <ul class="sessions-list">
+
+      <div v-if="isLoadingSessions" class="loading-sessions">
+        <div class="loading-spinner"></div>
+        <span>Loading sessions...</span>
+      </div>
+
+      <div v-else-if="sessionError" class="error-message">
+        {{ sessionError }}
+        <button class="btn btn-secondary retry-btn" @click="fetchSessions">Retry</button>
+      </div>
+
+      <div v-else-if="sessions.length === 0" class="no-sessions">
+        <p>No active sessions found.</p>
+      </div>
+
+      <ul v-else class="sessions-list">
         <li v-for="session in sessions" :key="session.id" class="session-item" :class="{ current: session.current }">
           <div class="session-icon">
-            <svg v-if="session.device.includes('iPhone')" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            <svg v-if="session.device.includes('iPhone') || session.device.includes('iOS')" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            <svg v-else-if="session.device.includes('Android')" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 16V8a7 7 0 0 1 14 0v8"></path><line x1="12" y1="20" x2="12" y2="20"></line><line x1="8" y1="16" x2="8" y2="20"></line><line x1="16" y1="16" x2="16" y2="20"></line><path d="M12 4c-1.5 0-2.5-1.5-2.5-1.5S10.5 1 12 1s2.5 1.5 2.5 1.5S13.5 4 12 4z"></path></svg>
             <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
           </div>
           <div class="session-details">
@@ -281,6 +374,42 @@ function deleteAccount() {
 
 .password-strength .strong {
   color: #28a745;
+}
+
+/* Loading spinner */
+.loading-sessions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+  color: var(--text-light);
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.no-sessions {
+  text-align: center;
+  padding: 2rem 0;
+  color: var(--text-light);
+}
+
+.retry-btn {
+  margin-left: 1rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
 }
 
 .section-header {
