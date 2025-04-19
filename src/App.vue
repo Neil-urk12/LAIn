@@ -1,14 +1,31 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from "vue-router";
-import { ref, computed } from "vue";
+import { ref, computed, onBeforeUnmount, onMounted } from "vue";
 import SideBar from "./components/Global/SideBar.vue";
+import { useAuthStore } from "./stores/auth";
+import { pb } from "./pocketbase/pocketbase";
 
 const route = useRoute();
 const isSidebarCollapsed = ref(true);
+const auth = useAuthStore();
 
 const showSidebar = computed(() => {
   const hiddenRoutes = ["home", "login", "about", "admin"];
   return !hiddenRoutes.includes(route.name as string);
+});
+
+function markSessionInactive() {
+  if (!auth.sessionId) return;
+  const url = `${pb.baseURL}/api/collections/sessions/records/${auth.sessionId}`;
+  const data = JSON.stringify({ isActive: false });
+  navigator.sendBeacon(url, data);
+}
+
+onMounted(() => {
+  window.addEventListener("beforeunload", markSessionInactive);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener("beforeunload", markSessionInactive);
 });
 </script>
 

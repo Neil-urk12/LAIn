@@ -463,10 +463,10 @@ onMounted(() => {
 .otp-modal {
   background: #fff;
   border-radius: 16px;
-  padding: 2rem 2.5rem;
+  padding: 2rem;
   box-shadow: 0 4px 32px rgba(0,0,0,0.18);
-  min-width: 320px;
-  max-width: 90vw;
+  width: 90%;
+  max-width: 400px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -484,7 +484,8 @@ onMounted(() => {
   border-radius: 8px;
   border: 1px solid #ccc;
   margin-bottom: 1rem;
-  width: 240px;
+  width: 100%;
+  max-width: 240px;
   text-align: center;
 }
 .otp-error {
@@ -987,6 +988,25 @@ onMounted(() => {
 
   .input-group input.error {
     padding-right: 35px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .otp-modal {
+    padding: 1.5rem;
+  }
+  .otp-input {
+    font-size: 1.2rem;
+    letter-spacing: 0.2rem;
+  }
+  .otp-modal .btn {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1rem;
+  }
+  .otp-modal .resend-btn {
+    width: 100%;
+    margin-top: 0.5rem;
   }
 }
 </style>

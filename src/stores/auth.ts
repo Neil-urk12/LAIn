@@ -13,6 +13,7 @@ export const useAuthStore = defineStore("auth", {
     authenticated: false,
     result: null as OTPResponse | null,
     loginOtp: null as OTPResponse | null,
+    sessionId: null as string | null,
   }),
   actions: {
     encryptData(data: string): string {
@@ -207,22 +208,23 @@ export const useAuthStore = defineStore("auth", {
         });
 
         if (existingSessions.items.length > 0) {
+          this.sessionId = existingSessions.items[0].id;
           await pb.collection('sessions').update(existingSessions.items[0].id, {
-            lastActive: new Date().toISOString()
+            lastActive: new Date().toISOString(),
+            isActive: true
           });
           return
         }
 
-        await pb.collection('sessions').create(
-          {
-            "userId": this.user.id,
-            "deviceInfo": this.getDeviceInfo(),
-            "ipAddress": encryptedIp,
-            "lastActive": new Date().toISOString(),
-            "token": this.token,
-            "isActive": true
-          }
-        );
+        const record = await pb.collection('sessions').create({
+          userId: this.user.id,
+          deviceInfo: this.getDeviceInfo(),
+          ipAddress: encryptedIp,
+          lastActive: new Date().toISOString(),
+          token: this.token,
+          isActive: true
+        });
+        this.sessionId = record.id;
       } catch (error) {
         console.error('Failed to create/update session record:', error);
         // Log more detailed error information
