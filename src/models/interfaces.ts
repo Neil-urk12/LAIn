@@ -45,10 +45,30 @@ export interface AuthResponse {
 }
 export interface Courses {
   id: string;
-  title: string;
-  description: string;
-  price: string;
   instructorId: string;
+  title: string;
+  courseCode: string;
+  description: string;
+  aboutCourse: string;
+  level: string;
+  hoursDuration: number;
+  rating: number;
+  price: string;
+  status: string;
+  reviews: number;
+  lessonsAmount: number;
+  whatYoullLearn: string[];
+  requirements: string[];
+  whoIsFor: string[];
+  includes: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Instructor {
+  id: string;
+  name: string;
+  email: string;
   createdAt: string;
   updatedAt: string;
 }

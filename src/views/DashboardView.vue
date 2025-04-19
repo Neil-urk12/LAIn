@@ -1,23 +1,32 @@
 <script setup lang="ts">
-import { defineAsyncComponent } from "vue";
-const StatsCards = defineAsyncComponent(
-  () => import("../components/DashboardView/StatsCards.vue"),
-);
-const ContinueLearning = defineAsyncComponent(
-  () => import("../components/DashboardView/ContinueLearning.vue"),
-);
-const LearningPath = defineAsyncComponent(
-  () => import("../components/DashboardView/LearningPath.vue"),
-);
-const Recommended = defineAsyncComponent(
-  () => import("../components/DashboardView/Recommended.vue"),
-);
+import { defineAsyncComponent, ref, computed, onMounted } from "vue";
+import { useAuthStore } from "../stores/auth";
+import { useRouter } from "vue-router";
+
+const StatsCards = defineAsyncComponent(() => import("../components/DashboardView/StatsCards.vue"));
+const ContinueLearning = defineAsyncComponent(() => import("../components/DashboardView/ContinueLearning.vue"));
+const LearningPath = defineAsyncComponent(() => import("../components/DashboardView/LearningPath.vue"));
+const Recommended = defineAsyncComponent(() => import("../components/DashboardView/Recommended.vue"));
+
+const auth = useAuthStore();
+const router = useRouter();
+const userName = computed(() => auth.user?.name || "");
+const userRole = computed(() => auth.user?.role || "");
+interface Activity { icon: string; description: string; time: string; }
+const activityList = ref<Activity[]>([]);
+function fetchRecentActivity(): Activity[] {
+  // TODO: replace with real data fetch
+  return [];
+}
+onMounted(() => {
+  activityList.value = fetchRecentActivity();
+});
 </script>
 
 <template>
   <main>
     <section class="header">
-      <h1>Welcome back, Cez!</h1>
+      <h1>Welcome back, {{ userName }}!</h1>
       <p>Here's what's happening with your learning journey today.</p>
     </section>
 
@@ -85,12 +94,12 @@ const Recommended = defineAsyncComponent(
       <div class="account-settings">
         <h3>Account Settings</h3>
         <div class="avatar"></div>
-        <div class="name">John Doe</div>
-        <div class="role">AI Enthusiast</div>
-        <button>Edit Profile</button>
-        <button>Account Settings</button>
-        <button>Subscription</button>
-        <button>Back to Home</button>
+        <div class="name">{{ userName }}</div>
+        <div class="role">{{ userRole }}</div>
+        <button @click="router.push('/profile')">Edit Profile</button>
+        <button @click="router.push('/settings')">Account Settings</button>
+        <button @click="router.push('/subscription')">Subscription</button>
+        <button @click="router.push('/')">Back to Home</button>
       </div>
     </section>
   </main>

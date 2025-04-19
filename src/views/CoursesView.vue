@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import type { Courses } from "../models/interfaces";
+import { pb } from "../pocketbase/pocketbase";
 
 const isLoading = ref(true);
 const showEnrollModal = ref(false);
-const selectedCourse = ref<Course | null>(null);
+const selectedCourse = ref<Courses | null>(null);
 
-// Define the structure for a course
+/*
 interface Course {
   id: number;
   title: string;
@@ -19,7 +21,6 @@ interface Course {
   imageUrl?: string; // Optional image URL
 }
 
-// Dummy course data
 const courses = ref<Course[]>([
   {
     id: 1,
@@ -43,7 +44,7 @@ const courses = ref<Course[]>([
     price: 49.99,
     imageUrl: "https://via.placeholder.com/300x150/EEE/DDD?text=ML+Basics",
   },
-  {
+    {
     id: 3,
     title: "Deep Learning Specialization",
     description: "Dive deep into neural networks and deep learning.",
@@ -88,13 +89,17 @@ const courses = ref<Course[]>([
     imageUrl: "https://via.placeholder.com/300x150/EEE/DDD?text=RL+Explained",
   },
 ]);
+]);
+*/
 
-onMounted(() => {
+const courses = ref<Courses[]>([]);
+
+onMounted(async () => {
   try {
-    console.log("Fetching data...");
+    const data = await pb.collection("courses").getFullList<Courses>();
+    courses.value = data;
   } catch (error) {
-    console.error("Error fetching data:", error);
-    isLoading.value = false; // Ensure loading stops on error
+    console.error("Error fetching courses:", error);
   } finally {
     isLoading.value = false;
   }
@@ -102,11 +107,11 @@ onMounted(() => {
 
 const router = useRouter();
 
-const goToCourseDashboard = (courseId: number) => {
+const goToCourseDashboard = (courseId: string) => {
   router.push({ name: "course", params: { id: courseId } });
 };
 
-const handleEnrollClick = (event: Event, course: Course) => {
+const handleEnrollClick = (event: Event, course: Courses) => {
   event.stopPropagation(); // Prevent triggering the card click
   if (course.price === "Free") {
     selectedCourse.value = course;
@@ -186,11 +191,7 @@ const closeModal = () => {
         >
           <div
             class="course-image"
-            :style="{
-              backgroundImage: course.imageUrl
-                ? `url(${course.imageUrl})`
-                : 'none',
-            }"
+            :style="{ backgroundImage: `url(https://via.placeholder.com/300x150?text=${course.courseCode})` }"
           ></div>
           <div class="course-content">
             <div class="course-header">
@@ -200,17 +201,13 @@ const closeModal = () => {
             <h3>{{ course.title }}</h3>
             <p>{{ course.description }}</p>
             <div class="course-footer">
-              <span
-                >{{ course.duration }} hours •
-                {{ course.lessons }} lessons</span
-              >
+              <span>
+                {{ course.hoursDuration }} hours •
+                {{ course.lessonsAmount }} lessons
+              </span>
             </div>
             <div class="course-actions">
-              <span class="price">{{
-                typeof course.price === "number"
-                  ? `$${course.price.toFixed(2)}`
-                  : course.price
-              }}</span>
+              <span class="price">{{ course.price }}</span>
               <a href="#" @click="(e) => handleEnrollClick(e, course)"
                 >Enroll Now</a
               >
