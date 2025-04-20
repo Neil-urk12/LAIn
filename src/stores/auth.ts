@@ -91,6 +91,8 @@ export const useAuthStore = defineStore("auth", {
               createdAt: authData.record.created,
               updatedAt: authData.record.updated,
               token: token,
+              learningStreak: authData.record.learningStreak ?? 0,
+              lastLoginDate: authData.record.lastLoginDate
             };
             this.setUser(user, token);
             return true;
@@ -138,6 +140,8 @@ export const useAuthStore = defineStore("auth", {
         createdAt: authData.record.created,
         updatedAt: authData.record.updated,
         token: authData.token,
+        learningStreak: authData.record.learningStreak ?? 1,
+        lastLoginDate: authData.record.lastLoginDate
       }
       this.setUser(user, authData.token);
       return true
@@ -234,11 +238,13 @@ export const useAuthStore = defineStore("auth", {
 
     },
     async setUser(user: User, token: string) {
+      user.learningStreak = user.learningStreak ?? 0;
+      user.lastLoginDate = user.lastLoginDate ?? new Date().toISOString();
       this.user = user;
       this.token = token;
       this.authenticated = true;
 
-      // Create a session record after setting the user
+      await this.updateLearningStreak();
       await this.createSessionRecord();
     },
     // Get all sessions for the current user with decrypted IP addresses
@@ -311,7 +317,8 @@ export const useAuthStore = defineStore("auth", {
           email: record?.email || "",
           name: record?.name || "",
           username: record?.username || "",
-          role: record?.role || ""
+          role: record?.role || "",
+          learningStreak: record?.learningStreak ?? 1
         };
         pb.authStore.clear();
 
@@ -401,13 +408,15 @@ export const useAuthStore = defineStore("auth", {
           createdAt: authData.record.created,
           updatedAt: authData.record.updated,
           token: authData.token,
+          learningStreak: authData.record.learningStreak ?? 1,
+          lastLoginDate: authData.record.lastLoginDate
         };
 
         // Set the user in the store (this will also create a session record)
         await this.setUser(user, authData.token);
         return user;
       } catch (error) {
-
+          console.error(error)
         throw error;
       }
     },
@@ -535,21 +544,49 @@ export const useAuthStore = defineStore("auth", {
     async register({ email, password, passwordConfirm, name, username, role = 'student' }: { email: string; password: string; passwordConfirm: string; name: string; username: string; role?: string }) {
       try {
         pb.authStore.clear();
+        const now = new Date().toISOString();
         const data = {
-          "password": password,
-          "passwordConfirm": passwordConfirm,
-          "name": name,
-          "username": username,
-          "email": email,
-          "emailVisibility": true,
-          "verified": false,
-          "role": role
+          password,
+          passwordConfirm,
+          name,
+          username,
+          email,
+          emailVisibility: true,
+          verified: false,
+          role,
+          learningStreak: 0,
+          lastLoginDate: now
         };
 
         await pb.collection('users').create(data);
 
       } catch (error: unknown) {
         throw error;
+      }
+    },
+    async updateLearningStreak() {
+      if (!this.user) return;
+      const today = new Date().toISOString().split('T')[0];
+      const lastLogin = this.user.lastLoginDate?.split('T')[0];
+      let newStreak: number;
+      // First login ever
+      if (this.user.learningStreak === 0) {
+        newStreak = 1;
+      } else if (lastLogin === today) {
+        return;
+      } else {
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        newStreak = lastLogin === yesterday ? this.user.learningStreak + 1 : 1;
+      }
+      try {
+        const updated = await pb.collection('users').update(this.user.id, {
+          learningStreak: newStreak,
+          lastLoginDate: new Date().toISOString()
+        });
+        this.user.learningStreak = updated.learningStreak;
+        this.user.lastLoginDate = updated.lastLoginDate;
+      } catch (e) {
+        console.error('Failed to update learning streak:', e);
       }
     },
   },

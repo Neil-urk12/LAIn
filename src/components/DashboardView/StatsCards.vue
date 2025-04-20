@@ -16,8 +16,8 @@
     <div class="card">
       <div class="label">Learning Streak</div>
       <div class="bottom-row">
-        <div class="number">12</div>
-        <span class="subtext">days</span>
+        <div class="number"><span style="margin-right:4px">🔥</span>{{ learningStreak }}</div>
+        <span class="subtext">day<span v-if="learningStreak !== 1">s</span></span>
       </div>
     </div>
     <div class="card">
@@ -30,7 +30,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useAuthStore } from '../../stores/auth';
 defineOptions({ name: 'StatsCards' })
+
+const auth = useAuthStore();
+const learningStreak = computed(() => auth.user?.learningStreak ?? 0);
 </script>
 
 <style scoped>

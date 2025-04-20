@@ -16,6 +16,8 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   token?: string;
+  learningStreak: number;
+  lastLoginDate?: string;
 }
 
 export interface UserSettings {

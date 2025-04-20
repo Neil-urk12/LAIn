@@ -56,6 +56,7 @@ export const useSettingsStore = defineStore('settings', {
           company: this.formData.company,
           website: this.formData.website,
           linkedIn: this.formData.linkedin,
+          learningStreak: authStore.user.learningStreak ?? 0,
         });
         authStore.setUser({
           ...authStore.user,
@@ -67,6 +68,7 @@ export const useSettingsStore = defineStore('settings', {
           company: updated.company,
           website: updated.website,
           linkedIn: updated.linkedIn,
+          learningStreak: updated.learningStreak ?? authStore.user.learningStreak ?? 0,
         }, authStore.token || '');
         this.initialData = JSON.parse(JSON.stringify(this.formData));
         alert('Changes saved!');
