@@ -553,7 +553,13 @@ export const useAuthStore = defineStore("auth", {
           email,
           emailVisibility: true,
           verified: false,
+          linkedIn: '',
           role,
+          website: '',
+          company: '',
+          position: '',
+          bio: '',
+          profilePicture: '',
           learningStreak: 0,
           lastLoginDate: now
         };

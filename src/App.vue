@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from "vue-router";
-import { ref, computed, onBeforeUnmount, onMounted } from "vue";
-import SideBar from "./components/Global/SideBar.vue";
+import { ref, computed, onBeforeUnmount, onMounted, defineAsyncComponent } from "vue";
+const SideBar = defineAsyncComponent(() => import("./components/Global/SideBar.vue"));
 import { useAuthStore } from "./stores/auth";
 import { pb } from "./pocketbase/pocketbase";
 
@@ -10,7 +10,7 @@ const isSidebarCollapsed = ref(true);
 const auth = useAuthStore();
 
 const showSidebar = computed(() => {
-  const hiddenRoutes = ["home", "login", "about", "admin", "not-found"];
+  const hiddenRoutes = ["home", "login", "about", "admin", "not-found", "verify-email"];
   return !hiddenRoutes.includes(route.name as string);
 });
 
