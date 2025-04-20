@@ -5,6 +5,8 @@ import { pb } from '../pocketbase/pocketbase';
 import type { Courses, Instructor } from '../models/interfaces';
 import mockCourseData from '../mockdata/courses.json';
 
+type CourseWithExpand = Courses & { expand?: { instructorId: Instructor } };
+
 const course = ref<(Courses & { instructor: Instructor }) | null>(null);
 const isLoading = ref(true);
 
@@ -17,16 +19,33 @@ const relatedCoursesData = mockCourseData.relatedCourses;
 
 onMounted(async () => {
   try {
-    const data = await pb.collection<Courses>('courses').getOne(route.params.id as string);
-    const instructorData = await pb.collection<Instructor>('instructors').getOne(data.instructorId);
+    const data = await pb.collection<Courses>('courses').getOne(
+      route.params.id as string,
+      { expand: 'instructorId' }
+    ) as CourseWithExpand;
     course.value = {
-      ...data,
-      instructor: instructorData,
+      id: data.id,
+      instructorId: data.instructorId,
+      title: data.title,
+      courseCode: data.courseCode,
+      description: data.description,
+      aboutCourse: data.aboutCourse,
+      level: data.level,
+      hoursDuration: data.hoursDuration,
+      rating: data.rating,
+      price: data.price,
+      status: data.status,
+      reviews: data.reviews,
+      imageUrl: data.imageUrl,
+      lessonsAmount: data.lessonsAmount,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+      instructor: data.expand!.instructorId,
       whatYoullLearn: typeof data.whatYoullLearn === "string" ? JSON.parse(data.whatYoullLearn) : data.whatYoullLearn,
       requirements: typeof data.requirements === "string" ? JSON.parse(data.requirements) : data.requirements,
       whoIsFor: typeof data.whoIsFor === "string" ? JSON.parse(data.whoIsFor) : data.whoIsFor,
       includes: typeof data.includes === "string" ? JSON.parse(data.includes) : data.includes
-    }
+    } as Courses & { instructor: Instructor };
   } catch (err) {
     console.error(err)
     router.replace({ name: 'not-found', state: window.history.state });
