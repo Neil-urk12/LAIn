@@ -108,16 +108,19 @@ onMounted(async () => {
 const router = useRouter();
 
 const goToCourseDashboard = (courseId: string) => {
+  if (!courseId) return;
+  if (!courses.value.find(course => course.id === courseId)) return;
+  
   router.push({ name: "course", params: { id: courseId } });
 };
 
 const handleEnrollClick = (event: Event, course: Courses) => {
-  event.stopPropagation(); // Prevent triggering the card click
+  event.stopPropagation(); 
   if (course.price === "Free") {
     selectedCourse.value = course;
     showEnrollModal.value = true;
   } else {
-    // Handle paid courses differently (e.g., redirect to payment page)
+    // TODO: Implement payment processing
     console.log("Redirecting to payment page for:", course.title);
   }
 };

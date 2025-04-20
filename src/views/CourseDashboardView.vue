@@ -1,39 +1,54 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import courseData from '../mockdata/courses.json';
+import { useRouter, useRoute } from 'vue-router';
+import { pb } from '../pocketbase/pocketbase';
+import type { Courses, Instructor } from '../models/interfaces';
+import mockCourseData from '../mockdata/courses.json';
 
-// Load course data from mock file - replace with actual data fetching based on route param
-const course = ref(courseData);
+const course = ref<(Courses & { instructor: Instructor }) | null>(null);
+const isLoading = ref(true);
 
 const activeTab = ref('Overview');
-const route = useRoute();
 const router = useRouter();
+const route = useRoute()
 
-onMounted(() => {
-  const courseId = route.params.id;
-  console.log('Fetching data for course ID:', courseId);
-  // TODO: Fetch actual course data using courseId
-  // For now, using dummy data
+const reviewsData = mockCourseData.reviewsData;
+const relatedCoursesData = mockCourseData.relatedCourses;
+
+onMounted(async () => {
+  try {
+    const data = await pb.collection<Courses>('courses').getOne(route.params.id as string);
+    const instructorData = await pb.collection<Instructor>('instructors').getOne(data.instructorId);
+    course.value = {
+      ...data,
+      instructor: instructorData,
+      whatYoullLearn: typeof data.whatYoullLearn === "string" ? JSON.parse(data.whatYoullLearn) : data.whatYoullLearn,
+      requirements: typeof data.requirements === "string" ? JSON.parse(data.requirements) : data.requirements,
+      whoIsFor: typeof data.whoIsFor === "string" ? JSON.parse(data.whoIsFor) : data.whoIsFor,
+      includes: typeof data.includes === "string" ? JSON.parse(data.includes) : data.includes
+    }
+  } catch (err) {
+    console.error(err)
+    router.replace({ name: 'not-found', state: window.history.state });
+    return;
+  } finally {
+    isLoading.value = false;
+  }
 });
 
 const formatReviews = (num: number) => {
-    if (num >= 1000) {
+    if (num >= 1000) 
         return (num / 1000).toFixed(1) + 'k';
-    }
     return num;
 };
 
 const enrollCourse = () => {
-  if (course.value.price === 'Free Access') {
-    // Navigate to the Enrollment page for free courses
-    router.push({ name: 'Enrollment', params: { id: course.value.id } });
-  } else {
-    // Placeholder for paid course enrollment logic
-    console.log(`Attempting to enroll in PAID course ID: ${course.value.id}`);
-    // This is where you might redirect to a checkout page or trigger a payment modal
-    // router.push({ name: 'CheckoutPage', params: { courseId: course.value.id } });
-    alert(`Enrollment process for "${course.value.title}" (Paid Course) needs to be implemented.`);
+  if (course.value?.price === 'Free') 
+    router.push({ name: 'Enrollment', params: { id: course.value?.id } });
+  else {
+    // TODO: Implement paid course enrollment
+    console.log(`Attempting to enroll in PAID course ID: ${course.value?.id}`);
+    alert(`Enrollment process for "${course.value?.title}" (Paid Course) needs to be implemented.`);
   }
 };
 </script>
@@ -44,27 +59,27 @@ const enrollCourse = () => {
     <nav class="breadcrumbs">
       <router-link to="/dashboard">Dashboard</router-link> >
       <router-link to="/courses">Courses</router-link> >
-      <span>{{ course.title }}</span>
+      <span>{{ course?.title }}</span>
     </nav>
 
     <!-- Header Section -->
-    <header class="course-header-banner" :style="{ backgroundImage: `url(${course.headerImageUrl})` }">
+    <header class="course-header-banner" :style="{ backgroundImage: `url(${course?.imageUrl})` }">
       <div class="header-content">
-        <span class="badge">{{ course.level }}</span>
-        <h1>{{ course.title }}</h1>
-        <p class="description">{{ course.description }}</p>
+        <span class="badge">{{ course?.level }}</span>
+        <h1>{{ course?.title }}</h1>
+        <p class="description">{{ course?.description }}</p>
         <div class="meta">
-          <span>🕒 {{ course.duration }} hours</span>
-          <span>📚 {{ course.lessons }} lessons</span>
-          <span>📅 Last updated: {{ course.lastUpdated }}</span>
-          <span>⭐ {{ course.rating }} ({{ formatReviews(course.reviews) }} reviews)</span>
+          <span>🕒 {{ course?.hoursDuration }} hours</span>
+          <span>📚 {{ course?.lessonsAmount }} lessons</span>
+          <span>📅 Last updated: {{ course?.updatedAt }}</span>
+          <span>⭐ {{ course?.rating }} ({{ formatReviews(course?.reviews || 0) }} reviews)</span>
         </div>
         <div class="instructor-info">
           <!-- <img :src="course.instructor.avatarUrl" alt="Instructor Avatar" class="instructor-avatar" /> -->
           <span class="placeholder-avatar"></span>
-          <span>Instructor: <strong>{{ course.instructor.name }}</strong></span>
+          <span>Instructor: <strong>{{ course?.instructor.name }}</strong></span>
         </div>
-         <button class="enroll-button header-enroll-btn" @click="enrollCourse">Enroll Now - {{ course.price }}</button>
+         <button class="enroll-button header-enroll-btn" @click="enrollCourse">Enroll Now - {{ course?.price }}</button>
       </div>
     </header>
 
@@ -85,30 +100,30 @@ const enrollCourse = () => {
           <div v-if="activeTab === 'Overview'">
             <section>
               <h2>About This Course</h2>
-              <p>{{ course.about }}</p>
+              <p>{{ course?.aboutCourse }}</p>
             </section>
             <section>
               <h2>What You'll Learn</h2>
               <ul class="checklist">
-                <li v-for="(item, index) in course.whatYoullLearn" :key="'learn-' + index">✓ {{ item }}</li>
+                <li v-for="(item, index) in course?.whatYoullLearn" :key="'learn-' + index">✓ {{ item }}</li>
               </ul>
             </section>
              <section>
               <h2>Requirements</h2>
               <ul>
-                <li v-for="(item, index) in course.requirements" :key="'req-' + index">{{ item }}</li>
+                <li v-for="(item, index) in course?.requirements" :key="'req-' + index">{{ item }}</li>
               </ul>
             </section>
             <section>
               <h2>Who This Course Is For</h2>
               <ul>
-                <li v-for="(item, index) in course.whoIsThisFor" :key="'who-' + index">{{ item }}</li>
+                <li v-for="(item, index) in course?.whoIsFor" :key="'who-' + index">{{ item }}</li>
               </ul>
             </section>
           </div>
           <div v-if="activeTab === 'Curriculum'" class="curriculum-section">
             <h2>Course Curriculum</h2>
-            <p class="curriculum-summary">4 modules • {{ course.lessons }} lessons • {{ course.duration }} hours total</p>
+            <p class="curriculum-summary">4 modules • {{ course?.lessonsAmount }} lessons • {{ course?.hoursDuration }} hours total</p>
             <div class="module-list">
               <div class="module-item">
                 <div class="module-header">
@@ -154,32 +169,31 @@ const enrollCourse = () => {
             <div class="instructor-layout">
               <div class="instructor-profile">
                 <div class="instructor-avatar-large placeholder-avatar"></div>
-                <h3>{{ course.instructor.name }}</h3>
-                <p class="instructor-title">{{ course.instructor.title }}</p>
+                <h3>{{ course?.instructor.name }}</h3>
+                <p class="instructor-title">{{ course?.instructor.title }}</p>
                 <div class="instructor-stats">
-                  <span>⭐ {{ course.instructor.rating }} Instructor Rating</span>
-                  <span>👥 {{ formatReviews(course.instructor.students) }} Students</span>
-                  <span>📚 {{ course.instructor.courses }} Courses</span>
+                  <span>⭐ {{ course?.instructor.rating }} Instructor Rating</span>
+                  <!-- <span>👥 {{ formatReviews(course?.instructor.students) }} Students</span> -->
+                  <span>📚 {{ course?.instructor.courses }} Courses</span>
                 </div>
               </div>
               <div class="instructor-bio">
-                <p>{{ course.instructor.bio }}</p>
+                <p>{{ course?.instructor.bio }}</p>
               </div>
             </div>
           </div>
-          <div v-if="activeTab === 'Reviews'" class="reviews-section">
+           <div v-if="activeTab === 'Reviews'" class="reviews-section">
             <h2>Student Reviews</h2>
             <div class="reviews-summary">
               <div class="average-rating">
-                <span class="rating-value">{{ course.reviewsData.averageRating.toFixed(1) }}</span>
+                <span class="rating-value">{{ reviewsData.averageRating.toFixed(1) }}</span>
                 <div class="stars">
-                  <!-- Display stars based on averageRating -->
-                   <span v-for="n in 5" :key="'avg-star-' + n" :class="{ 'filled': n <= Math.round(course.reviewsData.averageRating) }">⭐</span>
+                  <span v-for="n in 5" :key="'avg-star-' + n" :class="{ 'filled': n <= Math.round(reviewsData.averageRating) }">⭐</span>
                 </div>
-                <span class="total-reviews">({{ formatReviews(course.reviewsData.totalReviews) }} reviews)</span>
+                <span class="total-reviews">({{ formatReviews(reviewsData.totalReviews) }} reviews)</span>
               </div>
               <div class="rating-distribution">
-                <div v-for="dist in course.reviewsData.distribution" :key="'dist-' + dist.stars" class="distribution-bar">
+                <div v-for="dist in reviewsData.distribution" :key="'dist-' + dist.stars" class="distribution-bar">
                   <span class="star-label">{{ dist.stars }} stars</span>
                   <div class="bar-container">
                     <div class="bar" :style="{ width: dist.percentage + '%' }"></div>
@@ -189,7 +203,7 @@ const enrollCourse = () => {
               </div>
             </div>
             <div class="review-list">
-              <div v-for="comment in course.reviewsData.comments" :key="comment.id" class="review-item">
+              <div v-for="comment in reviewsData.comments" :key="comment.id" class="review-item">
                  <div class="review-author">
                     <span class="placeholder-avatar small-avatar"></span>
                     <div class="author-info">
@@ -202,8 +216,8 @@ const enrollCourse = () => {
                  </div>
                  <p class="review-text">{{ comment.text }}</p>
               </div>
-            </div>
-            <button class="load-more-button">Load More Reviews</button>
+            </div> 
+            <!-- <button class="load-more-button">Load More Reviews</button> -->
           </div>
         </div>
       </div>
@@ -213,9 +227,9 @@ const enrollCourse = () => {
         <div class="sidebar-widget">
           <h3>Course Includes</h3>
           <ul>
-            <li v-for="(item, index) in course.includes" :key="'inc-' + index">📄 {{ item }}</li>
+            <li v-for="(item, index) in course?.includes" :key="'inc-' + index">📄 {{ item }}</li>
           </ul>
-          <button class="enroll-button" @click="enrollCourse">Enroll Now - {{ course.price }}</button>
+          <button class="enroll-button" @click="enrollCourse">Enroll Now - {{ course?.price }}</button>
         </div>
         <div class="sidebar-widget">
           <h3>Share This Course</h3>
@@ -229,36 +243,34 @@ const enrollCourse = () => {
     </div>
 
      <!-- Related Courses Section -->
-    <section class="related-courses">
-        <h2>Related Courses</h2>
-        <div class="courses-grid">
-             <!-- Using a simplified card structure for related courses -->
-            <div class="related-course-card" v-for="related in course.relatedCourses" :key="related.id">
-                <div class="related-course-image" :style="{ backgroundImage: `url(${related.imageUrl})` }"></div>
-                <div class="related-course-content">
-                    <span class="badge small">{{ related.level }}</span>
-                     <span class="rating small">⭐ {{ related.rating }}</span>
-                    <h3>{{ related.title }}</h3>
-                    <div class="meta small">
-                        <span>🕒 {{ related.duration }} hrs</span>
-                        <span>📚 {{ related.lessons }} lessons</span>
-                    </div>
-                    <div class="price-view">
-                        <span class="price">{{ typeof related.price === 'number' ? `$${related.price.toFixed(2)}` : related.price }}</span>
-                        <a href="#" @click.prevent="$router.push({ name: 'CourseDetail', params: { id: related.id } })">View Course</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+      <section class="related-courses">
+          <h2>Related Courses</h2>
+          <div class="courses-grid">
+              <div class="related-course-card" v-for="related in relatedCoursesData" :key="related.id">
+                  <div class="related-course-image" :style="{ backgroundImage: `url(${related.imageUrl})` }"></div>
+                  <div class="related-course-content">
+                      <span class="badge small">{{ related.level }}</span>
+                      <span class="rating small">⭐ {{ related.rating }}</span>
+                      <h3>{{ related.title }}</h3>
+                      <div class="meta small">
+                          <span>🕒 {{ related.duration }} hrs</span>
+                          <span>📚 {{ related.lessons }} lessons</span>
+                      </div>
+                      <div class="price-view">
+                          <span class="price">{{ typeof related.price === 'number' ? `$${related.price.toFixed(2)}` : related.price }}</span>
+                          <a href="#" @click.prevent="$router.push({ name: 'CourseDetail', params: { id: related.id } })">View Course</a>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </section> 
 
-    <!-- Ready to Start Section -->
-    <section class="ready-to-start">
-        <h2>Ready to start learning?</h2>
-        <p>This course is completely free. Enroll now to gain access!</p>
-        <button class="enroll-button" @click="enrollCourse">Enroll Now - {{ course.price }}</button>
-    </section>
-
+      <!-- Ready to Start Section -->
+      <section class="ready-to-start">
+          <h2>Ready to start learning?</h2>
+          <p>This course is completely free. Enroll now to gain access!</p>
+          <button class="enroll-button" @click="enrollCourse">Enroll Now - {{ course?.price }}</button>
+      </section>
   </div>
 </template>
 
@@ -585,7 +597,6 @@ const enrollCourse = () => {
 .price-view a:hover {
     text-decoration: underline;
 }
-
 
 /* Ready to Start Section */
 .ready-to-start {

@@ -8,7 +8,7 @@ export interface User {
   emailVisibility: boolean;
   linkedIn?: string;
   website?: string;
-  company?: string
+  company?: string;
   position?: string;
   bio?: string;
   profilePicture?: string;
@@ -30,7 +30,6 @@ export interface UserSettings {
   linkedin: string;
 }
 
-
 export interface TempUser {
   id: string;
   email: string;
@@ -43,6 +42,7 @@ export interface AuthResponse {
   token: string;
   record: User;
 }
+
 export interface Courses {
   id: string;
   instructorId: string;
@@ -56,11 +56,13 @@ export interface Courses {
   price: string;
   status: string;
   reviews: number;
+  imageUrl: string;
   lessonsAmount: number;
-  whatYoullLearn: string[];
-  requirements: string[];
-  whoIsFor: string[];
-  includes: string[];
+
+  whatYoullLearn: string[] | string;
+  requirements: string[] | string;
+  whoIsFor: string[] | string;
+  includes: string[] | string;
   createdAt: string;
   updatedAt: string;
 }
@@ -68,6 +70,10 @@ export interface Courses {
 export interface Instructor {
   id: string;
   name: string;
+  title: string;
+  rating: number;
+  courses: number;
+  bio: string;
   email: string;
   createdAt: string;
   updatedAt: string;
