@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import type { Courses } from "../models/interfaces";
+import type { Courses, Enrollments } from "../models/interfaces";
 import { pb } from "../pocketbase/pocketbase";
 
 const isLoading = ref(true);
@@ -91,13 +91,24 @@ const courses = ref<Course[]>([
 ]);
 ]);
 */
-
+const enrolledCourseIds = ref<string[]>([]);
 const courses = ref<Courses[]>([]);
 
 onMounted(async () => {
   try {
     const data = await pb.collection("courses").getFullList<Courses>();
     courses.value = data;
+    // Fetch user enrollments and record course IDs
+    if (pb.authStore.isValid) {
+      try {
+        const enrollmentData = await pb
+          .collection("enrollments")
+          .getFullList<Enrollments>({ filter: `userId=\"${pb.authStore.record?.id}\"` });
+        enrolledCourseIds.value = enrollmentData.map((e) => e.courseId);
+      } catch (err) {
+        console.error("Error fetching enrollments:", err);
+      }
+    }
   } catch (error) {
     console.error("Error fetching courses:", error);
   } finally {
@@ -115,6 +126,7 @@ const goToCourseDashboard = (courseId: string) => {
 };
 
 const handleEnrollClick = (event: Event, course: Courses) => {
+  if (enrolledCourseIds.value.includes(course.id)) return;
   event.stopPropagation(); 
   if (course.price === "Free") {
     selectedCourse.value = course;
@@ -211,9 +223,12 @@ const closeModal = () => {
             </div>
             <div class="course-actions">
               <span class="price">{{ course.price }}</span>
-              <a href="#" @click="(e) => handleEnrollClick(e, course)"
-                >Enroll Now</a
-              >
+              <template v-if="!enrolledCourseIds.includes(course.id)">
+                <a href="#" @click="(e) => handleEnrollClick(e, course)">Enroll Now</a>
+              </template>
+              <template v-else>
+                <span class="enrolled">Enrolled</span>
+              </template>
             </div>
           </div>
         </div>
@@ -374,6 +389,44 @@ p {
 .price {
   font-weight: bold;
   color: var(--primary-color);
+}
+
+.enrolled {
+  font-weight: bold;
+  color: var(--text-medium);
+}
+
+.skeleton .course-image,
+.skeleton .badge,
+.skeleton .rating,
+.skeleton h3,
+.skeleton p,
+.skeleton .course-footer,
+.skeleton .price,
+.skeleton .course-actions a {
+  background: var(--bg-light);
+}
+
+/* Hover effects */
+.course-card {
+  transition: border-color 0.3s ease;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+}
+.course-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.filters input:hover,
+.filters select:hover,
+.filter-btn:hover {
+  border-color: var(--primary-color);
+}
+
+.tabs button:hover {
+  background: var(--primary-color);
+  color: var(--bg-white);
 }
 
 .skeleton .course-image,
