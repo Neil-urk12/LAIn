@@ -33,6 +33,7 @@ const router = createRouter({
       path: "/courses/:id",
       name: "course",
       component: () => import("../views/CourseDashboardView.vue"),
+      props: true,
       meta: { requiresAuth: true }
     },
     {
@@ -66,6 +67,12 @@ const router = createRouter({
       component: () => import("../views/AdminView.vue"),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('../views/NotFoundView.vue'),
+      meta: { requiresAuth: false }
+    }
   ],
 });
 
