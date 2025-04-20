@@ -1,52 +1,51 @@
 <script setup lang="ts">
+import type { Courses, Instructor, Enrollments } from '@/models/interfaces';
+import type { CourseWithExpand } from '@/models/types';
 import { ref, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
-
-// Define props to receive the course ID from the router
-const props = defineProps<{
-  id: string;
-}>();
+import { useRouter, useRoute } from 'vue-router';
+import { pb } from '../pocketbase/pocketbase';
+import { useEnrollmentStore } from '@/stores/enrollment';
 
 const router = useRouter();
+const route = useRoute()
+const enrollmentStore = useEnrollmentStore();
 
-// Dummy course data - replace with actual data fetching based on props.id
-// We need similar data structure as in CourseDashboardView for consistency
-const course = ref({
-  id: 1,
-  title: 'AI Fundamentals: Getting Started',
-  level: 'Beginner',
-  lessons: 24,
-  duration: 10,
-  rating: 4.6,
-  reviews: 3250,
-  studentsEnrolled: 65000,
-  lastUpdated: 'September 2023',
-  instructor: {
-    name: 'Dr. Toma Sigma',
-  },
-  price: 'Free',
-  includes: [
-    'Full access to all 24 lessons',
-    '8 hours of on-demand video',
-    'Access to 15 downloadable resources',
-    'Certificate of completion',
-    'Lifetime access to course updates'
-  ],
+const course = ref<(Courses & { instructor: Instructor }) | null>(null);
+const studentsEnrolled = ref<number>(0);
+const formattedLastUpdated = computed(() => course.value
+  ? new Date(course.value.updatedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  : '');
 
-  imageUrl: 'https://via.placeholder.com/300x150/EEE/DDD?text=AI+Fundamentals'
-});
-
-const courseId = computed(() => parseInt(props.id, 10));
-
-onMounted(() => {
-  console.log('Enrollment page for course ID:', courseId.value);
-  // TODO: Fetch actual course data using courseId.value
-  // For now, using dummy data that matches the ID for demonstration
-  if (courseId.value !== course.value.id) {
-      // Basic handling if the dummy data ID doesn't match the route ID
-      console.warn("Route ID doesn't match dummy data ID. Displaying dummy data.");
-      // Ideally, fetch the correct course data here.
-  }
+onMounted(async () => {
+  const data = await pb.collection<Courses>('courses').getOne(
+      route.params.id as string,
+      { expand: 'instructorId' }
+    ) as CourseWithExpand;
+    course.value = {
+      id: data.id,
+      instructorId: data.instructorId,
+      title: data.title,
+      courseCode: data.courseCode,
+      description: data.description,
+      aboutCourse: data.aboutCourse,
+      level: data.level,
+      hoursDuration: data.hoursDuration,
+      rating: data.rating,
+      price: data.price,
+      status: data.status,
+      reviews: data.reviews,
+      imageUrl: data.imageUrl,
+      lessonsAmount: data.lessonsAmount,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+      instructor: data.expand!.instructorId,
+      whatYoullLearn: typeof data.whatYoullLearn === "string" ? JSON.parse(data.whatYoullLearn) : data.whatYoullLearn,
+      requirements: typeof data.requirements === "string" ? JSON.parse(data.requirements) : data.requirements,
+      whoIsFor: typeof data.whoIsFor === "string" ? JSON.parse(data.whoIsFor) : data.whoIsFor,
+      includes: typeof data.includes === "string" ? JSON.parse(data.includes) : data.includes
+    } as Courses & { instructor: Instructor }
+  await enrollmentStore.fetchByCourse(route.params.id as string);
+  studentsEnrolled.value = enrollmentStore.enrollments.length;
 });
 
 const formatReviews = (num: number) => {
@@ -56,28 +55,32 @@ const formatReviews = (num: number) => {
     return num;
 };
 
-const completeEnrollment = () => {
-  console.log(`Completing enrollment for FREE course ID: ${course.value.id} - ${course.value.title}`);
-  // TODO: Add actual enrollment logic here (e.g., API call, update user state)
-
-  // Redirect to the main dashboard after "enrollment"
+const completeEnrollment = async () => {
+  // Enroll current user via store
+  try {
+    await enrollmentStore.enroll(course.value!.id);
+    console.log(`Enrolled in course ID: ${course.value?.id}`);
+  } catch (error) {
+    alert(`Enrollment failed: ${(error as Error).message}`);
+    return;
+  }
+  alert(`Successfully enrolled in "${course.value?.title}"! Redirecting to dashboard.`);
   router.push('/dashboard');
-  alert(`Successfully enrolled in "${course.value.title}"! Redirecting to dashboard.`);
 };
 
 const returnToCourseDetails = () => {
-    router.push({ name: 'course', params: { id: course.value.id } });
+    router.push({ name: 'course', params: { id: course.value?.id } });
 }
 
 </script>
 
 <template>
-  <div class="enrollment-view">
+  <div class="enrollment-view" v-if="course">
     <!-- Breadcrumbs -->
     <nav class="breadcrumbs">
       <router-link to="/dashboard">Dashboard</router-link> >
       <router-link to="/courses">Courses</router-link> >
-      <router-link :to="{ name: 'course', params: { id: course.id } }">{{ course.title }}</router-link> >
+      <router-link :to="{ name: 'course', params: { id: course?.id } }">{{ course?.title }}</router-link> >
       <span>Enroll</span>
     </nav>
 
@@ -100,7 +103,7 @@ const returnToCourseDetails = () => {
 
         <h3>What you'll get:</h3>
         <ul class="checklist">
-          <li v-for="(item, index) in course.includes" :key="'include-' + index">
+          <li v-for="(item, index) in course?.includes || []" :key="'include-' + index">
             <span class="icon">✔️</span> {{ item }}
           </li>
         </ul>
@@ -123,33 +126,33 @@ const returnToCourseDetails = () => {
 
       <!-- Right Column: Course Summary Card -->
       <aside class="course-summary-card">
-        <div class="course-image" :style="{ backgroundImage: `url(${course.imageUrl})` }"></div>
+        <div class="course-image" :style="{ backgroundImage: `url(${course?.imageUrl})` }"></div>
         <div class="course-content">
-          <span class="badge">{{ course.level }}</span>
-          <h3>{{ course.title }}</h3>
+          <span class="badge">{{ course?.level }}</span>
+          <h3>{{ course?.title }}</h3>
           <div class="meta">
-            <span>🕒 {{ course.duration }} hours</span>
+            <span>🕒 {{ course?.hoursDuration }} hours</span>
             <span>•</span>
-            <span>📚 {{ course.lessons }} lessons</span>
+            <span>📚 {{ course?.lessonsAmount }} lessons</span>
           </div>
           <div class="meta rating-meta">
-             <span>⭐ {{ course.rating }} ({{ formatReviews(course.reviews) }} reviews)</span>
+             <span>⭐ {{ course?.rating }} ({{ formatReviews(course?.reviews || 0) }} reviews)</span>
           </div>
            <div class="meta students-meta">
-             <span>👥 {{ formatReviews(course.studentsEnrolled) }} students enrolled</span>
+             <span>👥 {{ formatReviews(studentsEnrolled) }} students enrolled</span>
           </div>
           <div class="meta updated-meta">
-             <span>📅 Last updated: {{ course.lastUpdated }}</span>
+             <span>📅 Last updated: {{ formattedLastUpdated }}</span>
           </div>
           <div class="instructor-info">
             <span>Instructor</span>
             <div class="instructor-details">
               <span class="placeholder-avatar small-avatar"></span>
-              <strong>{{ course.instructor.name }}</strong>
+              <strong>{{ course?.instructor?.name }}</strong>
             </div>
           </div>
           <div class="price-info">
-            <span class="price-tag">{{ course.price }}</span>
+            <span class="price-tag">{{ course?.price }}</span>
             <span class="price-subtext">Full access to all content</span>
           </div>
         </div>
