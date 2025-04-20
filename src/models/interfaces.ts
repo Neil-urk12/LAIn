@@ -83,7 +83,9 @@ export interface Enrollments {
   id: string;
   userId: string;
   courseId: string;
+  isCompleted: boolean
   status: string;
+  progress: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -119,3 +121,21 @@ export interface Session {
   created?: string;
   updated?: string;
 }
+
+export interface Reviews {
+  id: string;
+  courseId: string;
+  userId: string;
+  instructorId: string;
+  starsRating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt: string;
+}
+/*
+
+courseId: FACAI100
+userId: 
+instructorId;
+
+*/

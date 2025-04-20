@@ -4,8 +4,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { pb } from '../pocketbase/pocketbase';
 import type { Courses, Instructor } from '../models/interfaces';
 import mockCourseData from '../mockdata/courses.json';
-
-type CourseWithExpand = Courses & { expand?: { instructorId: Instructor } };
+import type { CourseWithExpand } from '../models/types';
 
 const course = ref<(Courses & { instructor: Instructor }) | null>(null);
 const isLoading = ref(true);
