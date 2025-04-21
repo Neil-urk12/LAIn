@@ -37,16 +37,18 @@ const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
         </ul>
       </nav>
       <div class="header-actions">
-        <ThemeToggleButton />
+        <ThemeToggleButton class="desktop-theme-toggle" />
         <a v-if="!auth.isAuthenticated" href="#" class="btn btn-secondary btn-signin" @click.prevent="router.push('/login')">Sign In</a>
         <RouterLink v-else to="/dashboard" class="btn btn-secondary btn-signin">Dashboard</RouterLink>
-        <a href="#" class="btn btn-primary" @click.prevent="handleGetStarted">Get Started</a>
+        <a href="#" class="btn btn-primary" @click.prevent="handleGetStarted">{{ auth.isAuthenticated ? 'Continue' : 'Get Started' }}</a>
       </div>
-      <button class="mobile-nav-toggle" @click="toggleMobileMenu" aria-label="Toggle menu">
-         <Menu :size="24" />
-      </button>
-    </div>
-     <nav class="mobile-nav" :class="{ 'is-open': isMobileMenuOpen }">
+      <div class="mobile-actions">
+        <button class="mobile-nav-toggle" @click="toggleMobileMenu" aria-label="Toggle menu">
+          <Menu :size="24" />
+        </button>
+        <ThemeToggleButton class="mobile-theme-toggle" />
+      </div>
+      <nav class="mobile-nav" :class="{ 'is-open': isMobileMenuOpen }">
         <ul>
           <li><RouterLink to="/courses">Courses</RouterLink></li>
           <li><RouterLink to="/about">About</RouterLink></li>
@@ -54,9 +56,10 @@ const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
           <li><RouterLink to="/blog">Blog</RouterLink></li>
           <li v-if="!auth.isAuthenticated"><a href="#" @click.prevent="router.push('/login')" class="btn btn-secondary">Sign In</a></li>
           <li v-else><RouterLink to="/dashboard" class="btn btn-secondary">Dashboard</RouterLink></li>
-          <li><a href="#" @click.prevent="handleGetStarted" class="btn btn-primary">Get Started</a></li>
+          <li><a href="#" @click.prevent="handleGetStarted" class="btn btn-primary">{{ auth.isAuthenticated ? 'Continue' : 'Get Started' }}</a></li>
         </ul>
       </nav>
+    </div>
   </header>
 </template>
 
@@ -124,6 +127,10 @@ const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
     color: var(--text-dark);
 }
 
+.mobile-actions {
+  display: none;
+}
+
 .mobile-nav {
     display: none; /* Hidden by default */
     background-color: var(--bg-white);
@@ -169,6 +176,31 @@ const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
   }
   .mobile-nav-toggle {
     display: block; /* Show hamburger */
+  }
+  .header-actions {
+    display: none;
+  }
+  .mobile-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mobile-theme-toggle {
+    display: inline-flex;
+  }
+  .desktop-theme-toggle {
+    display: none;
+  }
+}
+@media (min-width: 769px) {
+  .mobile-actions {
+    display: none;
+  }
+  .mobile-theme-toggle {
+    display: none;
+  }
+  .desktop-theme-toggle {
+    display: inline-flex;
   }
 }
 .theme-toggle-btn {
