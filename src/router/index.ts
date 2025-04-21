@@ -32,7 +32,7 @@ const router = createRouter({
     {
       path: "/courses/:id",
       name: "course",
-      component: () => import("../views/CourseDashboardView.vue"),
+      component: () => import("../views/CourseOverview.vue"),
       props: true,
       meta: { requiresAuth: true }
     },
