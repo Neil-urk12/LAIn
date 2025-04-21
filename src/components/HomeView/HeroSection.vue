@@ -10,9 +10,11 @@
         </p>
         <div class="hero-actions">
           <a href="#" class="btn btn-primary icon-link" @click.prevent="handleExploreCoursesClick">
-            Explore Courses <ArrowRight :size="18" />
+            {{ auth.isAuthenticated ? 'Continue where you left off' : 'Explore Courses' }} <ArrowRight :size="18" />
           </a>
-          <a href="#" class="btn btn-secondary" @click.prevent="handleViewDemoClick">View Demo</a>
+          <a href="#" class="btn btn-secondary" @click.prevent="handleViewDemoClick">
+            {{ auth.isAuthenticated ? 'View Dashboard' : 'View Demo' }}
+          </a>
         </div>
         <div class="hero-stats">
           <span><Users :size="16" /> 2 Students</span>

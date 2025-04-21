@@ -6,7 +6,9 @@
         Join thousands of students already learning AI with LAIn. Get started
         today with a free trial.
       </p>
-      <a href="#" class="btn btn-primary btn-lg" @click.prevent="handleStartFreeTrialClick">Start Free Trial <ArrowRight :size="20" /></a>
+      <a href="#" class="btn btn-primary btn-lg" @click.prevent="handleStartFreeTrialClick">
+        {{ auth.isAuthenticated ? 'Go to Dashboard' : 'Start Free Trial' }} <ArrowRight :size="20" />
+      </a>
     </div>
   </section>
 </template>
