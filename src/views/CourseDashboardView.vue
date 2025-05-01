@@ -93,13 +93,6 @@ const nextSteps = ref([
 const courseDuration = computed(() =>
   course.value ? `${course.value.hoursDuration} hours` : "",
 );
-// const courseLessonsCount = computed(() =>
-//   course.value ? course.value.lessonsAmount : 0,
-// );
-
-// const courseStudentsCount = computed(() =>
-
-// );
 
 const courseStudentsCount = ref(0);
 const courseLessonsCount = ref(0);
@@ -118,12 +111,7 @@ onMounted(async () => {
     lessons.value = await pb
       .collection<Lessons>("lessons")
       .getFullList({ filter: `courseId="${courseId}"`, sort: "order" });
-    // courseStudentsCount.value = await pb.collection.length<Enrollments>("enrollments", {
-    //   filter: `courseId="${courseId}"`,
-    // });
-    // courseLessonsCount.value = await pb.collection.length("lessons", {
-    //   filter: `courseId="${courseId}"`,
-    // });
+    courseLessonsCount.value = lessons.value.length;
     const enrollments = await pb
       .collection<Enrollments>("enrollments")
       .getFullList({ filter: `courseId="${courseId}"` });
