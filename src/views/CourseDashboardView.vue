@@ -131,6 +131,35 @@ const progressPercent = computed(() => {
     ? Math.round((prog / courseLessonsCount.value) * 100)
     : 0;
 });
+
+const goToLesson = (lessonId: string) => {
+  router.push({
+    name: "lesson",
+    params: { courseId: courseId, lessonId: lessonId }
+  });
+};
+
+const startFirstLesson = () => {
+  if (lessons.value.length > 0) {
+    goToLesson(lessons.value[0].id);
+  }
+};
+
+const continueLesson = () => {
+  const progress = enrollmentStore.currentEnrollment?.progress || 0;
+  if (progress < lessons.value.length) {
+    // Go to the next uncompleted lesson
+    goToLesson(lessons.value[progress].id);
+  } else if (lessons.value.length > 0) {
+    // If all lessons are completed, go to the first lesson
+    goToLesson(lessons.value[0].id);
+  }
+};
+
+const isLessonCompleted = (index: number) => {
+  const progress = enrollmentStore.currentEnrollment?.progress || 0;
+  return index < progress;
+};
 </script>
 
 <template>
@@ -167,8 +196,9 @@ const progressPercent = computed(() => {
               <li
                 :key="lIdx"
                 class="lesson-item"
+                @click="goToLesson(lesson.id)"
               >
-                <input type="checkbox" disabled />
+                <input type="checkbox" :checked="isLessonCompleted(lIdx)" disabled />
                 <span class="lesson-title">{{ lesson.title }}</span>
               </li>
             </ul>
@@ -190,7 +220,7 @@ const progressPercent = computed(() => {
               by exploring the modules and lessons.
             </p>
           </div>
-          <button class="start-btn">Start First Lesson</button>
+          <button class="start-btn" @click="startFirstLesson">Start First Lesson</button>
         </div>
 
         <!-- Course Dashboard Card -->
@@ -234,7 +264,7 @@ const progressPercent = computed(() => {
             <span class="instructor-label">Instructor</span>
             <span class="instructor-name">{{ course?.instructor.name }}</span>
             <span class="course-rating">★ {{ course?.rating }}</span>
-            <button class="continue-btn">Continue Learning</button>
+            <button class="continue-btn" @click="continueLesson">Continue Learning</button>
           </div>
         </section>
 
@@ -257,6 +287,7 @@ const progressPercent = computed(() => {
               <li
                 :key="lIdx"
                 class="module-block-lesson-expanded"
+                @click="goToLesson(lesson.id)"
               >
                 <div class="lesson-icon">
                   <span>▶️</span> <!-- Assuming all fetched items are lessons -->
@@ -284,7 +315,10 @@ const progressPercent = computed(() => {
               <div class="step-content">
                 <div class="step-title">{{ step.title }}</div>
                 <div class="step-desc">{{ step.desc }}</div>
-                <button :class="['step-btn', step.button.style]">
+                <button 
+                  :class="['step-btn', step.button.style]"
+                  @click="step.button.text === 'Start Learning' ? startFirstLesson() : null"
+                >
                   {{ step.button.text }}
                 </button>
               </div>
@@ -369,6 +403,11 @@ const progressPercent = computed(() => {
   gap: 0.6rem;
   margin-bottom: 0.5rem;
   font-size: 0.98rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.lesson-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 .lesson-title {
   flex: 1;
@@ -587,9 +626,11 @@ const progressPercent = computed(() => {
   padding: 0.7rem 0 0.7rem 0;
   border-radius: 6px;
   transition: background 0.15s;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 .module-block-lesson-expanded:hover {
-  background: var(--bg-light);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 .lesson-icon {
   font-size: 1.1rem;

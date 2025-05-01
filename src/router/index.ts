@@ -9,83 +9,90 @@ const router = createRouter({
       path: "/",
       name: "home",
       component: HomeView,
-      meta: { requiresAuth: false }
+      meta: { requiresAuth: false },
     },
     {
       path: "/login",
       name: "login",
       component: () => import("../views/LoginView.vue"),
-      meta: { requiresAuth: false }
+      meta: { requiresAuth: false },
     },
     {
       path: "/dashboard",
       name: "dashboard",
       component: () => import("../views/DashboardView.vue"),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: "/courses",
       name: "courses",
       component: () => import("../views/CoursesView.vue"),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: "/courses/:id",
       name: "course",
       component: () => import("../views/CourseOverview.vue"),
       props: true,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: "/courses/:id/dashboard",
       name: "course-dashboard",
       component: () => import("../views/CourseDashboardView.vue"),
       props: true,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: "/settings",
       name: "settings",
       component: () => import("../views/SettingsView.vue"),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: "/certificates",
       name: "certificates",
       component: () => import("../views/CertificatesView.vue"),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: "/courses/:id/enroll",
       name: "Enrollment",
       component: () => import("../views/EnrollmentView.vue"),
       props: true,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: "/about",
       name: "about",
       component: () => import("../views/AboutView.vue"),
-      meta: { requiresAuth: false }
+      meta: { requiresAuth: false },
     },
     {
       path: "/admin",
       name: "admin",
       component: () => import("../views/AdminView.vue"),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: false },
     },
     {
       path: "/auth/:token",
       name: "verify-email",
       component: () => import("../views/VerifyEmailView.vue"),
-      meta: { requiresAuth: false }
+      meta: { requiresAuth: false },
     },
     {
-      path: '/:pathMatch(.*)*',
-      name: 'not-found',
-      component: () => import('../views/NotFoundView.vue'),
-      meta: { requiresAuth: false }
-    }
+      path: "/courses/:courseId/lessons/:lessonId",
+      name: "lesson",
+      component: () => import("../views/LessonView.vue"),
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    // {
+    //   path: "/:pathMatch(.*)*",
+    //   name: "not-found",
+    //   component: () => import("../views/NotFoundView.vue"),
+    //   meta: { requiresAuth: false },
+    // },
   ],
 });
 
@@ -108,10 +115,10 @@ router.beforeEach(async (to, from, next) => {
 
   if (requiresAuth && !authStore.isAuthenticated) {
     // Route requires auth but user is not authenticated
-    next({ name: 'login' });
-  } else if (to.name === 'login' && authStore.isAuthenticated) {
+    next({ name: "login" });
+  } else if (to.name === "login" && authStore.isAuthenticated) {
     // User is already logged in and trying to access login page
-    next({ name: 'dashboard' });
+    next({ name: "dashboard" });
   } else {
     // Either the route doesn't require auth, or the user is authenticated
     next();

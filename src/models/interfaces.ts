@@ -96,6 +96,7 @@ export interface Lessons {
   id: string;
   title: string;
   content: string;
+  richContent: string;
   courseId: string;
   order: number;
   createdAt: string;
