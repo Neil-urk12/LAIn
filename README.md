@@ -1,79 +1,80 @@
-# LAIn: E-Learning Platform for AI
+# LAIn - AI Education Platform
 
-LAIn is a modern e-learning platform designed to help users master Artificial Intelligence (AI) through interactive courses, hands-on projects, and a vibrant learning community. Built with Vue.js, LAIn provides a comprehensive curriculum, flexible learning paths, and industry-recognized certificates.
+Empowering the next generation of AI innovators through accessible, high-quality education.
 
-## 🚀 Features
+## About
 
-- **Comprehensive Curriculum:** From AI fundamentals to advanced deep learning, our courses cover the full spectrum of AI knowledge.
-- **Hands-on Projects:** Apply your knowledge with real-world projects and practical exercises.
-- **Expert Instructors:** Learn from industry professionals and academics with years of experience in AI.
-- **Flexible Learning:** Study at your own pace with on-demand video lectures and interactive exercises.
-- **Career Advancement:** Earn certificates recognized by top employers and advance your career in AI.
-- **Community Support:** Join a global community of AI enthusiasts and get help whenever you need it.
-- **Personalized Dashboard:** Track your progress, manage enrollments, and view your learning path.
-- **Admin Panel:** Manage users, courses, analytics, and platform settings.
-- **Privacy & Security:** Robust settings to control your profile, notifications, and privacy preferences.
+LAIn is a platform dedicated to democratizing AI learning. We provide comprehensive courses for learners of all levels, aiming to make complex AI concepts understandable and empower individuals to utilize AI in their careers and projects.
 
-## 🖥️ Main Views & Components
+Our mission is to break down barriers to AI education and foster a supportive global community.
 
-- **Home:** Hero section, features, course highlights, testimonials, and call-to-action.
-- **Courses:** Browse, enroll, and explore course details.
-- **Dashboard:** Continue learning, track stats, and follow your personalized learning path.
-- **Certificates:** View and share earned certificates.
-- **Settings:** Manage account, appearance, privacy, billing, and notifications.
-- **Admin:** User and course management, analytics, and quick actions.
+## What We Offer
 
-Component structure is modular, with dedicated folders for each major view (e.g., `DashboardView`, `HomeView`, `SettingsView`).
+*   **Structured Curriculum:** Carefully designed learning paths.
+*   **Hands-on Projects:** Practical projects to apply knowledge.
+*   **Global Community:** Connect with fellow learners and AI enthusiasts.
 
-## 🏁 Getting Started
+## Technology Stack
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repo-url>
-   cd LAIn
-   ```
-2. **Install dependencies:**
-   ```bash
-   bun install
-   ```
-3. **Run the development server:**
-   ```bash
-   bun run dev
-   ```
-4. **Open your browser:**
-   Visit [http://localhost:5173](http://localhost:5173) (or the port shown in your terminal).
+LAIn is built with modern technologies:
 
-## 📂 Project Structure
+*   **Frontend:** Vue 3 (Composition API), Pinia, TypeScript, Lucide Icons, Bun
+*   **Backend & Infrastructure:** Go, Rust, TypeScript, Vercel, PostgreSQL
 
-- `src/views/` — Main application views (Home, Courses, Dashboard, Admin, Settings, etc.)
-- `src/components/` — Reusable UI components organized by view
-- `assets/` — Styles, images, and static assets
+## Getting Started
 
-## 🏆 Certificates
+### Installation
 
-LAIn certificates are digital credentials that verify your completion of courses and mastery of specific skills. Certificates can be shared on your resume, LinkedIn, or portfolio.
+(Instructions on how to install the project dependencies, e.g., using Bun or npm)
 
-**How to earn a certificate:**
-1. Enroll in a course
-2. Complete all course requirements (lessons, quizzes, projects)
-3. Receive your certificate automatically upon completion
+```bash
+# Using Bun
+bun install
 
-## 🤝 Contributing
-
-Contributions are welcome! Please fork the repository and submit a pull request.
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 📬 Contact
-
-For support or inquiries, please contact the LAIn team at [neilvallecer12@gmail.com](mailto:neilvallecer12@gmail.com).
-
----
-
-© 2025 LAIn. All rights reserved.
-
-```sh
-bun run lint
+# Using npm
+npm install
 ```
+
+### Usage
+
+(Instructions on how to run the development server or build the project)
+
+```bash
+# Run development server (using Bun)
+bun dev
+
+# Run development server (using npm)
+npm run dev
+
+# Build for production (using Bun)
+bun run build
+
+# Build for production (using npm)
+npm run build
+```
+
+## Project Structure
+
+(A brief overview of the main directories and their purpose)
+
+*   `src/`: Contains the main application source code.
+    *   `components/`: Reusable Vue components.
+    *   `models/`: TypeScript interfaces and types.
+    *   `pocketbase/`: Pocketbase client setup.
+    *   `router/`: Vue Router configuration.
+    *   `stores/`: Pinia stores for state management.
+    *   `views/`: Vue components for different pages/views.
+*   `public/`: Static assets.
+*   `mockdata/`: Mock data files (e.g., `courses.json`, `lessons.json`).
+
+## Contributing
+
+(Information on how others can contribute - Placeholder)
+
+## License
+
+(License information - Placeholder)
+
+## Contact
+
+(Contact information - Placeholder)
