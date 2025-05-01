@@ -6,6 +6,7 @@ import { useAuthStore } from './auth';
 export const useEnrollmentStore = defineStore('enrollment', {
   state: () => ({
     enrollments: [] as Enrollments[],
+    completedCourses: [] as Enrollments[],
     currentEnrollment: null as Enrollments | null,
     loading: false,
     error: null as string | null,
@@ -14,6 +15,15 @@ export const useEnrollmentStore = defineStore('enrollment', {
     isEnrolled: (state) => (courseId: string) => {
       return state.enrollments.some(e => e.courseId === courseId);
     },
+    completedCoursesCount: (state) => {
+      return state.completedCourses.length;
+    },
+    isLoading: (state) => {
+      return state.loading;
+    },
+    enrollmentsCount: (state) => {
+      return state.enrollments.length;
+    }
   },
   actions: {
     async fetchByCourse(courseId: string) {
@@ -27,6 +37,26 @@ export const useEnrollmentStore = defineStore('enrollment', {
         this.enrollments = list;
         // Set currentEnrollment if exists
         this.currentEnrollment = list.length > 0 ? list[0] : null;
+        const completed = list.filter(e => e.isCompleted);
+        this.completedCourses = completed;
+      } catch (err) {
+        this.error = (err as Error).message;
+      } finally {
+        this.loading = false;
+      }
+    },
+    async fetchEnrolledCourses() {
+      this.loading = true;
+      this.error = null;
+      try {
+        const authStore = useAuthStore();
+        if (!authStore.user) throw new Error('User not authenticated');
+        const filterStr = `userId="${authStore.getUser?.id}" && status="enrolled"`;
+        const list = await pb.collection<Enrollments>('enrollments').getFullList({
+          filter: filterStr,
+          expand: 'courseId',
+        });
+        this.enrollments = list;
       } catch (err) {
         this.error = (err as Error).message;
       } finally {

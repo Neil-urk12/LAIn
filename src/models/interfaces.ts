@@ -90,6 +90,9 @@ export interface Enrollments {
   progress: number;
   createdAt: string;
   updatedAt: string;
+  expand?: {
+    courseId: Courses;
+  };
 }
 
 export interface Lessons {
