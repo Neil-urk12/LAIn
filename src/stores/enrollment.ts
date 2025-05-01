@@ -20,8 +20,13 @@ export const useEnrollmentStore = defineStore('enrollment', {
       this.loading = true;
       this.error = null;
       try {
-        const list = await pb.collection<Enrollments>('enrollments').getFullList({ filter: `courseId="${courseId}"` });
+        const authStore = useAuthStore();
+        if (!authStore.user) throw new Error('User not authenticated');
+        const filterStr = `courseId="${courseId}" && userId="${authStore.user.id}"`;
+        const list = await pb.collection<Enrollments>('enrollments').getFullList({ filter: filterStr });
         this.enrollments = list;
+        // Set currentEnrollment if exists
+        this.currentEnrollment = list.length > 0 ? list[0] : null;
       } catch (err) {
         this.error = (err as Error).message;
       } finally {

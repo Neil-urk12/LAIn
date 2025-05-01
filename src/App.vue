@@ -10,7 +10,7 @@ const isSidebarCollapsed = ref(true);
 const auth = useAuthStore();
 
 const showSidebar = computed(() => {
-  const hiddenRoutes = ["home", "login", "about", "admin", "not-found", "verify-email"];
+  const hiddenRoutes = ["home", "login", "about", "admin", "not-found", "verify-email", "course-dashboard"];
   return !hiddenRoutes.includes(route.name as string);
 });
 
