@@ -106,8 +106,19 @@ export interface Certificates {
   id: string;
   userId: string;
   courseId: string;
+  title: string
+  specialization: string
   issueDate: string;
-  credentialId: string;
+  credentialId: string
+  tags: string[]
+  status: 'published'
+  downloadUrl?: string
+  certificateImage: File
+  courseCode: string
+  instructorId: string
+  expirationDate?: string
+  verificationUrl: string
+  verified: boolean
   createdAt: string;
   updatedAt: string;
 }
@@ -137,7 +148,7 @@ export interface Reviews {
 /*
 
 courseId: FACAI100
-userId: 
+userId:
 instructorId;
 
 */
