@@ -3,7 +3,7 @@ import { useRoute, useRouter } from "vue-router";
 import { ref, onMounted, computed } from "vue";
 import { useEnrollmentStore } from "../stores/enrollment";
 import { pb } from "../pocketbase/pocketbase";
-import type { Courses, Lessons, Instructor } from "../models/interfaces";
+import type { Courses, Lessons, Instructor, Enrollments } from "../models/interfaces";
 import type { CourseWithExpand } from "../models/types";
 
 // const course = {
@@ -93,9 +93,17 @@ const nextSteps = ref([
 const courseDuration = computed(() =>
   course.value ? `${course.value.hoursDuration} hours` : "",
 );
-const courseLessonsCount = computed(() =>
-  course.value ? course.value.lessonsAmount : 0,
-);
+// const courseLessonsCount = computed(() =>
+//   course.value ? course.value.lessonsAmount : 0,
+// );
+
+// const courseStudentsCount = computed(() =>
+
+// );
+
+const courseStudentsCount = ref(0);
+const courseLessonsCount = ref(0);
+const certificate = ref('Included');
 
 onMounted(async () => {
   try {
@@ -110,6 +118,17 @@ onMounted(async () => {
     lessons.value = await pb
       .collection<Lessons>("lessons")
       .getFullList({ filter: `courseId="${courseId}"`, sort: "order" });
+    // courseStudentsCount.value = await pb.collection.length<Enrollments>("enrollments", {
+    //   filter: `courseId="${courseId}"`,
+    // });
+    // courseLessonsCount.value = await pb.collection.length("lessons", {
+    //   filter: `courseId="${courseId}"`,
+    // });
+    const enrollments = await pb
+      .collection<Enrollments>("enrollments")
+      .getFullList({ filter: `courseId="${courseId}"` });
+
+    courseStudentsCount.value = enrollments.length;
   } catch (err) {
     console.error(err);
     router.replace({ name: "not-found", state: window.history.state });
@@ -176,7 +195,7 @@ const progressPercent = computed(() => {
           <div>
             <span class="banner-title"
               >Welcome to
-              <span class="highlight">{{ course.value!.title }}</span></span
+              <span class="highlight">{{ course?.title }}</span></span
             >
             <p class="banner-desc">
               You've just enrolled in this course. Start your learning journey
@@ -189,10 +208,10 @@ const progressPercent = computed(() => {
         <!-- Course Dashboard Card -->
         <section class="dashboard-card">
           <div class="dashboard-header">
-            <span v-if="course.value!.beginner" class="badge">Beginner</span>
-            <h1 class="course-title">{{ course.value!.title }}</h1>
+            <span v-if="course?.level === 'Beginner'" class="badge">Beginner</span>
+            <h1 class="course-title">{{ course!.title }}</h1>
           </div>
-          <p class="course-desc">{{ course.value!.description }}</p>
+          <p class="course-desc">{{ course?.description }}</p>
           <div class="dashboard-info">
             <div class="info-block">
               <div class="info-label">Duration</div>
@@ -205,12 +224,12 @@ const progressPercent = computed(() => {
             <div class="info-block">
               <div class="info-label">Students</div>
               <div class="info-value">
-                {{ course.value!.students.toLocaleString() }}
+                {{ courseStudentsCount }}
               </div>
             </div>
             <div class="info-block">
               <div class="info-label">Certificate</div>
-              <div class="info-value">{{ course.value!.certificate }}</div>
+              <div class="info-value">{{ certificate }}</div>
             </div>
           </div>
           <div class="dashboard-progress">
@@ -225,8 +244,8 @@ const progressPercent = computed(() => {
           </div>
           <div class="dashboard-footer">
             <span class="instructor-label">Instructor</span>
-            <span class="instructor-name">{{ course.value!.instructor.name }}</span>
-            <span class="course-rating">★ {{ course.value!.rating }}</span>
+            <span class="instructor-name">{{ course?.instructor.name }}</span>
+            <span class="course-rating">★ {{ course?.rating }}</span>
             <button class="continue-btn">Continue Learning</button>
           </div>
         </section>
