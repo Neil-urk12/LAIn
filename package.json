@@ -13,7 +13,13 @@
     "lint": "eslint . --fix"
   },
   "dependencies": {
+    "@types/bun": "^1.2.9",
+    "@types/crypto-js": "^4.2.2",
+    "@vueuse/core": "^13.1.0",
+    "crypto-js": "^4.2.0",
+    "lucide-vue-next": "^0.487.0",
     "pinia": "^3.0.1",
+    "pocketbase": "^0.25.2",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },

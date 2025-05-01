@@ -1,45 +1,80 @@
-# LAIn
+# LAIn - AI Education Platform
 
-This template should help get you started developing with Vue 3 in Vite.
+Empowering the next generation of AI innovators through accessible, high-quality education.
 
-## Recommended IDE Setup
+## About
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+LAIn is a platform dedicated to democratizing AI learning. We provide comprehensive courses for learners of all levels, aiming to make complex AI concepts understandable and empower individuals to utilize AI in their careers and projects.
 
-## Type Support for `.vue` Imports in TS
+Our mission is to break down barriers to AI education and foster a supportive global community.
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+## What We Offer
 
-## Customize configuration
+*   **Structured Curriculum:** Carefully designed learning paths.
+*   **Hands-on Projects:** Practical projects to apply knowledge.
+*   **Global Community:** Connect with fellow learners and AI enthusiasts.
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+## Technology Stack
 
-## Project Setup
+LAIn is built with modern technologies:
 
-```sh
+*   **Frontend:** Vue 3 (Composition API), Pinia, TypeScript, Lucide Icons, Bun
+*   **Backend & Infrastructure:** Go, Rust, TypeScript, Vercel, PostgreSQL
+
+## Getting Started
+
+### Installation
+
+(Instructions on how to install the project dependencies, e.g., using Bun or npm)
+
+```bash
+# Using Bun
+bun install
+
+# Using npm
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+### Usage
 
-```sh
+(Instructions on how to run the development server or build the project)
+
+```bash
+# Run development server (using Bun)
+bun dev
+
+# Run development server (using npm)
 npm run dev
-```
 
-### Type-Check, Compile and Minify for Production
+# Build for production (using Bun)
+bun run build
 
-```sh
+# Build for production (using npm)
 npm run build
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+## Project Structure
 
-```sh
-npm run test:unit
-```
+(A brief overview of the main directories and their purpose)
 
-### Lint with [ESLint](https://eslint.org/)
+*   `src/`: Contains the main application source code.
+    *   `components/`: Reusable Vue components.
+    *   `models/`: TypeScript interfaces and types.
+    *   `pocketbase/`: Pocketbase client setup.
+    *   `router/`: Vue Router configuration.
+    *   `stores/`: Pinia stores for state management.
+    *   `views/`: Vue components for different pages/views.
+*   `public/`: Static assets.
+*   `mockdata/`: Mock data files (e.g., `courses.json`, `lessons.json`).
 
-```sh
-npm run lint
-```
+## Contributing
+
+(Information on how others can contribute - Placeholder)
+
+## License
+
+(License information - Placeholder)
+
+## Contact
+
+(Contact information - Placeholder)
