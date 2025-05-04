@@ -22,7 +22,7 @@ const props = defineProps({
   },
   thumbnail: {
     type: String,
-    required: false, 
+    required: false,
     default: '',
   },
 });
@@ -61,9 +61,10 @@ const props = defineProps({
 
 .thumbnail {
   background: var(--border-color);
-  height: 150px;
+  height: 250px;
   display: flex;
   align-items: center;
+  background-size: cover;
   justify-content: center;
 }
 

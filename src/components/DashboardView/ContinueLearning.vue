@@ -2,6 +2,7 @@
 import { onMounted, ref, computed, defineAsyncComponent } from 'vue';
 const CourseCard = defineAsyncComponent(() => import('../Global/CourseCard.vue'));
 import { useEnrollmentStore } from '@/stores/enrollment';
+import { pb } from '../../pocketbase/pocketbase';
 
 defineOptions({ name: 'ContinueLearning' });
 
@@ -32,8 +33,9 @@ onMounted(async () => {
     difficulty: enrollment.expand?.courseId.level ?? '',
     progress: enrollment.progress,
     lastAccessedDate: enrollment.updatedAt,
-    thumbnail: enrollment.expand?.courseId.imageUrl ?? '',
+    thumbnail: `${pb.baseUrl}/api/files/courses/${enrollment.expand?.courseId.id}/${enrollment.expand?.courseId.courseImage}`,
   }));
+  console.log('Enrolled Courses:', enrolledCourses.value);
   isLoading.value = false;
 });
 </script>

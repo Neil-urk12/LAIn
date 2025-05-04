@@ -60,7 +60,7 @@ export interface Courses {
   reviews: number;
   imageUrl: string;
   lessonsAmount: number;
-
+  courseImage?: string;
   whatYoullLearn: string[] | string;
   requirements: string[] | string;
   whoIsFor: string[] | string;
