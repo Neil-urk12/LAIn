@@ -88,9 +88,10 @@ export const useAuthStore = defineStore("auth", {
               position: authData.record.position,
               bio: authData.record.bio,
               profilePicture: authData.record.profilePicture,
-              createdAt: authData.record.created,
-              updatedAt: authData.record.updated,
+              created: authData.record.created,
+              updated: authData.record.updated,
               token: token,
+              isActive: authData.record.isActive,
               learningStreak: authData.record.learningStreak ?? 0,
               lastLoginDate: authData.record.lastLoginDate
             };
@@ -137,9 +138,10 @@ export const useAuthStore = defineStore("auth", {
         role: authData.record.role,
         emailVisibility: authData.record.emailVisibility,
         verified: authData.record.verified,
-        createdAt: authData.record.created,
-        updatedAt: authData.record.updated,
+        created: authData.record.created,
+        updated: authData.record.updated,
         token: authData.token,
+        isActive: authData.record.isActive,
         learningStreak: authData.record.learningStreak ?? 1,
         lastLoginDate: authData.record.lastLoginDate
       }
@@ -405,10 +407,11 @@ export const useAuthStore = defineStore("auth", {
           role: authData.record.role,
           emailVisibility: authData.record.emailVisibility,
           verified: authData.record.verified,
-          createdAt: authData.record.created,
-          updatedAt: authData.record.updated,
+          created: authData.record.created,
+          updated: authData.record.updated,
           token: authData.token,
           learningStreak: authData.record.learningStreak ?? 1,
+          isActive: authData.record.isActive,
           lastLoginDate: authData.record.lastLoginDate
         };
 
@@ -416,7 +419,7 @@ export const useAuthStore = defineStore("auth", {
         await this.setUser(user, authData.token);
         return user;
       } catch (error) {
-          console.error(error)
+        console.error(error)
         throw error;
       }
     },
@@ -561,7 +564,8 @@ export const useAuthStore = defineStore("auth", {
           bio: '',
           profilePicture: '',
           learningStreak: 0,
-          lastLoginDate: now
+          lastLoginDate: now,
+          isActive: false
         };
 
         await pb.collection('users').create(data);

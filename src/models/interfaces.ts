@@ -16,6 +16,7 @@ export interface User {
   created: string;
   updated: string;
   token?: string;
+  isActive: boolean
   learningStreak: number;
   lastLoginDate?: string;
 }

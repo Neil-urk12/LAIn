@@ -1,7 +1,7 @@
 <template>
   <aside :class="['sidebar', { 'collapsed': isCollapsed }]">
     <div class="sidebar-header">
-      <div class="logo-container">
+      <div class="logo-container" @click="navigateToDashboard" style="cursor: pointer;">
         <BookOpen :size="24" class="logo-icon" />
         <div v-show="!isCollapsed" class="logo-text">
           <span class="logo">LAIn</span> <span class="logo-admin">Admin</span>
@@ -46,11 +46,11 @@
 
 <script setup lang="ts">
 import type { Component } from 'vue';
-import { computed, ref } from 'vue';
+import { computed, ref, defineAsyncComponent } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 import { LogOut, BookOpen, ChevronLeft } from 'lucide-vue-next';
-import ThemeToggleButton from '@/components/Global/ThemeToggleButton.vue';
+const ThemeToggleButton = defineAsyncComponent(() => import('../Global/ThemeToggleButton.vue'))
 
 const emit = defineEmits(['nav-click', 'toggle-collapse']);
 const authStore = useAuthStore();
@@ -88,6 +88,10 @@ const handleNavClick = (view: string) => {
 const handleLogout = async () => {
   await authStore.logout();
   router.push('/login');
+};
+
+const navigateToDashboard = () => {
+  router.push('/dashboard');
 };
 </script>
 

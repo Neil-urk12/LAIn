@@ -106,9 +106,10 @@ onMounted(async () => {
 <style scoped>
 .admin-dashboard {
   display: flex;
-  min-height: 100vh;
+  height: 100vh; /* Use exact height instead of min-height */
   background-color: var(--bg-light, #f9fafb);
   transition: padding-left 0.3s ease;
+  overflow: hidden; /* Prevent scrollbars on the main container */
 }
 
 .admin-dashboard.sidebar-collapsed .main-content {
@@ -122,6 +123,8 @@ onMounted(async () => {
   flex-direction: column;
   width: 100%;
   transition: margin-left 0.3s ease;
+  overflow: hidden; /* Prevent overflow from causing scrollbars */
+  height: 100vh; /* Full viewport height */
 }
 
 /* Header */

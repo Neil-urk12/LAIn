@@ -108,7 +108,7 @@ export const useAdminStore = defineStore('admin', {
       try {
         // Fetch recent enrollments
         const enrollments = await pb.collection<Enrollments>('enrollments').getList(1, 10, {
-          sort: '-created',
+          sort: '-createdAt',
           expand: 'userId,courseId'
         });
 
@@ -198,6 +198,7 @@ export const useAdminStore = defineStore('admin', {
         const users = await pb.collection<User>('users').getFullList({
           sort: '-created'
         });
+        console.log('Fetched users:', users);
 
         // Fetch all enrollments
         const allEnrollments = await pb.collection('enrollments').getFullList();
@@ -218,6 +219,52 @@ export const useAdminStore = defineStore('admin', {
       } catch (err) {
         this.error = (err as Error).message;
         console.error('Error fetching users:', err);
+      } finally {
+        this.loading.users = false;
+      }
+    },
+
+    async updateUser(id: string, userData: Partial<User>) {
+      this.loading.users = true;
+      this.error = null;
+      console.log('Updating user with ID:', id);
+      console.log('Update data:', userData);
+
+      try {
+        // Ensure required fields are present
+        if (!userData.name || !userData.username || !userData.role) {
+          console.warn('Required fields missing, fetching user first');
+          const existingUser = await pb.collection('users').getOne(id);
+          userData = {
+            ...userData,
+            name: userData.name || existingUser.name,
+            username: userData.username || existingUser.username,
+            role: userData.role || existingUser.role
+          };
+        }
+
+        console.log('PocketBase collection:', pb.collection('users'));
+        console.log('Final update data:', userData);
+        console.log('Request URL will be:', `${pb.baseUrl}/api/collections/users/records/${id}`);
+
+        const updatedUser = await pb.collection('users').update(id, userData);
+        console.log('User updated successfully:', updatedUser);
+        await this.fetchUsers();
+      } catch (err) {
+        this.error = (err as Error).message;
+        console.error('Error updating user:', err);
+        // Log more details about the error
+        if (err && typeof err === 'object' && 'status' in err) {
+          console.error('Status code:', (err as { status: unknown }).status);
+          if ('data' in err) {
+            console.error('Response data:', (err as { data: unknown }).data);
+          }
+          // Add more specific error handling
+          if ((err as { status: unknown }).status === 404) {
+            console.error('404 Not Found - Check that the user ID exists and the collection name is correct');
+          }
+        }
+        throw err;
       } finally {
         this.loading.users = false;
       }
@@ -266,7 +313,7 @@ export const useAdminStore = defineStore('admin', {
       try {
         // Fetch all courses
         const coursesData = await pb.collection<Courses>('courses').getFullList({
-          sort: '-created'
+          sort: '-createdAt'
         });
 
         // Fetch all instructors to get their names
@@ -320,7 +367,12 @@ export const useAdminStore = defineStore('admin', {
       this.error = null;
 
       try {
-        const newCourse = await pb.collection('courses').create(courseData);
+        const completeCourseData = {
+          ...courseData,
+          instructorId: courseData.instructorId || this.instructors[0].id
+        };
+
+        const newCourse = await pb.collection('courses').create(completeCourseData);
         await this.fetchCourses(); // Refresh the courses list
         return newCourse;
       } catch (err) {
@@ -378,6 +430,42 @@ export const useAdminStore = defineStore('admin', {
       } catch (err) {
         this.error = (err as Error).message;
         console.error('Error creating user:', err);
+        throw err;
+      } finally {
+        this.loading.users = false;
+      }
+    },
+
+    async deleteUser(id: string) {
+      this.loading.users = true;
+      this.error = null;
+
+      try {
+        await pb.collection('users').delete(id);
+        // Remove the user from the local state
+        this.users = this.users.filter(user => user.id !== id);
+      } catch (err) {
+        this.error = (err as Error).message;
+        console.error('Error deleting user:', err);
+        throw err;
+      } finally {
+        this.loading.users = false;
+      }
+    },
+
+    async resetUserPassword(id: string, newPassword: string) {
+      this.loading.users = true;
+      this.error = null;
+
+      try {
+        await pb.collection('users').update(id, {
+          password: newPassword,
+          passwordConfirm: newPassword
+        });
+        return true;
+      } catch (err) {
+        this.error = (err as Error).message;
+        console.error('Error resetting user password:', err);
         throw err;
       } finally {
         this.loading.users = false;

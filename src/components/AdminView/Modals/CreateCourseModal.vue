@@ -2,7 +2,7 @@
 import { reactive } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 
-const props = defineProps<{
+defineProps<{
   show: boolean;
 }>();
 
@@ -33,13 +33,19 @@ const courseForm = reactive({
 
 const submitCreateForm = async () => {
   try {
-    // Convert string lists to arrays
+    // Process string lists to ensure they're not empty
+    const whatYoullLearnArray = courseForm.whatYoullLearn.split('\n').filter(item => item.trim() !== '');
+    const requirementsArray = courseForm.requirements.split('\n').filter(item => item.trim() !== '');
+    const whoIsForArray = courseForm.whoIsFor.split('\n').filter(item => item.trim() !== '');
+    const includesArray = courseForm.includes.split('\n').filter(item => item.trim() !== '');
+    
+    // Ensure there's content and send as strings (not arrays) to match the API expectation
     const formData = {
       ...courseForm,
-      whatYoullLearn: courseForm.whatYoullLearn.split('\n').filter(item => item.trim() !== ''),
-      requirements: courseForm.requirements.split('\n').filter(item => item.trim() !== ''),
-      whoIsFor: courseForm.whoIsFor.split('\n').filter(item => item.trim() !== ''),
-      includes: courseForm.includes.split('\n').filter(item => item.trim() !== ''),
+      whatYoullLearn: whatYoullLearnArray.length > 0 ? whatYoullLearnArray.join('\n') : 'Not specified',
+      requirements: requirementsArray.length > 0 ? requirementsArray.join('\n') : 'No prerequisites',
+      whoIsFor: whoIsForArray.length > 0 ? whoIsForArray.join('\n') : 'All learners',
+      includes: includesArray.length > 0 ? includesArray.join('\n') : 'Course content',
       rating: 0,
       reviews: 0,
       imageUrl: `https://via.placeholder.com/300x150?text=${courseForm.courseCode}`
@@ -146,22 +152,22 @@ const submitCreateForm = async () => {
 
         <div class="form-group">
           <label for="whatYoullLearn">What You'll Learn (one item per line)</label>
-          <textarea id="whatYoullLearn" v-model="courseForm.whatYoullLearn" rows="4" placeholder="Enter each item on a new line"></textarea>
+          <textarea id="whatYoullLearn" v-model="courseForm.whatYoullLearn" rows="4" placeholder="Enter at least one learning outcome (e.g., Build a full-stack web application)" required></textarea>
         </div>
 
         <div class="form-group">
           <label for="requirements">Requirements (one item per line)</label>
-          <textarea id="requirements" v-model="courseForm.requirements" rows="4" placeholder="Enter each item on a new line"></textarea>
+          <textarea id="requirements" v-model="courseForm.requirements" rows="4" placeholder="Enter at least one requirement (e.g., Basic JavaScript knowledge)" required></textarea>
         </div>
 
         <div class="form-group">
           <label for="whoIsFor">Who Is This Course For (one item per line)</label>
-          <textarea id="whoIsFor" v-model="courseForm.whoIsFor" rows="4" placeholder="Enter each item on a new line"></textarea>
+          <textarea id="whoIsFor" v-model="courseForm.whoIsFor" rows="4" placeholder="Enter at least one target audience (e.g., Web developers looking to expand their skills)" required></textarea>
         </div>
 
         <div class="form-group">
           <label for="includes">Course Includes (one item per line)</label>
-          <textarea id="includes" v-model="courseForm.includes" rows="4" placeholder="Enter each item on a new line"></textarea>
+          <textarea id="includes" v-model="courseForm.includes" rows="4" placeholder="Enter at least one course item (e.g., 10 hours of on-demand video)" required></textarea>
         </div>
 
         <div class="modal-actions">

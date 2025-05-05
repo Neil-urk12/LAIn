@@ -2,7 +2,7 @@
 import { ref, reactive } from 'vue';
 import { useAdminStore } from '@/stores/admin';
 
-const props = defineProps<{
+defineProps<{
   show: boolean;
 }>();
 
@@ -21,7 +21,14 @@ const userForm = reactive({
   password: '',
   passwordConfirm: '',
   role: 'student',
-  verified: true
+  verified: true,
+  bio: '',
+  company: '',
+  position: '',
+  linkedIn: '',
+  website: '',
+  isActive: true,
+  learningStreak: 0
 });
 
 // Form errors
@@ -98,14 +105,16 @@ const submitForm = async () => {
     const data = {
       ...userForm,
       emailVisibility: true,
-      linkedIn: '',
-      website: '',
-      company: '',
-      position: '',
-      bio: '',
       profilePicture: '',
-      learningStreak: 0,
-      lastLoginDate: now
+      lastLoginDate: now,
+      // Ensure all fields are included
+      bio: userForm.bio,
+      company: userForm.company,
+      position: userForm.position,
+      linkedIn: userForm.linkedIn,
+      website: userForm.website,
+      isActive: userForm.isActive,
+      learningStreak: userForm.learningStreak
     };
 
     await adminStore.createUser(data);
@@ -118,17 +127,25 @@ const submitForm = async () => {
       password: '',
       passwordConfirm: '',
       role: 'student',
-      verified: true
+      verified: true,
+      bio: '',
+      company: '',
+      position: '',
+      linkedIn: '',
+      website: '',
+      isActive: true,
+      learningStreak: 0
     });
 
     emit('created');
     emit('close');
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating user:', error);
 
     // Handle specific API errors
-    if (error.response?.data) {
-      const responseData = error.response.data;
+    if (error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response) {
+      const responseData = error.response.data as Record<string, { message: string }>;
 
       if (responseData.email) {
         errors.email = responseData.email.message;
@@ -227,6 +244,47 @@ const submitForm = async () => {
             <input type="checkbox" v-model="userForm.verified" />
             <span>Activate account immediately</span>
           </label>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="userForm.isActive" />
+            <span>Set account as active</span>
+          </label>
+        </div>
+
+        <div class="form-section">
+          <h3>Additional Information</h3>
+          
+          <div class="form-group">
+            <label for="bio">Bio</label>
+            <textarea id="bio" v-model="userForm.bio" rows="3"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="company">Company</label>
+            <input type="text" id="company" v-model="userForm.company" />
+          </div>
+          
+          <div class="form-group">
+            <label for="position">Position</label>
+            <input type="text" id="position" v-model="userForm.position" />
+          </div>
+          
+          <div class="form-group">
+            <label for="linkedIn">LinkedIn</label>
+            <input type="text" id="linkedIn" v-model="userForm.linkedIn" />
+          </div>
+          
+          <div class="form-group">
+            <label for="website">Website</label>
+            <input type="text" id="website" v-model="userForm.website" />
+          </div>
+          
+          <div class="form-group">
+            <label for="learningStreak">Learning Streak (days)</label>
+            <input type="number" id="learningStreak" v-model="userForm.learningStreak" min="0" />
+          </div>
         </div>
 
         <div class="modal-actions">

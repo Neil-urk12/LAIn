@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, defineEmits, defineAsyncComponent, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { BookOpen, LayoutGrid, Calendar, MessageSquare, FileText, CreditCard, Settings } from 'lucide-vue-next'
+import { BookOpen, LayoutGrid, Calendar, MessageSquare, FileText, CreditCard, Settings, User } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 const ThemeToggleButton = defineAsyncComponent(() => import('./ThemeToggleButton.vue'))
 
@@ -81,6 +81,10 @@ function toggleMobileSidebar() {
         <li :class="{ active: route.path === '/certificates' }" @click="$router.push('/certificates')">
           <FileText :size="18" color="#059669" />
           <span v-show="!isCollapsed">Certificates</span>
+        </li>
+        <li :class="{ active: route.path === '/admin' }" @click="$router.push('/admin')">
+          <User :size="18" color="#059669" />
+          <span v-show="!isCollapsed">Admin</span>
         </li>
         <li>
           <CreditCard :size="18" color="#059669" />
