@@ -26,17 +26,20 @@
       </ul>
     </nav>
     <div class="sidebar-footer">
-      <div class="user-avatar" v-if="authStore.isAuthenticated">
-        {{ getUserInitials }}
+      <ThemeToggleButton class="theme-toggle" />
+      <div class="user-info-actions">
+        <div class="user-avatar" v-if="authStore.isAuthenticated">
+          {{ getUserInitials }}
+        </div>
+        <div class="user-avatar" v-else>?</div>
+        <div class="user-info" v-show="!isCollapsed">
+          <span class="user-name">{{ authStore.getName || 'Guest User' }}</span>
+          <span class="user-email">{{ authStore.getEmail || 'Not logged in' }}</span>
+        </div>
+        <button class="logout-btn" @click="handleLogout" title="Logout">
+          <LogOut :size="18" />
+        </button>
       </div>
-      <div class="user-avatar" v-else>?</div>
-      <div class="user-info" v-show="!isCollapsed">
-        <span class="user-name">{{ authStore.getName || 'Guest User' }}</span>
-        <span class="user-email">{{ authStore.getEmail || 'Not logged in' }}</span>
-      </div>
-      <button class="logout-btn" @click="handleLogout" title="Logout">
-        <LogOut :size="18" />
-      </button>
     </div>
   </aside>
 </template>
@@ -47,6 +50,7 @@ import { computed, ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 import { LogOut, BookOpen, ChevronLeft } from 'lucide-vue-next';
+import ThemeToggleButton from '@/components/Global/ThemeToggleButton.vue';
 
 const emit = defineEmits(['nav-click', 'toggle-collapse']);
 const authStore = useAuthStore();
@@ -96,6 +100,10 @@ const handleLogout = async () => {
   flex-direction: column;
   padding: calc(var(--spacing-unit) * 3); /* 24px */
   transition: width 0.3s ease, padding 0.3s ease;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .sidebar.collapsed {
@@ -129,14 +137,14 @@ const handleLogout = async () => {
 }
 
 .logo {
-  font-size: 1.5rem; /* 24px */
+  font-size: 1.25rem; /* 20px */
   font-weight: 700;
   color: var(--primary-color, #10b981);
   margin-right: calc(var(--spacing-unit) * 0.5); /* 4px */
 }
 
 .logo-admin {
-  font-size: 1.5rem; /* 24px */
+  font-size: 1.25rem; /* 20px */
   font-weight: 500;
   color: var(--text-dark, #1f2937);
 }
@@ -215,12 +223,19 @@ const handleLogout = async () => {
   padding-top: calc(var(--spacing-unit) * 2); /* 16px */
   border-top: 1px solid var(--border-color, #e5e7eb);
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: calc(var(--spacing-unit) * 2); /* 16px */
   position: relative;
 }
 
 .sidebar.collapsed .sidebar-footer {
-  justify-content: center;
+  align-items: center;
+}
+
+.user-info-actions {
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
 .user-avatar {
@@ -279,6 +294,19 @@ const handleLogout = async () => {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+.sidebar.collapsed .user-info-actions {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.theme-toggle {
+  align-self: flex-start;
+}
+
+.sidebar.collapsed .theme-toggle {
+  align-self: center;
+}
+
 .sidebar.collapsed .logout-btn {
   margin-left: 0;
 }
@@ -335,5 +363,16 @@ html.dark .logout-btn {
 html.dark .logout-btn:hover {
   background-color: #374151; /* Darker hover in dark mode */
   color: #a7f3d0; /* Lighter green text */
+}
+
+/* Dark mode styles for theme toggle button */
+html.dark .theme-toggle-btn {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+html.dark .theme-toggle-btn:hover {
+  background-color: #374151;
+  border-color: #4b5563;
 }
 </style>
