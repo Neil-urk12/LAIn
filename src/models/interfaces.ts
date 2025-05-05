@@ -13,8 +13,8 @@ export interface User {
   bio?: string;
   profilePicture?: string;
   verified: boolean;
-  createdAt: string;
-  updatedAt: string;
+  created: string;
+  updated: string;
   token?: string;
   learningStreak: number;
   lastLoginDate?: string;
@@ -91,6 +91,7 @@ export interface Enrollments {
   createdAt: string;
   updatedAt: string;
   expand?: {
+    userId?: User;
     courseId: Courses;
   };
 }

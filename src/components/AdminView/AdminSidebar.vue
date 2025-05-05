@@ -18,19 +18,31 @@
       </ul>
     </nav>
     <div class="sidebar-footer">
-      <div class="user-avatar">A</div>
-      <div class="user-info">
-        <span class="user-name">Admin User</span>
-        <span class="user-email">admin@lain.edu</span>
+      <div class="user-avatar" v-if="authStore.isAuthenticated">
+        {{ getUserInitials }}
       </div>
+      <div class="user-avatar" v-else>?</div>
+      <div class="user-info">
+        <span class="user-name">{{ authStore.getName || 'Guest User' }}</span>
+        <span class="user-email">{{ authStore.getEmail || 'Not logged in' }}</span>
+      </div>
+      <button class="logout-btn" @click="handleLogout" title="Logout">
+        <LogOut :size="18" />
+      </button>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
 import type { Component } from 'vue';
+import { computed } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import { useRouter } from 'vue-router';
+import { LogOut } from 'lucide-vue-next';
 
 const emit = defineEmits(['nav-click']);
+const authStore = useAuthStore();
+const router = useRouter();
 
 defineProps<{
   navigation: Array<{
@@ -41,8 +53,23 @@ defineProps<{
   }>;
 }>();
 
+const getUserInitials = computed(() => {
+  if (!authStore.getName) return '?';
+
+  const nameParts = authStore.getName.split(' ');
+  if (nameParts.length > 1) {
+    return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
+  }
+  return nameParts[0].substring(0, 2).toUpperCase();
+});
+
 const handleNavClick = (view: string) => {
   emit('nav-click', view);
+};
+
+const handleLogout = async () => {
+  await authStore.logout();
+  router.push('/login');
 };
 </script>
 
@@ -120,6 +147,7 @@ const handleNavClick = (view: string) => {
   border-top: 1px solid var(--border-color, #e5e7eb);
   display: flex;
   align-items: center;
+  position: relative;
 }
 
 .user-avatar {
@@ -133,22 +161,50 @@ const handleNavClick = (view: string) => {
   justify-content: center;
   font-weight: 500;
   margin-right: calc(var(--spacing-unit) * 1.5); /* 12px */
+  flex-shrink: 0;
 }
 
 .user-info {
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
 }
 
 .user-name {
   font-weight: 500;
   color: var(--text-dark, #1f2937);
   font-size: 0.875rem; /* 14px */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-email {
   font-size: 0.75rem; /* 12px */
   color: var(--text-light, #6b7280);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: var(--text-light, #6b7280);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: calc(var(--spacing-unit) * 1);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: var(--bg-light, #f9fafb);
+  color: var(--primary-color, #10b981);
 }
 
 /* Dark mode styles */
@@ -176,6 +232,15 @@ html.dark .sidebar-nav li a:hover {
 }
 html.dark .sidebar-nav li.active a {
   background-color: #064e3b; /* Darker green active */
+  color: #a7f3d0; /* Lighter green text */
+}
+
+html.dark .logout-btn {
+  color: #9ca3af; /* Lighter gray in dark mode */
+}
+
+html.dark .logout-btn:hover {
+  background-color: #374151; /* Darker hover in dark mode */
   color: #a7f3d0; /* Lighter green text */
 }
 </style>

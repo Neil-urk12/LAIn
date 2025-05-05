@@ -1,18 +1,23 @@
 <script setup lang="ts">
-import { ref, defineAsyncComponent, watch } from 'vue';
+import { ref, defineAsyncComponent, watch, onMounted } from 'vue';
 import AdminSidebar from '@/components/AdminView/AdminSidebar.vue';
 import AdminDashboard from '@/components/AdminView/AdminDashboard.vue';
-const UserManagement = defineAsyncComponent(() => import('@/components/AdminView/UserManagement.vue'));
+const UserManagement = defineAsyncComponent(() => import('../components/AdminView/UserManagement.vue'));
+const CourseManagement = defineAsyncComponent(() => import('../components/AdminView/CourseManagement.vue'));
 import {
   Home,
   Users,
   BookOpen,
   BarChart2,
   Settings,
-  DollarSign,
 } from 'lucide-vue-next';
+import { useAdminStore } from '@/stores/admin';
+import { useAuthStore } from '@/stores/auth';
+import { useRouter } from 'vue-router';
 
-
+const adminStore = useAdminStore();
+const authStore = useAuthStore();
+const router = useRouter();
 const activeView = ref('dashboard');
 const navigation = ref([
   { name: 'Dashboard', icon: Home, active: true, view: 'dashboard' },
@@ -28,33 +33,41 @@ const updateActiveNav = (view: string) => {
     active: item.view === view
   }));
   activeView.value = view;
+
+  // Fetch data based on the active view
+  if (view === 'users' && !adminStore.users.length) {
+    adminStore.fetchUsers();
+  }
+
+  if (view === 'courses' && !adminStore.courses.length) {
+    adminStore.fetchCourses();
+  }
 };
 
 watch(activeView, (newView) => {
   updateActiveNav(newView);
 });
 
-const stats = ref([
-  { title: 'Total Users', value: 2543, change: '+12.5%', icon: Users },
-  { title: 'Total Courses', value: 48, change: '+4.2%', icon: BookOpen },
-  { title: 'Active Enrollments', value: 1875, change: '+18.7%', icon: BarChart2 },
-  { title: 'Revenue', value: 12450, change: '+8.3%', icon: DollarSign },
-]);
+// Fetch data when component is mounted
+onMounted(async () => {
+  // Initialize auth if needed
+  if (!authStore.isAuthenticated) {
+    await authStore.initAuth();
+  }
 
-const recentActivity = ref([
-  { id: 1, initials: 'JD', userName: 'Jan Cez', action: 'enrolled in', subject: 'AI Fundamentals', timestamp: '5 minutes ago', avatarColor: '#86efac' }, // light green
-  { id: 2, initials: 'JS', userName: 'Jane Rosalijos', action: 'completed lesson', subject: 'Introduction to Machine Learning', timestamp: '30 minutes ago', avatarColor: '#93c5fd' }, // light blue
-  { id: 3, initials: 'RJ', userName: 'Standik Rosalijos', action: 'earned certificate for', subject: 'Python for Data Science', timestamp: 'about 1 hour ago', avatarColor: '#fca5a5' }, // light red
-  { id: 4, initials: 'ED', userName: 'Emiligma Morales', action: 'created account', subject: null, timestamp: 'about 2 hours ago', avatarColor: '#c4b5fd' }, // light purple
-  { id: 5, initials: 'MW', userName: 'Bro bro', action: 'submitted assignment for', subject: 'Deep Learning Applications', timestamp: 'about 3 hours ago', avatarColor: '#fdba74' }, // light orange
-]);
+  // Check if user is authenticated and has admin role
+  if (!authStore.isAuthenticated || (authStore.getUser?.role !== 'admin')) {
+    // Redirect non-admin users to dashboard
+    router.push('/dashboard');
+    return;
+  }
 
-const quickActions = ref([
-  { label: 'Create New Course' },
-  { label: 'Add New User' },
-  { label: 'View Analytics' },
-  { label: 'System Settings' },
-]);
+  // Fetch stats and recent activity for the dashboard
+  await Promise.all([
+    adminStore.fetchStats(),
+    adminStore.fetchRecentActivity()
+  ]);
+});
 
 </script>
 
@@ -64,16 +77,24 @@ const quickActions = ref([
       :navigation="navigation"
       @nav-click="updateActiveNav"
     />
-    
+
     <AdminDashboard
       v-if="activeView === 'dashboard'"
-      :stats="stats"
-      :recentActivity="recentActivity"
-      :quickActions="quickActions"
+      :stats="adminStore.stats"
+      :recentActivity="adminStore.recentActivity"
+      :quickActions="adminStore.quickActions"
     />
-    
+
     <UserManagement
       v-if="activeView === 'users'"
+      :users="adminStore.users"
+      :loading="adminStore.loading.users"
+    />
+
+    <CourseManagement
+      v-if="activeView === 'courses'"
+      :courses="adminStore.courses"
+      :loading="adminStore.loading.courses"
     />
   </div>
 </template>
