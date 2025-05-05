@@ -3,14 +3,27 @@ import { ref } from 'vue';
 import { PlusIcon, SearchIcon } from 'lucide-vue-next';
 import type { User } from '@/models/interfaces';
 import UserTable from './Tables/UserTable.vue';
+import AddUserModal from './Modals/AddUserModal.vue';
+import { useAdminStore } from '@/stores/admin';
 
 // Define props
-const props = defineProps<{
+defineProps<{
   users: User[];
   loading: boolean;
 }>();
 
+const adminStore = useAdminStore();
 const searchTerm = ref('');
+const showAddUserModal = ref(false);
+
+const handleAddUserClick = () => {
+  showAddUserModal.value = true;
+};
+
+const handleUserCreated = () => {
+  // Refresh the users list
+  adminStore.fetchUsers();
+};
 </script>
 
 <template>
@@ -20,7 +33,7 @@ const searchTerm = ref('');
         <h1>User Management</h1>
         <p>Manage user accounts, permissions, and course enrollments</p>
       </div>
-      <button class="btn btn-primary add-user-btn">
+      <button class="btn btn-primary add-user-btn" @click="handleAddUserClick">
         <PlusIcon :size="16" /> Add User
       </button>
     </div>
@@ -38,6 +51,13 @@ const searchTerm = ref('');
       :users="users"
       :loading="loading"
       :searchTerm="searchTerm"
+    />
+
+    <!-- Add User Modal -->
+    <AddUserModal
+      :show="showAddUserModal"
+      @close="showAddUserModal = false"
+      @created="handleUserCreated"
     />
   </div>
 </template>

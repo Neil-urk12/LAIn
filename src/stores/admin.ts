@@ -364,6 +364,24 @@ export const useAdminStore = defineStore('admin', {
       } finally {
         this.loading.courses = false;
       }
+    },
+
+    // User Management Actions
+    async createUser(userData: Partial<User>) {
+      this.loading.users = true;
+      this.error = null;
+
+      try {
+        const newUser = await pb.collection('users').create(userData);
+        await this.fetchUsers(); // Refresh the users list
+        return newUser;
+      } catch (err) {
+        this.error = (err as Error).message;
+        console.error('Error creating user:', err);
+        throw err;
+      } finally {
+        this.loading.users = false;
+      }
     }
   }
 });

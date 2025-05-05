@@ -1,7 +1,15 @@
 <template>
-  <aside class="sidebar">
+  <aside :class="['sidebar', { 'collapsed': isCollapsed }]">
     <div class="sidebar-header">
-      <span class="logo">LAIn</span> <span class="logo-admin">Admin</span>
+      <div class="logo-container">
+        <BookOpen :size="24" class="logo-icon" />
+        <div v-show="!isCollapsed" class="logo-text">
+          <span class="logo">LAIn</span> <span class="logo-admin">Admin</span>
+        </div>
+      </div>
+      <button class="toggle-btn" @click="toggleSidebar" :title="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+        <ChevronLeft :size="20" :class="{ 'rotate-180': isCollapsed }" />
+      </button>
     </div>
     <nav class="sidebar-nav">
       <ul>
@@ -10,9 +18,9 @@
           :key="item.name"
           :class="{ 'active': item.active }"
         >
-          <a href="#" @click.prevent="handleNavClick(item.view)">
+          <a href="#" @click.prevent="handleNavClick(item.view)" :title="isCollapsed ? item.name : ''">
             <component :is="item.icon" class="nav-icon" />
-            <span>{{ item.name }}</span>
+            <span v-show="!isCollapsed">{{ item.name }}</span>
           </a>
         </li>
       </ul>
@@ -22,7 +30,7 @@
         {{ getUserInitials }}
       </div>
       <div class="user-avatar" v-else>?</div>
-      <div class="user-info">
+      <div class="user-info" v-show="!isCollapsed">
         <span class="user-name">{{ authStore.getName || 'Guest User' }}</span>
         <span class="user-email">{{ authStore.getEmail || 'Not logged in' }}</span>
       </div>
@@ -35,14 +43,15 @@
 
 <script setup lang="ts">
 import type { Component } from 'vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
-import { LogOut } from 'lucide-vue-next';
+import { LogOut, BookOpen, ChevronLeft } from 'lucide-vue-next';
 
-const emit = defineEmits(['nav-click']);
+const emit = defineEmits(['nav-click', 'toggle-collapse']);
 const authStore = useAuthStore();
 const router = useRouter();
+const isCollapsed = ref(false);
 
 defineProps<{
   navigation: Array<{
@@ -63,6 +72,11 @@ const getUserInitials = computed(() => {
   return nameParts[0].substring(0, 2).toUpperCase();
 });
 
+const toggleSidebar = () => {
+  isCollapsed.value = !isCollapsed.value;
+  emit('toggle-collapse', isCollapsed.value);
+};
+
 const handleNavClick = (view: string) => {
   emit('nav-click', view);
 };
@@ -81,14 +95,37 @@ const handleLogout = async () => {
   display: flex;
   flex-direction: column;
   padding: calc(var(--spacing-unit) * 3); /* 24px */
+  transition: width 0.3s ease, padding 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+  padding: calc(var(--spacing-unit) * 2); /* 16px */
 }
 
 .sidebar-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding-bottom: calc(var(--spacing-unit) * 3); /* 24px */
   margin-bottom: calc(var(--spacing-unit) * 2); /* 16px */
   border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo-icon {
+  color: var(--primary-color, #10b981);
+  margin-right: calc(var(--spacing-unit) * 1);
+  flex-shrink: 0;
+}
+
+.logo-text {
+  display: flex;
+  align-items: center;
 }
 
 .logo {
@@ -97,10 +134,33 @@ const handleLogout = async () => {
   color: var(--primary-color, #10b981);
   margin-right: calc(var(--spacing-unit) * 0.5); /* 4px */
 }
+
 .logo-admin {
   font-size: 1.5rem; /* 24px */
   font-weight: 500;
   color: var(--text-dark, #1f2937);
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: var(--text-light, #6b7280);
+  cursor: pointer;
+  padding: calc(var(--spacing-unit) * 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.toggle-btn:hover {
+  background-color: var(--bg-light, #f9fafb);
+  color: var(--primary-color, #10b981);
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
 }
 
 .sidebar-nav {
@@ -125,6 +185,11 @@ const handleLogout = async () => {
   margin-bottom: calc(var(--spacing-unit) * 0.5); /* 4px */
 }
 
+.sidebar.collapsed .sidebar-nav li a {
+  justify-content: center;
+  padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 1);
+}
+
 .sidebar-nav li a:hover {
   background-color: var(--bg-light, #f9fafb);
   color: var(--text-dark, #1f2937);
@@ -141,6 +206,10 @@ const handleLogout = async () => {
   margin-right: calc(var(--spacing-unit) * 1.5); /* 12px */
 }
 
+.sidebar.collapsed .nav-icon {
+  margin-right: 0;
+}
+
 .sidebar-footer {
   margin-top: auto; /* Pushes footer to the bottom */
   padding-top: calc(var(--spacing-unit) * 2); /* 16px */
@@ -148,6 +217,10 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   position: relative;
+}
+
+.sidebar.collapsed .sidebar-footer {
+  justify-content: center;
 }
 
 .user-avatar {
@@ -162,6 +235,10 @@ const handleLogout = async () => {
   font-weight: 500;
   margin-right: calc(var(--spacing-unit) * 1.5); /* 12px */
   flex-shrink: 0;
+}
+
+.sidebar.collapsed .user-avatar {
+  margin-right: 0;
 }
 
 .user-info {
@@ -202,6 +279,10 @@ const handleLogout = async () => {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+.sidebar.collapsed .logout-btn {
+  margin-left: 0;
+}
+
 .logout-btn:hover {
   background-color: var(--bg-light, #f9fafb);
   color: var(--primary-color, #10b981);
@@ -212,6 +293,18 @@ html.dark .sidebar {
   background-color: #1f2937; /* Darker sidebar */
   border-right-color: #374151;
 }
+
+html.dark .toggle-btn {
+  background-color: #1f2937;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+html.dark .toggle-btn:hover {
+  background-color: #374151;
+  color: #a7f3d0;
+}
+
 html.dark .sidebar-header,
 html.dark .sidebar-footer {
   border-color: #374151;

@@ -19,6 +19,7 @@ const adminStore = useAdminStore();
 const authStore = useAuthStore();
 const router = useRouter();
 const activeView = ref('dashboard');
+const isSidebarCollapsed = ref(false);
 const navigation = ref([
   { name: 'Dashboard', icon: Home, active: true, view: 'dashboard' },
   { name: 'Users', icon: Users, active: false, view: 'users' },
@@ -72,30 +73,33 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="admin-dashboard">
+  <div :class="['admin-dashboard', { 'sidebar-collapsed': isSidebarCollapsed }]">
     <AdminSidebar
       :navigation="navigation"
       @nav-click="updateActiveNav"
+      @toggle-collapse="isSidebarCollapsed = $event"
     />
 
-    <AdminDashboard
-      v-if="activeView === 'dashboard'"
-      :stats="adminStore.stats"
-      :recentActivity="adminStore.recentActivity"
-      :quickActions="adminStore.quickActions"
-    />
+    <div class="main-content">
+      <AdminDashboard
+        v-if="activeView === 'dashboard'"
+        :stats="adminStore.stats"
+        :recentActivity="adminStore.recentActivity"
+        :quickActions="adminStore.quickActions"
+      />
 
-    <UserManagement
-      v-if="activeView === 'users'"
-      :users="adminStore.users"
-      :loading="adminStore.loading.users"
-    />
+      <UserManagement
+        v-if="activeView === 'users'"
+        :users="adminStore.users"
+        :loading="adminStore.loading.users"
+      />
 
-    <CourseManagement
-      v-if="activeView === 'courses'"
-      :courses="adminStore.courses"
-      :loading="adminStore.loading.courses"
-    />
+      <CourseManagement
+        v-if="activeView === 'courses'"
+        :courses="adminStore.courses"
+        :loading="adminStore.loading.courses"
+      />
+    </div>
   </div>
 </template>
 
@@ -104,14 +108,20 @@ onMounted(async () => {
   display: flex;
   min-height: 100vh;
   background-color: var(--bg-light, #f9fafb);
+  transition: padding-left 0.3s ease;
 }
 
+.admin-dashboard.sidebar-collapsed .main-content {
+  margin-left: 40px; /* Width of the collapsed sidebar with just the toggle button */
+}
 
 /* Main Content Area */
 .main-content {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  transition: margin-left 0.3s ease;
 }
 
 /* Header */
