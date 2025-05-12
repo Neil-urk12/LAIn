@@ -2,14 +2,18 @@
 import { useRoute, useRouter } from "vue-router";
 import { ref, onMounted, computed } from "vue";
 import { useEnrollmentStore } from "../stores/enrollment";
+import { useAuthStore } from "../stores/auth";
 import { pb } from "../pocketbase/pocketbase";
 import type { Courses, Lessons, Instructor, Enrollments } from "../models/interfaces";
 import type { CourseWithExpand } from "../models/types";
+import html2pdf from 'html2pdf.js';
+import CertificateTemplate from '../components/CertificateTemplate.vue';
 
 const route = useRoute();
 const router = useRouter();
 const courseId = route.params.id as string;
 const enrollmentStore = useEnrollmentStore();
+const authStore = useAuthStore();
 const isLoading = ref(true);
 const course = ref<(Courses & { instructor: Instructor }) | null>(null);
 const lessons = ref<Lessons[]>([]);
@@ -39,11 +43,18 @@ const courseDuration = computed(() =>
 
 const courseStudentsCount = ref(0);
 const courseLessonsCount = ref(0);
-const certificate = ref('Included');
 const showCertificatePreview = ref(false);
+const certificateData = ref({
+  studentName: '',
+  courseTitle: '',
+  completionDate: '',
+  credentialId: ''
+});
+const certificateTemplateRef = ref<HTMLElement | null>(null);
 
 onMounted(async () => {
   try {
+    isLoading.value = true;
     const data = (await pb
       .collection<Courses>("courses")
       .getOne(courseId, { expand: "instructorId" })) as CourseWithExpand;
@@ -62,7 +73,7 @@ onMounted(async () => {
 
     courseStudentsCount.value = enrollments.length;
   } catch (err) {
-    console.error(err);
+    console.error("Failed to load course data:", err);
     router.replace({ name: "not-found", state: window.history.state });
   } finally {
     isLoading.value = false;
@@ -77,8 +88,7 @@ const progressPercent = computed(() => {
 });
 
 const isCourseCompleted = computed(() => {
-  const progress = enrollmentStore.currentEnrollment?.progress ?? 0;
-  return courseLessonsCount.value > 0 && progress >= courseLessonsCount.value;
+  return enrollmentStore.currentEnrollment?.isCompleted ?? false;
 });
 
 const goToLesson = (lessonId: string) => {
@@ -97,10 +107,8 @@ const startFirstLesson = () => {
 const continueLesson = () => {
   const progress = enrollmentStore.currentEnrollment?.progress || 0;
   if (progress < lessons.value.length) {
-    // Go to the next uncompleted lesson
     goToLesson(lessons.value[progress].id);
   } else if (lessons.value.length > 0) {
-    // If all lessons are completed, go to the first lesson
     goToLesson(lessons.value[0].id);
   }
 };
@@ -111,6 +119,20 @@ const isLessonCompleted = (index: number) => {
 };
 
 function openCertificatePreview() {
+  if (!authStore.user || !course.value) {
+    console.error("User or course data missing for certificate preview.");
+    return;
+  }
+
+  const currentDate = new Date();
+  const completionTimestamp = currentDate.getTime();
+
+  certificateData.value = {
+    studentName: authStore.user.name || 'Student Name',
+    courseTitle: course.value.title,
+    completionDate: currentDate.toLocaleDateString(),
+    credentialId: `${authStore.user.id}-${course.value.id}-${completionTimestamp}`,
+  };
   showCertificatePreview.value = true;
 }
 
@@ -118,16 +140,29 @@ function closeCertificatePreview() {
   showCertificatePreview.value = false;
 }
 
-function downloadCertificateAsPdf() {
-  // Placeholder for PDF download logic
-  console.log("Downloading certificate as PDF...");
-  closeCertificatePreview();
-}
+async function downloadCertificateAsPdf() {
+  const element = certificateTemplateRef.value;
+  if (!element) {
+    console.error("Certificate template element not found.");
+    return;
+  }
 
-function downloadCertificateAsPng() {
-  // Placeholder for PNG download logic
-  console.log("Downloading certificate as PNG...");
-  closeCertificatePreview();
+  const pdfOptions = {
+    margin:       0.5,
+    filename:     `${certificateData.value.courseTitle}_Certificate_${certificateData.value.studentName}.pdf`,
+    image:        { type: 'jpeg' as 'jpeg' | 'png' | 'webp', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true },
+    jsPDF:        { unit: 'in' as const, format: 'letter', orientation: 'landscape' as const }
+  };
+
+  try {
+    console.log("Generating PDF...");
+    await html2pdf().from(element).set(pdfOptions).save();
+    console.log("Certificate downloaded as PDF.");
+  } catch (pdfError) {
+    console.error("Error generating PDF:", pdfError);
+    alert("Sorry, there was an error generating the certificate PDF.");
+  }
 }
 </script>
 
@@ -223,7 +258,7 @@ function downloadCertificateAsPng() {
             </div>
             <div class="info-block">
               <div class="info-label">Certificate</div>
-              <div class="info-value">{{ certificate }}</div>
+              <div class="info-value">{{ isCourseCompleted ? 'Available on Completion' : 'Included' }}</div>
             </div>
           </div>
           <div class="dashboard-progress">
@@ -241,7 +276,7 @@ function downloadCertificateAsPng() {
             <span class="instructor-name">{{ course?.instructor.name }}</span>
             <span class="course-rating">★ {{ course?.rating }}</span>
             <button v-if="!isCourseCompleted" class="continue-btn" @click="continueLesson">Continue Learning</button>
-            <button v-else class="certificate-btn" @click="openCertificatePreview">Download Certificate</button>
+            <button v-else class="certificate-btn" @click="openCertificatePreview">View Certificate</button>
           </div>
         </section>
 
@@ -257,8 +292,8 @@ function downloadCertificateAsPng() {
                 <span class="module-block-title">{{ lesson.title }}</span>
               </div>
               <span class="module-block-progress"
-                >0 / 1 completed</span
-              > <!-- Assuming each fetched lesson is a single item -->
+                >{{ isLessonCompleted(lIdx) ? 1 : 0 }} / 1 completed</span
+              >
             </div>
             <ul class="module-block-lessons-expanded">
               <li
@@ -267,7 +302,8 @@ function downloadCertificateAsPng() {
                 @click="goToLesson(lesson.id)"
               >
                 <div class="lesson-icon">
-                  <span>▶️</span> <!-- Assuming all fetched items are lessons -->
+                  <span v-if="isLessonCompleted(lIdx)">✅</span>
+                  <span v-else>▶️</span>
                 </div>
                 <div class="lesson-content">
                   <div class="lesson-title-row">
@@ -310,19 +346,19 @@ function downloadCertificateAsPng() {
   </template>
 
   <!-- Certificate Preview Modal -->
-  <div v-if="showCertificatePreview" class="certificate-preview-overlay">
-    <div class="certificate-preview-content">
-      <h2>Certificate of Completion</h2>
-      <div class="certificate-preview-area">
-        <!-- Placeholder for actual certificate preview -->
-        <p>Congratulations, [Student Name]!</p>
-        <p>You have successfully completed the course:</p>
-        <h3>{{ course?.title }}</h3>
-        <p>Issued on: {{ new Date().toLocaleDateString() }}</p>
+  <div v-if="showCertificatePreview" class="certificate-preview-overlay" @click.self="closeCertificatePreview">
+    <div class="certificate-preview-modal-content">
+      <h2>Certificate Preview</h2>
+      <div ref="certificateTemplateRef">
+        <CertificateTemplate
+          :student-name="certificateData.studentName"
+          :course-title="certificateData.courseTitle"
+          :completion-date="certificateData.completionDate"
+          :credential-id="certificateData.credentialId"
+        />
       </div>
       <div class="certificate-preview-actions">
         <button @click="downloadCertificateAsPdf">Download PDF</button>
-        <button @click="downloadCertificateAsPng">Download PNG</button>
         <button @click="closeCertificatePreview" class="close-btn">Close</button>
       </div>
     </div>
@@ -776,7 +812,7 @@ function downloadCertificateAsPng() {
 /* Styles for Certificate Button */
 .certificate-btn {
   margin-left: auto;
-  background: transparent; /* Or another suitable color */
+  background: transparent;
   color: green;
   border: 1px solid green;
   padding: 0.65rem 1.4rem;
@@ -784,11 +820,11 @@ function downloadCertificateAsPng() {
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 
 .certificate-btn:hover {
-  background: var(--primary-color); /* Darker shade for hover */
+  background: green;
   color: #fff;
 }
 
@@ -799,54 +835,43 @@ function downloadCertificateAsPng() {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  overflow-y: auto;
+  padding: 2rem 0;
 }
 
-.certificate-preview-content {
+.certificate-preview-modal-content {
   background: var(--bg-white);
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   text-align: center;
-  max-width: 600px;
-  width: 90%;
+  width: auto;
+  max-width: 90%;
+  display: inline-block;
 }
 
-.certificate-preview-content h2 {
+.certificate-preview-modal-content h2 {
   margin-top: 0;
-  margin-bottom: 1rem;
-  color: var(--text-dark);
-}
-
-.certificate-preview-area {
-  border: 1px dashed var(--border-color);
-  padding: 1.5rem;
   margin-bottom: 1.5rem;
-  min-height: 250px; /* Placeholder height */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.certificate-preview-area h3 {
-  color: var(--primary-color);
-  margin: 0.5rem 0;
+  color: var(--text-dark);
 }
 
 .certificate-preview-actions {
   display: flex;
   justify-content: center;
   gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .certificate-preview-actions button {
-  padding: 0.6rem 1.2rem;
+  padding: 0.7rem 1.4rem;
   border-radius: 6px;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;

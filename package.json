@@ -17,6 +17,7 @@
     "@types/crypto-js": "^4.2.2",
     "@vueuse/core": "^13.1.0",
     "crypto-js": "^4.2.0",
+    "html2pdf.js": "^0.10.3",
     "lucide-vue-next": "^0.487.0",
     "pinia": "^3.0.1",
     "pocketbase": "^0.25.2",

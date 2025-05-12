@@ -108,33 +108,6 @@ export interface Lessons {
   updatedAt: string;
 }
 
-export interface Certificates {
-  id: string;
-  userId?: string;
-  courseId: string;
-  templateId: string
-  issuedDate?: string;
-  credentialId: string;
-  status: 'published' | 'draft' | 'revoked';
-  expirationDate?: string;
-  verificationUrl: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CertificateTemplates {
-  id: string
-  title: string
-  specialization: string
-  courseCode: string
-  instructorId: string
-  tags: string[]
-  requirements: string[]
-  verified: boolean
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface Session {
   id: string;
   userId: string;
