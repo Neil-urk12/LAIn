@@ -1,45 +1,113 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { pb } from '../pocketbase/pocketbase'; // Import pb
+import { useAuthStore } from '../stores/auth'; // Import auth store
+import type { Certificates, CertificateTemplates, Courses } from '../models/interfaces'; // Import interfaces
 import CertificateCard from '../components/CertificatesView/CertificateCard.vue';
 import AboutSection from '../components/CertificatesView/AboutCertificatesSection.vue';
 import FaqSection from '../components/CertificatesView/FaqSection.vue';
+
+// Define the structure for displayed certificates
+interface EarnedCertificateDisplay {
+  id: string;
+  title: string; // From expanded template
+  specialization: string; // From expanded template or course
+  issuedDate?: string; // From certificate
+  credentialId: string; // From certificate
+  tags: string[]; // From expanded template
+  imageUrl?: string; // From expanded template (certificateImage) or course (imageUrl)
+}
+
+// Define expanded certificate type from PocketBase
+interface CertificateWithExpand extends Certificates {
+  expand?: {
+    templateId: CertificateTemplates;
+    courseId: Courses;
+    // Assuming userId is not needed here as we filter by it
+  };
+}
+
+
 const activeTab = ref('earned');
+const authStore = useAuthStore(); // Initialize auth store
+const isLoading = ref(true); // Loading state
+const error = ref<string | null>(null); // Error state
+
+// Use the new interface for earned certificates
+const earnedCertificates = ref<EarnedCertificateDisplay[]>([]);
 
 // Mock data for certificates (replace with actual data fetching later)
-const earnedCertificates = ref([
-  {
-    id: 1,
-    title: 'AI Fundamentals',
-    specialization: 'AI Fundamentals: Getting Started',
-    issuedDate: 'October 15, 2023',
-    credentialId: 'LAIn-AI-FUND-2023-001',
-    tags: ['Artificial Intelligence', 'Machine Learning Basics', 'Neural Networks'],
-    imageUrl: undefined, // Optional : Kapoy na
-  },
-  {
-    id: 2,
-    title: 'Machine Learning with Python',
-    specialization: 'Machine Learning with Python',
-    issuedDate: 'December 3, 2023',
-    credentialId: 'LAIn-ML-PY-2023-042',
-    tags: ['Python', 'Machine Learning', 'Data Analysis', 'Scikit-learn', 'Pandas'],
-    imageUrl: undefined,
-  },
-  {
-    id: 3,
-    title: 'Deep Learning Specialization',
-    specialization: 'Deep Learning Specialization',
-    issuedDate: 'February 20, 2024',
-    credentialId: 'LAIn-DL-SPEC-2024-018',
-    tags: ['Deep Learning', 'Neural Networks', 'TensorFlow', 'CNNs', 'RNNs'],
-    imageUrl: undefined,
-  },
-]);
+// Removed mock data
 
 const inProgressCertificates = ref([
   // Example: Add in-progress items for the 'In Progress' tab
   // { id: 4, title: 'Natural Language Processing', progress: 50, expectedCompletion: 'June 2024' },
 ]);
+
+
+// Fetch data on component mount
+onMounted(async () => {
+  if (!authStore.user?.id) {
+    error.value = "User not logged in.";
+    isLoading.value = false;
+    return;
+  }
+
+  try {
+    isLoading.value = true;
+    error.value = null;
+    const userId = authStore.user.id;
+
+    // Fetch published certificates for the current user, expand template and course
+    const records = await pb.collection<CertificateWithExpand>('certificates').getFullList({
+      filter: `userId = "${userId}" && status = "published"`,
+      expand: 'templateId,courseId',
+      sort: '-issuedDate', // Sort by most recently issued
+    });
+
+    // Transform fetched data into the display format
+    earnedCertificates.value = records.map(cert => {
+      const template = cert.expand?.templateId;
+      const course = cert.expand?.courseId;
+
+      // Basic check for expanded data
+      if (!template || !course) {
+        console.warn(`Missing expanded data for certificate ${cert.id}`);
+        // Return a partial object or skip, depending on requirements
+        // For now, let's create a partial object
+        return {
+          id: cert.id,
+          title: 'Course Data Missing', // Placeholder
+          specialization: 'Data Missing', // Placeholder
+          issuedDate: cert.issuedDate,
+          credentialId: cert.credentialId,
+          tags: [],
+          imageUrl: undefined,
+        };
+      }
+
+      return {
+        id: cert.id,
+        title: course.title, // Use course title
+        specialization: template.specialization || course.title, // Use template specialization or fallback to course title
+        issuedDate: cert.issuedDate,
+        credentialId: cert.credentialId,
+        tags: template.tags || [], // Use template tags
+        imageUrl: course.imageUrl || undefined, // Use course image
+      };
+    });
+
+  } catch (err: unknown) {
+    console.error("Error fetching certificates:", err);
+    if (err instanceof Error) {
+      error.value = `Failed to load certificates: ${err.message}. Please try again later.`;
+    } else {
+      error.value = "An unknown error occurred while loading certificates.";
+    }
+  } finally {
+    isLoading.value = false;
+  }
+});
 
 </script>
 
@@ -61,20 +129,32 @@ const inProgressCertificates = ref([
       <button :class="{ active: activeTab === 'inProgress' }" @click="activeTab = 'inProgress'">In Progress</button>
     </div>
 
-    <section v-if="activeTab === 'earned'" class="certificates-list">
-      <div class="certificate-grid">
+    <!-- Loading State -->
+    <div v-if="isLoading" class="loading-state">
+      <p>Loading certificates...</p>
+      <!-- Optional: Add a spinner component -->
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="error-state">
+      <p>{{ error }}</p>
+    </div>
+
+    <!-- Earned Certificates Section -->
+    <section v-else-if="activeTab === 'earned'" class="certificates-list">
+      <div v-if="earnedCertificates.length" class="certificate-grid">
         <CertificateCard
           v-for="certificate in earnedCertificates"
           :key="certificate.id"
           :title="certificate.title"
           :specialization="certificate.specialization"
-          :issued-date="certificate.issuedDate"
+          :issued-date="certificate.issuedDate ?? 'Date not available'"
           :credential-id="certificate.credentialId"
           :tags="certificate.tags"
           :image-url="certificate.imageUrl"
         />
-        <p v-if="!earnedCertificates.length">You haven't earned any certificates yet.</p>
       </div>
+      <p v-else>You haven't earned any certificates yet.</p>
     </section>
 
     <section v-if="activeTab === 'inProgress'" class="in-progress-list">
@@ -235,6 +315,16 @@ html.dark .tabs button:hover:not(.active) {
 html.dark .in-progress-list p,
 html.dark .certificates-list p {
     color: var(--text-light);
+}
+
+.loading-state, .error-state {
+  text-align: center;
+  padding: calc(var(--spacing-unit) * 4) 0;
+  color: var(--text-light);
+}
+
+.error-state {
+  color: var(--danger-color); /* Assuming you have a danger color variable */
 }
 
 </style>

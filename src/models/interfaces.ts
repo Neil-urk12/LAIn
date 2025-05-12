@@ -129,8 +129,6 @@ export interface CertificateTemplates {
   courseCode: string
   instructorId: string
   tags: string[]
-  certificateImage: string
-  downloadUrl: string
   requirements: string[]
   verified: boolean
   createdAt: string;
