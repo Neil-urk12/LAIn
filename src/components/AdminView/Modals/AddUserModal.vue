@@ -102,20 +102,20 @@ const submitForm = async () => {
   try {
     const now = new Date().toISOString();
 
+    // Create a copy of userForm excluding passwordConfirm and verified
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordConfirm, verified, ...formData } = userForm;
+
     const data = {
-      ...userForm,
+      ...formData, // Spread the rest of the form data
       emailVisibility: true,
-      profilePicture: '',
-      lastLoginDate: now,
-      // Ensure all fields are included
-      bio: userForm.bio,
-      company: userForm.company,
-      position: userForm.position,
-      linkedIn: userForm.linkedIn,
-      website: userForm.website,
-      isActive: userForm.isActive,
-      learningStreak: userForm.learningStreak
+      profilePicture: '', // Default empty profile picture
+      lastLoginDate: now, // Set initial last login
+      // Explicitly include password from the original form
+      password: userForm.password 
     };
+
+    console.log("Data being sent to createUser:", data); // Add logging
 
     await adminStore.createUser(data);
 

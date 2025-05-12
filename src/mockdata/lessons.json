@@ -1,0 +1,52 @@
+[
+  {
+    "id": "lesson1_ai_fundamentals",
+    "title": "What is Artificial Intelligence?",
+    "content": "An introduction to the concept of AI, its history, and different types.",
+    "courseId": "63f9698a63c747r",
+    "order": 1,
+    "createdAt": "2025-05-01T14:45:00.000Z",
+    "updatedAt": "2025-05-01T14:45:00.000Z",
+    "richContent": "<h2>Welcome to the first lesson!</h2><p>Artificial Intelligence (AI) is transforming our world. In this lesson, we'll explore what AI is and its fascinating history.</p><h3>What is AI?</h3><p>AI refers to the simulation of human intelligence in machines that are programmed to think like humans and mimic their actions.</p><h3>A Brief History</h3><p>The concept of AI dates back to the 1950s. Key milestones include the Dartmouth Workshop in 1956, the development of expert systems, and recent advancements in machine learning and deep learning.</p><img src=\"https://via.placeholder.com/600x300?text=AI+Concept\" alt=\"AI Concept Diagram\" style=\"max-width:100%; height:auto;\"><p>Stay tuned for the next lesson!</p>"
+  },
+  {
+    "id": "lesson2_ai_everyday",
+    "title": "AI in Everyday Life",
+    "content": "Exploring common examples of AI applications we interact with daily.",
+    "courseId": "63f9698a63c747r",
+    "order": 2,
+    "createdAt": "2025-05-01T14:46:00.000Z",
+    "updatedAt": "2025-05-01T14:46:00.000Z",
+    "richContent": "<h2>AI is all around us!</h2><p>From recommending movies to powering voice assistants, AI is integrated into many aspects of our daily lives.</p><ul><li>Voice Assistants (Siri, Alexa)</li><li>Recommendation Systems (Netflix, Amazon)</li><li>Spam Filters</li><li>Fraud Detection</li><li>Self-driving Cars</li></ul><img src=\"https://via.placeholder.com/600x300?text=AI+in+Everyday+Life\" alt=\"Examples of AI in daily life\" style=\"max-width:100%; height:auto;\"><p>Can you think of other examples?</p>"
+  },
+  {
+    "id": "lesson3_ai_history",
+    "title": "Brief History of AI",
+    "content": "A look at the key milestones and developments in the field of AI.",
+    "courseId": "63f9698a63c747r",
+    "order": 3,
+    "createdAt": "2025-05-01T14:47:00.000Z",
+    "updatedAt": "2025-05-01T14:47:00.000Z",
+    "richContent": "<h2>Tracing the Roots of AI</h2><p>Let's take a quick journey through the history of Artificial Intelligence.</p><ul><li><strong>1950s:</strong> Birth of AI, Dartmouth Workshop</li><li><strong>1960s-1970s:</strong> Early enthusiasm, development of expert systems</li><li><strong>1980s:</strong> AI Winter, reduced funding</li><li><strong>1990s-2000s:</strong> Rise of Machine Learning, data availability</li><li><strong>2010s-Present:</strong> Deep Learning boom, widespread applications</li></ul><p>Understanding the past helps us appreciate the present and future of AI.</p>"
+  },
+  {
+    "id": "lesson4_ai_myths",
+    "title": "AI Myths and Misconceptions",
+    "content": "Debunking common myths and clarifying misconceptions about AI.",
+    "courseId": "63f9698a63c747r",
+    "order": 4,
+    "createdAt": "2025-05-01T14:48:00.000Z",
+    "updatedAt": "2025-05-01T14:48:00.000Z",
+    "richContent": "<h2>Separating Fact from Fiction</h2><p>There are many myths surrounding AI. Let's clarify some common misconceptions.</p><ul><li><strong>Myth:</strong> AI will replace all human jobs soon.<br><strong>Reality:</strong> AI is more likely to augment human capabilities and create new jobs.</li><li><strong>Myth:</strong> AI is conscious or has feelings.<br><strong>Reality:</strong> Current AI is designed for specific tasks and lacks consciousness.</li><li><strong>Myth:</strong> AI is always unbiased.<br><strong>Reality:</strong> AI can inherit biases present in the data it's trained on.</li></ul><p>Critical thinking is important when evaluating claims about AI.</p>"
+  },
+  {
+    "id": "lesson5_ml_basics",
+    "title": "Machine Learning Basics",
+    "content": "An introductory overview of machine learning, a core component of AI.",
+    "courseId": "63f9698a63c747r",
+    "order": 5,
+    "createdAt": "2025-05-01T14:49:00.000Z",
+    "updatedAt": "2025-05-01T14:49:00.000Z",
+    "richContent": "<h2>Introduction to Machine Learning</h2><p>Machine Learning (ML) is a subset of AI that focuses on building systems that learn from data.</p><h3>How it Works</h3><p>Instead of being explicitly programmed, ML algorithms use statistical techniques to enable computers to 'learn' from data, identify patterns, and make decisions or predictions.</p><h3>Types of ML</h3><ul><li>Supervised Learning</li><li>Unsupervised Learning</li><li>Reinforcement Learning</li></ul><img src=\"https://via.placeholder.com/600x300?text=Machine+Learning+Diagram\" alt=\"Machine Learning Diagram\" style=\"max-width:100%; height:auto;\"><p>ML is a powerful tool driving many AI applications.</p>"
+  }
+]

@@ -4,6 +4,7 @@ import AdminSidebar from '@/components/AdminView/AdminSidebar.vue';
 import AdminDashboard from '@/components/AdminView/AdminDashboard.vue';
 const UserManagement = defineAsyncComponent(() => import('../components/AdminView/UserManagement.vue'));
 const CourseManagement = defineAsyncComponent(() => import('../components/AdminView/CourseManagement.vue'));
+const AnalyticsDashboard = defineAsyncComponent(() => import('../components/AdminView/Analytics.vue'));
 import {
   Home,
   Users,
@@ -42,6 +43,10 @@ const updateActiveNav = (view: string) => {
 
   if (view === 'courses' && !adminStore.courses.length) {
     adminStore.fetchCourses();
+  }
+
+  if (view === 'analytics') {
+    // Here you could add analytics specific data fetching if needed
   }
 };
 
@@ -98,6 +103,10 @@ onMounted(async () => {
         v-if="activeView === 'courses'"
         :courses="adminStore.courses"
         :loading="adminStore.loading.courses"
+      />
+
+      <AnalyticsDashboard
+        v-if="activeView === 'analytics'"
       />
     </div>
   </div>

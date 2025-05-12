@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import type { Courses, Enrollments } from "../models/interfaces";
+import type { Courses } from "../models/interfaces";
 import { pb } from "../pocketbase/pocketbase";
+import { useEnrollmentStore } from "../stores/enrollment";
 
 const isLoading = ref(true);
 const showEnrollModal = ref(false);
 const selectedCourse = ref<Courses | null>(null);
+const enrollmentStore = useEnrollmentStore();
 
 /*
 interface Course {
@@ -98,13 +100,15 @@ onMounted(async () => {
   try {
     const data = await pb.collection("courses").getFullList<Courses>();
     courses.value = data;
+
     // Fetch user enrollments and record course IDs
     if (pb.authStore.isValid) {
       try {
-        const enrollmentData = await pb
-          .collection("enrollments")
-          .getFullList<Enrollments>({ filter: `userId=\"${pb.authStore.record?.id}\"` });
-        enrolledCourseIds.value = enrollmentData.map((e) => e.courseId);
+        // Fetch enrollments using the enrollment store
+        await enrollmentStore.fetchEnrolledCourses();
+
+        // Get enrolled course IDs from the enrollment store
+        enrolledCourseIds.value = enrollmentStore.enrollments.map((e) => e.courseId);
       } catch (err) {
         console.error("Error fetching enrollments:", err);
       }
@@ -121,13 +125,26 @@ const router = useRouter();
 const goToCourseDashboard = (courseId: string) => {
   if (!courseId) return;
   if (!courses.value.find(course => course.id === courseId)) return;
-  
-  router.push({ name: "course", params: { id: courseId } });
+
+  // Check if the user is already enrolled in this course
+  if (enrolledCourseIds.value.includes(courseId)) {
+    // If enrolled, redirect to course dashboard
+    router.push({ name: "course-dashboard", params: { id: courseId } });
+  } else {
+    // If not enrolled, go to course overview
+    router.push({ name: "course", params: { id: courseId } });
+  }
 };
 
 const handleEnrollClick = (event: Event, course: Courses) => {
-  if (enrolledCourseIds.value.includes(course.id)) return;
-  event.stopPropagation(); 
+  event.stopPropagation();
+
+  // If already enrolled, redirect to course dashboard
+  if (enrolledCourseIds.value.includes(course.id)) {
+    router.push({ name: "course-dashboard", params: { id: course.id } });
+    return;
+  }
+
   if (course.price === "Free") {
     selectedCourse.value = course;
     showEnrollModal.value = true;
@@ -137,10 +154,24 @@ const handleEnrollClick = (event: Event, course: Courses) => {
   }
 };
 
-const confirmEnrollment = () => {
+const confirmEnrollment = async () => {
   if (selectedCourse.value) {
-    showEnrollModal.value = false;
-    goToCourseDashboard(selectedCourse.value.id);
+    try {
+      // Enroll the user in the course
+      await enrollmentStore.enroll(selectedCourse.value.id);
+
+      // Add the course ID to the enrolled courses list
+      if (!enrolledCourseIds.value.includes(selectedCourse.value.id)) {
+        enrolledCourseIds.value.push(selectedCourse.value.id);
+      }
+
+      showEnrollModal.value = false;
+
+      // Redirect to course dashboard
+      router.push({ name: "course-dashboard", params: { id: selectedCourse.value.id } });
+    } catch (error) {
+      console.error("Error enrolling in course:", error);
+    }
   }
 };
 

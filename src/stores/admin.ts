@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { pb } from '../pocketbase/pocketbase';
 import type { User, Courses, Enrollments, Instructor } from '../models/interfaces';
 import type { Component } from 'vue';
-import { Users, BookOpen, BarChart2, DollarSign } from 'lucide-vue-next';
+import { Users, BookOpen, BarChart2, DollarSign, Clock, Award, TrendingUp } from 'lucide-vue-next';
 
 interface Stat {
   title: string;
@@ -43,12 +43,20 @@ export const useAdminStore = defineStore('admin', {
     users: [] as User[],
     courses: [] as CourseWithInstructor[],
     instructors: [] as Instructor[],
+    analytics: {
+      enrollmentTrends: [] as { date: string, count: number }[],
+      topCourses: [] as { id: string, title: string, enrollments: number, completionRate: number, growth: number, isNegative: boolean }[],
+      userActivity: [] as { date: string, count: number }[],
+      engagementMetrics: [] as { name: string, value: string, change: number, isNegative: boolean }[],
+      summaryStats: [] as { title: string, value: string | number, change: string, isNegative: boolean, icon: Component }[]
+    },
     loading: {
       stats: false,
       activity: false,
       users: false,
       courses: false,
-      instructors: false
+      instructors: false,
+      analytics: false
     },
     error: null as string | null,
   }),
@@ -422,9 +430,12 @@ export const useAdminStore = defineStore('admin', {
     async createUser(userData: Partial<User>) {
       this.loading.users = true;
       this.error = null;
-
+      console.log('Creating user with data:', userData);
       try {
-        const newUser = await pb.collection('users').create(userData);
+        const newUser = await pb.collection('users').create({
+          ...userData,
+          passwordConfirm: userData.password
+        });
         await this.fetchUsers(); // Refresh the users list
         return newUser;
       } catch (err) {
@@ -470,6 +481,268 @@ export const useAdminStore = defineStore('admin', {
       } finally {
         this.loading.users = false;
       }
+    },
+
+    async fetchAnalytics(period: string = '30days') {
+      this.loading.analytics = true;
+      this.error = null;
+
+      try {
+        // Calculate date range based on period parameter
+        const endDate = new Date();
+        const startDate = new Date();
+
+        switch (period) {
+          case '7days':
+            startDate.setDate(startDate.getDate() - 7);
+            break;
+          case '30days':
+            startDate.setDate(startDate.getDate() - 30);
+            break;
+          case '90days':
+            startDate.setDate(startDate.getDate() - 90);
+            break;
+          case 'year':
+            startDate.setFullYear(startDate.getFullYear() - 1);
+            break;
+          case 'all':
+            startDate.setFullYear(2000); // Far enough back to include all data
+            break;
+          default:
+            startDate.setDate(startDate.getDate() - 30); // Default to 30 days
+        }
+
+        // Format dates for filter
+        const startDateStr = startDate.toISOString().split('T')[0];
+        const endDateStr = endDate.toISOString().split('T')[0];
+
+        // Fetch enrollments for trends
+        const enrollments = await pb.collection('enrollments').getList(1, 1000, {
+          filter: `created >= "${startDateStr}" && created <= "${endDateStr}"`,
+          sort: 'created'
+        });
+
+        // Process enrollments to get trends data by day
+        const enrollmentsByDay = this.processEnrollmentTrends(enrollments.items);
+        this.analytics.enrollmentTrends = enrollmentsByDay;
+
+        // Fetch user signups for activity trends
+        const users = await pb.collection('users').getList(1, 1000, {
+          filter: `created >= "${startDateStr}" && created <= "${endDateStr}"`,
+          sort: 'created'
+        });
+
+        // Process user data to get activity by day
+        const userActivityByDay = this.processUserActivity(users.items);
+        this.analytics.userActivity = userActivityByDay;
+
+        // Fetch courses for top courses data
+        const courses = await pb.collection('courses').getFullList();
+
+        // Get counts of enrollments for each course
+        const coursesWithEnrollments = await this.getCoursesWithEnrollments(courses, startDateStr, endDateStr);
+        this.analytics.topCourses = coursesWithEnrollments.slice(0, 5); // Top 5 courses
+
+        // Generate engagement metrics
+        await this.generateEngagementMetrics(startDateStr, endDateStr);
+
+        // Generate summary stats
+        this.generateSummaryStats(enrollments.items, users.items);
+      }
+      catch (err) {
+        this.error = (err as Error).message;
+        console.error('Error fetching analytics data:', err);
+      }
+      finally {
+        this.loading.analytics = false;
+      }
+    },
+
+    processEnrollmentTrends(enrollments: any[]): { date: string, count: number }[] {
+      // Group enrollments by date
+      const enrollmentsByDate: Record<string, number> = {};
+
+      enrollments.forEach(enrollment => {
+        const date = enrollment.created.split('T')[0];
+        enrollmentsByDate[date] = (enrollmentsByDate[date] || 0) + 1;
+      });
+
+      // Convert to array and sort by date
+      const result = Object.keys(enrollmentsByDate).map(date => ({
+        date,
+        count: enrollmentsByDate[date]
+      })).sort((a, b) => a.date.localeCompare(b.date));
+
+      return result;
+    },
+
+    processUserActivity(users: any[]): { date: string, count: number }[] {
+      // Group users by signup date
+      const usersByDate: Record<string, number> = {};
+
+      users.forEach(user => {
+        const date = user.created.split('T')[0];
+        usersByDate[date] = (usersByDate[date] || 0) + 1;
+      });
+
+      // Convert to array and sort by date
+      const result = Object.keys(usersByDate).map(date => ({
+        date,
+        count: usersByDate[date]
+      })).sort((a, b) => a.date.localeCompare(b.date));
+
+      return result;
+    },
+
+    async getCoursesWithEnrollments(courses: any[], startDate: string, endDate: string) {
+      // For each course, get enrollment count and completion rate
+      const coursesWithData = [];
+
+      // Get previous period to calculate growth
+      const prevStartDate = new Date(startDate);
+      const prevEndDate = new Date(endDate);
+      const periodDays = (new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24);
+      prevStartDate.setDate(prevStartDate.getDate() - periodDays);
+      prevEndDate.setDate(prevEndDate.getDate() - periodDays);
+
+      const prevStartStr = prevStartDate.toISOString().split('T')[0];
+      const prevEndStr = prevEndDate.toISOString().split('T')[0];
+
+      for (const course of courses) {
+        // Get current period enrollments
+        const enrollments = await pb.collection('enrollments').getList(1, 1, {
+          filter: `courseId = "${course.id}" && created >= "${startDate}" && created <= "${endDate}"`,
+          sort: 'created'
+        });
+
+        // Get previous period enrollments
+        const prevEnrollments = await pb.collection('enrollments').getList(1, 1, {
+          filter: `courseId = "${course.id}" && created >= "${prevStartStr}" && created <= "${prevEndStr}"`,
+          sort: 'created'
+        });
+
+        // Get completed enrollments count
+        const completedEnrollments = await pb.collection('enrollments').getList(1, 1, {
+          filter: `courseId = "${course.id}" && isCompleted = true && created >= "${startDate}" && created <= "${endDate}"`,
+          sort: 'created'
+        });
+
+        // Calculate completion rate
+        const completionRate = enrollments.totalItems > 0
+          ? Math.round((completedEnrollments.totalItems / enrollments.totalItems) * 100)
+          : 0;
+
+        // Calculate growth
+        const growth = prevEnrollments.totalItems > 0
+          ? Math.round(((enrollments.totalItems - prevEnrollments.totalItems) / prevEnrollments.totalItems) * 100)
+          : (enrollments.totalItems > 0 ? 100 : 0);
+
+        coursesWithData.push({
+          id: course.id,
+          title: course.title,
+          enrollments: enrollments.totalItems,
+          completionRate,
+          growth,
+          isNegative: growth < 0
+        });
+      }
+
+      // Sort by enrollments (descending)
+      return coursesWithData.sort((a, b) => b.enrollments - a.enrollments);
+    },
+
+
+    async generateEngagementMetrics(startDate: string, endDate: string) {
+      // This would require additional data collection in a real app
+      // Here we'll use some placeholders based on available data
+
+      // Get total users
+      const users = await pb.collection('users').getList(1, 1, {
+        filter: `created <= "${endDate}"`
+      });
+
+      // Get total enrollments
+      const enrollments = await pb.collection('enrollments').getList(1, 1, {
+        filter: `created <= "${endDate}"`
+      });
+
+      // Get active users (users with recent activity, approximated by login date)
+      // In a real app, you would have more precise activity tracking
+      const recentDate = new Date();
+      recentDate.setDate(recentDate.getDate() - 7); // Consider active if logged in last 7 days
+      const recentDateStr = recentDate.toISOString().split('T')[0];
+
+      const activeUsers = await pb.collection('users').getList(1, 1, {
+        filter: `lastLoginDate >= "${recentDateStr}"`
+      });
+
+      // Calculate average courses per user
+      const coursesPerUser = users.totalItems > 0 ?
+        (enrollments.totalItems / users.totalItems).toFixed(1) : '0';
+
+      // Calculate daily active users as a percentage of total users
+      const dailyActiveUsers = activeUsers.totalItems;
+
+      // For metrics like average session duration, we'd need detailed analytics tracking
+      // Here we'll use placeholder values
+
+      this.analytics.engagementMetrics = [
+        { name: 'Average Session Duration', value: '12 mins', change: 8, isNegative: false },
+        { name: 'Courses Per User', value: coursesPerUser, change: 5, isNegative: false },
+        { name: 'Daily Active Users', value: dailyActiveUsers.toString(), change: 12, isNegative: false },
+        { name: 'Learning Streak Avg.', value: '3.5 days', change: 2, isNegative: false },
+        { name: 'Content Completion Rate', value: '65%', change: 7, isNegative: false }
+      ];
+    },
+
+    generateSummaryStats(enrollments: Record<string, any>[], users: Record<string, any>[]) {
+      // Calculate total enrollments
+      const totalEnrollments = enrollments.length;
+
+      // Calculate total user growth
+      const totalUsers = users.length;
+
+      // For completion rate and time, we would need more detailed data
+      // Using placeholders for now
+      const completionRate = '68%';
+      const completionTime = '14 days';
+
+      // Placeholders for change percentages
+      const enrollmentChange = '12.5%';
+      const completionTimeChange = '4.2%';
+      const completionRateChange = '8.7%';
+      const userGrowthChange = '18.3%';
+
+      this.analytics.summaryStats = [
+        {
+          title: 'Total Enrollments',
+          value: totalEnrollments.toLocaleString(),
+          change: enrollmentChange,
+          isNegative: false,
+          icon: Users
+        },
+        {
+          title: 'Avg. Completion Time',
+          value: completionTime,
+          change: completionTimeChange,
+          isNegative: true,
+          icon: Clock
+        },
+        {
+          title: 'Completion Rate',
+          value: completionRate,
+          change: completionRateChange,
+          isNegative: false,
+          icon: Award
+        },
+        {
+          title: 'User Growth',
+          value: `${totalUsers}`,
+          change: userGrowthChange,
+          isNegative: false,
+          icon: TrendingUp
+        }
+      ];
     }
   }
 });

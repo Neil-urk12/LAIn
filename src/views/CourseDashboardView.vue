@@ -6,63 +6,6 @@ import { pb } from "../pocketbase/pocketbase";
 import type { Courses, Lessons, Instructor, Enrollments } from "../models/interfaces";
 import type { CourseWithExpand } from "../models/types";
 
-// const course = {
-//   title: 'AI Fundamentals: Getting Started',
-//   description: 'A beginner-friendly introduction to artificial intelligence concepts and applications.',
-//   duration: '10 hours',
-//   lessons: 24,
-//   students: 65000,
-//   certificate: 'Included',
-//   instructor: 'Dr. Emily Zhang',
-//   rating: 4.6,
-//   beginner: true
-// };
-
-// const modules = [
-//   {
-//     title: 'Module 1: Introduction to AI',
-//     duration: '2 hours',
-//     lessonCount: 5,
-//     lessons: [
-//       { title: 'What is Artificial Intelligence?', duration: '12 min', type: 'lesson', desc: 'A simple explanation of AI and how it differs from traditional computing.' },
-//       { title: 'AI in Everyday Life', duration: '15 min', type: 'lesson' },
-//       { title: 'Brief History of AI', duration: '18 min', type: 'lesson' },
-//       { title: 'AI Myths and Misconceptions', duration: '14 min', type: 'lesson' },
-//       { title: 'Module 1 Quiz', duration: '10 min', type: 'quiz' }
-//     ]
-//   },
-//   {
-//     title: 'Module 2: AI Concepts and Terminology',
-//     duration: '3 hours',
-//     lessonCount: 3,
-//     lessons: [
-//       { title: 'Machine Learning Basics', duration: '20 min', type: 'lesson' },
-//       { title: 'Neural Networks Simplified', duration: '22 min', type: 'lesson' },
-//       { title: 'Understanding Algorithms', duration: '18 min', type: 'lesson' }
-//     ]
-//   }
-// ];
-
-// const nextSteps = [
-//   {
-//     icon: '▶️',
-//     title: 'Start the first lesson',
-//     desc: 'Begin your learning journey with the introductory lesson.',
-//     button: { text: 'Start Learning', style: 'primary' }
-//   },
-//   {
-//     icon: '👥',
-//     title: 'Join the community',
-//     desc: 'Connect with fellow students to enhance your learning experience.',
-//     button: { text: 'View Community', style: 'secondary' }
-//   },
-//   {
-//     icon: '📄',
-//     title: 'Download course materials',
-//     desc: 'Access supplementary resources to support your learning.',
-//     button: { text: 'View Resources', style: 'secondary' }
-//   }
-// ];
 const route = useRoute();
 const router = useRouter();
 const courseId = route.params.id as string;
@@ -208,6 +151,13 @@ const isLessonCompleted = (index: number) => {
 
       <!-- Main Content -->
       <main class="main-content">
+        <!-- Breadcrumb Navigation -->
+        <nav class="breadcrumbs">
+          <router-link to="/dashboard">Dashboard</router-link> >
+          <router-link to="/courses">Courses</router-link> >
+          <span>{{ course?.title }}</span>
+        </nav>
+        
         <!-- Welcome Banner -->
         <div class="welcome-banner">
           <div>
@@ -334,6 +284,21 @@ const isLessonCompleted = (index: number) => {
 </template>
 
 <style scoped>
+.breadcrumbs {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-bottom: 20px;
+}
+
+.breadcrumbs a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
 .dashboard-container {
   display: flex;
   min-height: 100vh;

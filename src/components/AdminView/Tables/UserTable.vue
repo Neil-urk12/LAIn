@@ -213,6 +213,14 @@ const handleToggleStatusClick = async (user: User) => {
     closeAllDropdowns();
   }
 };
+
+const handleUserSuccessfullyDeleted = () => {
+  // User is already removed from store's state by the deleteUser action
+  showDeleteModal.value = false; // Ensure modal is closed
+  selectedUser.value = null; // Clear selection
+  // Optional: Add a success notification here if desired
+  console.log('User deleted successfully.');
+};
 </script>
 
 <template>
@@ -319,7 +327,7 @@ const handleToggleStatusClick = async (user: User) => {
     :user="selectedUser"
     :show="showDeleteModal"
     @close="showDeleteModal = false"
-    @deleted="adminStore.fetchUsers()"
+    @deleted="handleUserSuccessfullyDeleted"
   />
 
   <ResetPasswordModal
