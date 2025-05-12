@@ -15,6 +15,9 @@ export const useEnrollmentStore = defineStore('enrollment', {
     isEnrolled: (state) => (courseId: string) => {
       return state.enrollments.some(e => e.courseId === courseId);
     },
+    enrolledCourses: (state) => {
+      return state.enrollments.filter(e => e.status === 'enrolled');
+    },
     completedCoursesCount: (state) => {
       return state.completedCourses.length;
     },
@@ -54,11 +57,13 @@ export const useEnrollmentStore = defineStore('enrollment', {
         const filterStr = `userId="${authStore.getUser?.id}" && status="enrolled"`;
         const list = await pb.collection<Enrollments>('enrollments').getFullList({
           filter: filterStr,
-          expand: 'courseId',
+          expand: 'courseId(lessonsAmount)',
         });
+        console.log('Enrolled Courses in store:', list);
         this.enrollments = list;
       } catch (err) {
         this.error = (err as Error).message;
+        console.error('Error fetching enrolled courses:', err);
       } finally {
         this.loading = false;
       }

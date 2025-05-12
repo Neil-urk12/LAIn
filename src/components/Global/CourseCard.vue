@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { defineProps } from 'vue';
+import { useRouter } from 'vue-router';
 
 defineOptions({ name: 'CourseCard' });
 
 const props = defineProps({
+  id: {
+    type: String,
+    required: true,
+  },
   title: {
     type: String,
     required: true,
@@ -26,6 +31,16 @@ const props = defineProps({
     default: '',
   },
 });
+
+const router = useRouter();
+
+async function navigateToCourseDashboard() {
+  if (props.id) {
+    await router.push({ name: "course-dashboard", params: { id: props.id } });
+  } else {
+    console.error('Course ID is missing, cannot navigate.');
+  }
+}
 </script>
 
 <template>
@@ -43,7 +58,7 @@ const props = defineProps({
         </div>
         <span class="percent">{{ props.progress }}%</span>
       </div>
-      <button>Continue Learning</button>
+      <button @click="navigateToCourseDashboard">Continue Learning</button>
     </div>
   </div>
 </template>

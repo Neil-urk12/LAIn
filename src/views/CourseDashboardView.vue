@@ -40,6 +40,7 @@ const courseDuration = computed(() =>
 const courseStudentsCount = ref(0);
 const courseLessonsCount = ref(0);
 const certificate = ref('Included');
+const showCertificatePreview = ref(false);
 
 onMounted(async () => {
   try {
@@ -75,6 +76,11 @@ const progressPercent = computed(() => {
     : 0;
 });
 
+const isCourseCompleted = computed(() => {
+  const progress = enrollmentStore.currentEnrollment?.progress ?? 0;
+  return courseLessonsCount.value > 0 && progress >= courseLessonsCount.value;
+});
+
 const goToLesson = (lessonId: string) => {
   router.push({
     name: "lesson",
@@ -103,6 +109,26 @@ const isLessonCompleted = (index: number) => {
   const progress = enrollmentStore.currentEnrollment?.progress || 0;
   return index < progress;
 };
+
+function openCertificatePreview() {
+  showCertificatePreview.value = true;
+}
+
+function closeCertificatePreview() {
+  showCertificatePreview.value = false;
+}
+
+function downloadCertificateAsPdf() {
+  // Placeholder for PDF download logic
+  console.log("Downloading certificate as PDF...");
+  closeCertificatePreview();
+}
+
+function downloadCertificateAsPng() {
+  // Placeholder for PNG download logic
+  console.log("Downloading certificate as PNG...");
+  closeCertificatePreview();
+}
 </script>
 
 <template>
@@ -214,7 +240,8 @@ const isLessonCompleted = (index: number) => {
             <span class="instructor-label">Instructor</span>
             <span class="instructor-name">{{ course?.instructor.name }}</span>
             <span class="course-rating">★ {{ course?.rating }}</span>
-            <button class="continue-btn" @click="continueLesson">Continue Learning</button>
+            <button v-if="!isCourseCompleted" class="continue-btn" @click="continueLesson">Continue Learning</button>
+            <button v-else class="certificate-btn" @click="openCertificatePreview">Download Certificate</button>
           </div>
         </section>
 
@@ -281,6 +308,25 @@ const isLessonCompleted = (index: number) => {
   <template v-else>
     <div>Loading course...</div>
   </template>
+
+  <!-- Certificate Preview Modal -->
+  <div v-if="showCertificatePreview" class="certificate-preview-overlay">
+    <div class="certificate-preview-content">
+      <h2>Certificate of Completion</h2>
+      <div class="certificate-preview-area">
+        <!-- Placeholder for actual certificate preview -->
+        <p>Congratulations, [Student Name]!</p>
+        <p>You have successfully completed the course:</p>
+        <h3>{{ course?.title }}</h3>
+        <p>Issued on: {{ new Date().toLocaleDateString() }}</p>
+      </div>
+      <div class="certificate-preview-actions">
+        <button @click="downloadCertificateAsPdf">Download PDF</button>
+        <button @click="downloadCertificateAsPng">Download PNG</button>
+        <button @click="closeCertificatePreview" class="close-btn">Close</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -725,5 +771,104 @@ const isLessonCompleted = (index: number) => {
     flex-direction: column;
     gap: 0.5rem;
   }
+}
+
+/* Styles for Certificate Button */
+.certificate-btn {
+  margin-left: auto;
+  background: transparent; /* Or another suitable color */
+  color: green;
+  border: 1px solid green;
+  padding: 0.65rem 1.4rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.certificate-btn:hover {
+  background: var(--primary-color); /* Darker shade for hover */
+  color: #fff;
+}
+
+/* Styles for Certificate Preview Modal */
+.certificate-preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.certificate-preview-content {
+  background: var(--bg-white);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 600px;
+  width: 90%;
+}
+
+.certificate-preview-content h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--text-dark);
+}
+
+.certificate-preview-area {
+  border: 1px dashed var(--border-color);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  min-height: 250px; /* Placeholder height */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.certificate-preview-area h3 {
+  color: var(--primary-color);
+  margin: 0.5rem 0;
+}
+
+.certificate-preview-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.certificate-preview-actions button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: 1px solid var(--primary-color);
+}
+
+.certificate-preview-actions button:not(.close-btn) {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.certificate-preview-actions button:not(.close-btn):hover {
+  background: var(--primary-color-dark);
+  border-color: var(--primary-color-dark);
+}
+
+.certificate-preview-actions .close-btn {
+  background: var(--bg-light);
+  color: var(--primary-color-dark);
+}
+
+.certificate-preview-actions .close-btn:hover {
+  background: var(--border-color);
 }
 </style>

@@ -29,7 +29,7 @@ const navigation = ref([
   { name: 'Settings', icon: Settings, active: false, view: 'settings' },
 ]);
 
-const updateActiveNav = (view: string) => {
+const updateActiveNav = async (view: string) => {
   navigation.value = navigation.value.map(item => ({
     ...item,
     active: item.view === view
@@ -38,11 +38,11 @@ const updateActiveNav = (view: string) => {
 
   // Fetch data based on the active view
   if (view === 'users' && !adminStore.users.length) {
-    adminStore.fetchUsers();
+    await adminStore.fetchUsers();
   }
 
   if (view === 'courses' && !adminStore.courses.length) {
-    adminStore.fetchCourses();
+    await adminStore.fetchCourses();
   }
 
   if (view === 'analytics') {
@@ -64,7 +64,7 @@ onMounted(async () => {
   // Check if user is authenticated and has admin role
   if (!authStore.isAuthenticated || (authStore.getUser?.role !== 'admin')) {
     // Redirect non-admin users to dashboard
-    router.push('/dashboard');
+    await router.push('/dashboard');
     return;
   }
 

@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, computed, onMounted } from "vue";
+import { defineAsyncComponent, ref, computed, onMounted, watch } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useRouter } from "vue-router";
+import { useEnrollmentStore } from '@/stores/enrollment';
+import { pb } from '../pocketbase/pocketbase';
 
 const StatsCards = defineAsyncComponent(() => import("../components/DashboardView/StatsCards.vue"));
 const ContinueLearning = defineAsyncComponent(() => import("../components/DashboardView/ContinueLearning.vue"));
@@ -12,14 +14,71 @@ const auth = useAuthStore();
 const router = useRouter();
 const userName = computed(() => auth.user?.name || "");
 const userRole = computed(() => auth.user?.role || "");
+
+const enrollmentStore = useEnrollmentStore();
+interface EnrolledCourseDisplay {
+  id: string;
+  title: string;
+  difficulty: string;
+  progress: number;
+  lastAccessedDate: string;
+  thumbnail: string | undefined;
+}
+const enrolledCourses = ref<EnrolledCourseDisplay[]>([]);
+const isEnrolledCoursesLoading = ref(true);
+
+// ADD watch for changes in the store's enrolled courses
+watch(() => enrollmentStore.enrolledCourses, (newEnrollments) => {
+  if (!newEnrollments) {
+      enrolledCourses.value = []; // Handle null/undefined case if possible
+      return;
+  }
+  try {
+    // Perform the mapping directly using the watched value
+    enrolledCourses.value = newEnrollments.map(enrollment => {
+      const totalLessons = enrollment.expand?.courseId?.lessonsAmount ?? 0;
+      const completedLessons = enrollment.progress ?? 0;
+      const percentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+      return {
+        id: enrollment.expand?.courseId.id ?? '',
+        title: enrollment.expand?.courseId.title ?? '',
+        difficulty: enrollment.expand?.courseId.level ?? '',
+        progress: percentage, // Use calculated percentage
+        lastAccessedDate: enrollment.updatedAt, // Consider formatting this date
+        thumbnail: enrollment.expand?.courseId.courseImage ? `${pb.baseURL}/api/files/courses/${enrollment.expand?.courseId.id}/${enrollment.expand?.courseId.courseImage}` : undefined,
+      };
+    });
+    console.log('Watch: Mapped enrolled courses locally:', enrolledCourses.value);
+  } catch (error) {
+    console.error("Watch: Failed to map enrolled courses:", error);
+    enrolledCourses.value = []; // Reset local state on mapping error
+  }
+}, { deep: true }); // Use deep watch for safety, though maybe not strictly needed if store replaces array ref
+
 interface Activity { icon: string; description: string; time: string; }
 const activityList = ref<Activity[]>([]);
 function fetchRecentActivity(): Activity[] {
   // TODO: replace with real data fetch
   return [];
 }
-onMounted(() => {
+onMounted(async () => {
+  isEnrolledCoursesLoading.value = true; // Start loading
   activityList.value = fetchRecentActivity();
+
+  try {
+    await auth.initAuth();
+    // Fetch data; the watch will handle mapping when enrollmentStore.enrolledCourses updates
+    await enrollmentStore.fetchEnrolledCourses();
+  } catch (error) {
+    console.error("onMounted: Failed during initial data fetch:", error);
+    // If fetch fails, the watch might not trigger or might receive empty/stale data.
+    // Ensure local state is clear if fetch fails.
+    enrolledCourses.value = []; // Clear local state on fetch error
+  } finally {
+    // Loading finishes after the fetch attempt (success or failure)
+    isEnrolledCoursesLoading.value = false;
+  }
 });
 </script>
 
@@ -32,7 +91,16 @@ onMounted(() => {
 
     <StatsCards />
 
-    <ContinueLearning />
+    <!-- Render Skeleton or Component based on loading state -->
+    <section v-if="isEnrolledCoursesLoading" class="continue-learning-skeleton">
+      <h2>Continue Learning</h2>
+      <div class="courses-grid-skeleton">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div> 
+      </div>
+    </section>
+    <ContinueLearning v-else :enrolledCourses="enrolledCourses" /> 
 
     <LearningPath />
 
@@ -276,5 +344,33 @@ main {
 
 .account-settings button:hover {
   background: var(--color-background-mute);
+}
+
+/* Skeleton Styles */
+.continue-learning-skeleton {
+  margin: 30px 0;
+}
+
+.courses-grid-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.skeleton-card {
+  background: var(--color-background-mute); /* Use a muted background for skeleton */
+  border-radius: 10px;
+  height: 380px; /* Approximate height of CourseCard */
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
 }
 </style>

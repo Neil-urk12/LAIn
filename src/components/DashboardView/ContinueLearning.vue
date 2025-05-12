@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, defineAsyncComponent } from 'vue';
+import { computed, defineAsyncComponent, defineProps } from 'vue';
 const CourseCard = defineAsyncComponent(() => import('../Global/CourseCard.vue'));
-import { useEnrollmentStore } from '@/stores/enrollment';
-import { pb } from '../../pocketbase/pocketbase';
 
 defineOptions({ name: 'ContinueLearning' });
 
-const enrollmentStore = useEnrollmentStore();
 interface EnrolledCourseDisplay {
   id: string;
   title: string;
@@ -16,46 +13,31 @@ interface EnrolledCourseDisplay {
   thumbnail: string | undefined;
 }
 
-const enrolledCourses = ref<EnrolledCourseDisplay[]>([]);
-const isLoading = ref(true);
+const props = defineProps<{
+  enrolledCourses: EnrolledCourseDisplay[];
+}>();
 
 const filteredEnrolledCourses = computed(() => {
-  return enrolledCourses.value.filter(course =>
+  return props.enrolledCourses.filter(course =>
     course.id && course.title && course.difficulty
   );
-});
-
-onMounted(async () => {
-  await enrollmentStore.fetchEnrolledCourses();
-  enrolledCourses.value = enrollmentStore.enrollments.map(enrollment => ({
-    id: enrollment.expand?.courseId.id ?? '',
-    title: enrollment.expand?.courseId.title ?? '',
-    difficulty: enrollment.expand?.courseId.level ?? '',
-    progress: enrollment.progress,
-    lastAccessedDate: enrollment.updatedAt,
-    thumbnail: `${pb.baseUrl}/api/files/courses/${enrollment.expand?.courseId.id}/${enrollment.expand?.courseId.courseImage}`,
-  }));
-  console.log('Enrolled Courses:', enrolledCourses.value);
-  isLoading.value = false;
 });
 </script>
 
 <template>
   <section class="continue-learning">
     <h2>Continue Learning</h2>
-    <div class="courses-grid" v-if="!isLoading">
+    <div class="courses-grid">
       <CourseCard
         v-for="course in filteredEnrolledCourses"
         :key="course.id"
+        :id="course.id"
         :title="course.title"
         :difficulty="course.difficulty"
         :progress="course.progress"
         :lastAccessedDate="course.lastAccessedDate"
         :thumbnail="course.thumbnail"
       />
-    </div>
-    <div v-else>
-      Loading enrolled courses...
     </div>
   </section>
 </template>
