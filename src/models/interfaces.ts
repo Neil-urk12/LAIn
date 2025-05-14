@@ -13,9 +13,10 @@ export interface User {
   bio?: string;
   profilePicture?: string;
   verified: boolean;
-  createdAt: string;
-  updatedAt: string;
+  created: string;
+  updated: string;
   token?: string;
+  isActive: boolean
   learningStreak: number;
   lastLoginDate?: string;
 }
@@ -60,7 +61,7 @@ export interface Courses {
   reviews: number;
   imageUrl: string;
   lessonsAmount: number;
-
+  courseImage?: string;
   whatYoullLearn: string[] | string;
   requirements: string[] | string;
   whoIsFor: string[] | string;
@@ -90,6 +91,10 @@ export interface Enrollments {
   progress: number;
   createdAt: string;
   updatedAt: string;
+  expand?: {
+    userId?: User;
+    courseId: Courses;
+  };
 }
 
 export interface Lessons {
@@ -99,35 +104,6 @@ export interface Lessons {
   richContent: string;
   courseId: string;
   order: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Certificates {
-  id: string;
-  userId?: string;
-  courseId: string;
-  templateId: string
-  issuedDate?: string;
-  credentialId: string;
-  status: 'published' | 'draft' | 'revoked';
-  expirationDate?: string;
-  verificationUrl: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CertificateTemplates {
-  id: string
-  title: string
-  specialization: string
-  courseCode: string
-  instructorId: string
-  tags: string[]
-  certificateImage: string
-  downloadUrl: string
-  requirements: string[]
-  verified: boolean
   createdAt: string;
   updatedAt: string;
 }

@@ -1,26 +1,67 @@
+<script setup lang="ts">
+import { defineProps } from 'vue';
+import { useRouter } from 'vue-router';
+
+defineOptions({ name: 'CourseCard' });
+
+const props = defineProps({
+  id: {
+    type: String,
+    required: true,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  difficulty: {
+    type: String,
+    required: true,
+  },
+  progress: {
+    type: Number,
+    required: true,
+  },
+  lastAccessedDate: {
+    type: String,
+    required: true,
+  },
+  thumbnail: {
+    type: String,
+    required: false,
+    default: '',
+  },
+});
+
+const router = useRouter();
+
+async function navigateToCourseDashboard() {
+  if (props.id) {
+    await router.push({ name: "course-dashboard", params: { id: props.id } });
+  } else {
+    console.error('Course ID is missing, cannot navigate.');
+  }
+}
+</script>
+
 <template>
   <div class="course-card">
-    <div class="thumbnail"></div>
+    <div class="thumbnail" :style="{ backgroundImage: thumbnail ? 'url(' + thumbnail + ')' : 'none' }"></div>
     <div class="info">
       <div class="top-row">
-        <span class="badge beginner">Beginner</span>
-        <span class="date">Yesterday</span>
+        <span :class="['badge', props.difficulty.toLowerCase()]">{{ props.difficulty }}</span>
+        <span class="date">{{ props.lastAccessedDate }}</span>
       </div>
-      <h3>Introduction to Artificial Intelligence</h3>
+      <h3>{{ props.title }}</h3>
       <div class="progress-row">
         <div class="progress-bar">
-          <div class="progress-fill" style="width: 75%;"></div>
+          <div class="progress-fill" :style="{ width: props.progress + '%' }"></div>
         </div>
-        <span class="percent">75%</span>
+        <span class="percent">{{ props.progress }}%</span>
       </div>
-      <button>Continue Learning</button>
+      <button @click="navigateToCourseDashboard">Continue Learning</button>
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-defineOptions({ name: 'CourseCard' })
-</script>
 
 <style scoped>
 .course-card {
@@ -35,9 +76,10 @@ defineOptions({ name: 'CourseCard' })
 
 .thumbnail {
   background: var(--border-color);
-  height: 150px;
+  height: 250px;
   display: flex;
   align-items: center;
+  background-size: cover;
   justify-content: center;
 }
 

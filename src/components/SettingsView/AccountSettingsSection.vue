@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useEnrollmentStore } from '@/stores/enrollment';
 import { pb } from '@/pocketbase/pocketbase';
+import type { Courses } from '@/models/interfaces'; // Import Courses interface
 
 const auth = useAuthStore();
+const enrollmentStore = useEnrollmentStore();
+
+const enrolledCoursesDetails = ref<Courses[]>([]); // Ref to store details of enrolled courses
+const isLoadingEnrolledCourses = ref(true);
+const enrolledCoursesError = ref<string | null>(null);
 
 const currentPassword = ref('');
 const newPassword = ref('');
@@ -198,10 +205,44 @@ function deleteAccount() {
   }
 }
 
-// Load sessions when component mounts
-onMounted(() => {
+// Load sessions and enrolled courses when component mounts
+onMounted(async () => {
   fetchSessions();
+  await fetchEnrolledCoursesDetails(); // Fetch enrolled courses details
 });
+
+// Fetch details for enrolled courses
+async function fetchEnrolledCoursesDetails() {
+  isLoadingEnrolledCourses.value = true;
+  enrolledCoursesError.value = null;
+  enrolledCoursesDetails.value = []; // Clear previous data
+
+  try {
+    await enrollmentStore.fetchEnrolledCourses(); // Fetch enrollment records
+
+    if (enrollmentStore.enrollments.length > 0) {
+      // Fetch details for each enrolled course
+      const coursePromises = enrollmentStore.enrollments.map(async (enrollment) => {
+        try {
+          const course = await pb.collection('courses').getOne<Courses>(enrollment.courseId);
+          return course;
+        } catch (courseError) {
+          console.error(`Failed to fetch course details for ID ${enrollment.courseId}:`, courseError);
+          return null; // Return null for courses that failed to fetch
+        }
+      });
+
+      // Wait for all course details to be fetched and filter out nulls
+      const courses = await Promise.all(coursePromises);
+      enrolledCoursesDetails.value = courses.filter(course => course !== null) as Courses[];
+    }
+  } catch (error) {
+    console.error('Failed to fetch enrolled courses:', error);
+    enrolledCoursesError.value = 'Failed to load enrolled courses. Please try again.';
+  } finally {
+    isLoadingEnrolledCourses.value = false;
+  }
+}
 </script>
 
 <template>
@@ -315,6 +356,36 @@ onMounted(() => {
           <button class="btn btn-secondary" @click="toggleAccountConnection(account.id)">
             {{ account.connected ? 'Disconnect' : 'Connect' }}
           </button>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Enrolled Courses Section -->
+    <section class="settings-section">
+      <div class="section-header">
+        <h2>Enrolled Courses</h2>
+      </div>
+
+      <div v-if="isLoadingEnrolledCourses" class="loading-sessions">
+        <div class="loading-spinner"></div>
+        <span>Loading enrolled courses...</span>
+      </div>
+
+      <div v-else-if="enrolledCoursesError" class="error-message">
+        {{ enrolledCoursesError }}
+        <button class="btn btn-secondary retry-btn" @click="fetchEnrolledCoursesDetails">Retry</button>
+      </div>
+
+      <div v-else-if="enrolledCoursesDetails.length === 0" class="no-sessions">
+        <p>You are not currently enrolled in any courses.</p>
+      </div>
+
+      <ul v-else class="enrolled-courses-list">
+        <li v-for="course in enrolledCoursesDetails" :key="course.id" class="course-item">
+          <div class="course-details">
+            <strong>{{ course.title }}</strong>
+            <small>{{ course.courseCode }}</small>
+          </div>
         </li>
       </ul>
     </section>
@@ -633,6 +704,46 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.enrolled-courses-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.course-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background-color: var(--bg-light); /* Add a background for clarity */
+}
+
+html.dark .course-item {
+  background-color: var(--section-background);
+}
+
+.course-details {
+  flex-grow: 1;
+  line-height: 1.3;
+}
+
+.course-details strong {
+  color: var(--text-dark);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.course-details small {
+  color: var(--text-light);
+  font-size: 0.8rem;
 }
 
 .account-item {

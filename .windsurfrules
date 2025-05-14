@@ -1,0 +1,1 @@
+Don't run npm run dev terminal command and don't suggest it either because it's always running.

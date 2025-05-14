@@ -1,16 +1,33 @@
+<script setup lang="ts">
+import { computed, onMounted } from 'vue';
+import { useAuthStore } from '../../stores/auth';
+import { useEnrollmentStore } from '@/stores/enrollment';
+defineOptions({ name: 'StatsCards' })
+
+const enrollmentStore = useEnrollmentStore();
+const auth = useAuthStore();
+const learningStreak = computed(() => auth.user?.learningStreak ?? 0);
+const courses = computed(() => enrollmentStore.enrollmentsCount);
+const completedCourses = computed(() => enrollmentStore.completedCoursesCount);
+
+onMounted( async () => {
+  await enrollmentStore.fetchEnrolledCourses();
+})
+</script>
+
 <template>
   <div class="stats-cards">
     <div class="card">
       <div class="label">Courses in Progress</div>
       <div class="bottom-row">
-        <div class="number">3</div>
+        <div class="number">{{ courses }}</div>
         <span class="badge active">Active</span>
       </div>
     </div>
     <div class="card">
       <div class="label">Completed Courses</div>
       <div class="bottom-row">
-        <div class="number">7</div>
+        <div class="number">{{ completedCourses }}</div>
       </div>
     </div>
     <div class="card">
@@ -23,20 +40,11 @@
     <div class="card">
       <div class="label">Certificates Earned</div>
       <div class="bottom-row">
-        <div class="number">4</div>
+        <div class="number">0</div>
       </div>
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { computed } from 'vue';
-import { useAuthStore } from '../../stores/auth';
-defineOptions({ name: 'StatsCards' })
-
-const auth = useAuthStore();
-const learningStreak = computed(() => auth.user?.learningStreak ?? 0);
-</script>
 
 <style scoped>
 .stats-cards {

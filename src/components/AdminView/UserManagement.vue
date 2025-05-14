@@ -1,57 +1,45 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { PlusIcon, SearchIcon, MoreVerticalIcon } from 'lucide-vue-next';
+import { ref, reactive } from 'vue';
+import { PlusIcon, SearchIcon, FilterIcon, XIcon } from 'lucide-vue-next';
+import type { User } from '@/models/interfaces';
+import UserTable from './Tables/UserTable.vue';
+import AddUserModal from './Modals/AddUserModal.vue';
+import { useAdminStore } from '@/stores/admin';
 
-// Define user interface
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  enrolledCourses: number;
-  created: string;
-}
+// Define props
+defineProps<{
+  users: User[];
+  loading: boolean;
+}>();
 
+const adminStore = useAdminStore();
 const searchTerm = ref('');
+const showAddUserModal = ref(false);
+const showFilterDropdown = ref(false);
 
-const users = ref<User[]>([
-  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Student', status: 'Active', enrolledCourses: 3, created: '2023-01-15' },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Instructor', status: 'Active', enrolledCourses: 0, created: '2023-02-20' },
-  { id: 3, name: 'Robert Johnson', email: 'robert@example.com', role: 'Admin', status: 'Active', enrolledCourses: 1, created: '2023-03-10' },
-  { id: 4, name: 'Emily Davis', email: 'emily@example.com', role: 'Student', status: 'Inactive', enrolledCourses: 2, created: '2023-04-05' },
-  { id: 5, name: 'Michael Wilson', email: 'michael@example.com', role: 'Student', status: 'Active', enrolledCourses: 5, created: '2023-05-12' },
-]);
-
-const filteredUsers = computed(() => {
-  if (!searchTerm.value) {
-    return users.value;
-  }
-  const lowerSearchTerm = searchTerm.value.toLowerCase();
-  return users.value.filter(user =>
-    user.name.toLowerCase().includes(lowerSearchTerm) ||
-    user.email.toLowerCase().includes(lowerSearchTerm) ||
-    user.role.toLowerCase().includes(lowerSearchTerm)
-  );
+// Filter state
+const filters = reactive({
+  role: '',
+  status: ''
 });
 
-const getRoleTagClass = (role: string): string => {
-  switch (role.toLowerCase()) {
-    case 'admin': return 'tag-purple';
-    case 'instructor': return 'tag-blue';
-    case 'student': return 'tag-gray'; // Assuming a default/gray tag style might be needed
-    default: return 'tag-gray';
-  }
+const handleAddUserClick = () => {
+  showAddUserModal.value = true;
 };
 
-const getStatusTagClass = (status: string): string => {
-  switch (status.toLowerCase()) {
-    case 'active': return 'tag-green';
-    case 'inactive': return 'tag-red'; // Need to define tag-red
-    default: return 'tag-gray';
-  }
+const handleUserCreated = () => {
+  // Refresh the users list
+  adminStore.fetchUsers();
 };
 
+const toggleFilterDropdown = () => {
+  showFilterDropdown.value = !showFilterDropdown.value;
+};
+
+const clearFilters = () => {
+  filters.role = '';
+  filters.status = '';
+};
 </script>
 
 <template>
@@ -61,7 +49,7 @@ const getStatusTagClass = (status: string): string => {
         <h1>User Management</h1>
         <p>Manage user accounts, permissions, and course enrollments</p>
       </div>
-      <button class="btn btn-primary add-user-btn">
+      <button class="btn btn-primary add-user-btn" @click="handleAddUserClick">
         <PlusIcon :size="16" /> Add User
       </button>
     </div>
@@ -71,60 +59,69 @@ const getStatusTagClass = (status: string): string => {
         <SearchIcon :size="16" class="search-icon" />
         <input type="text" v-model="searchTerm" placeholder="Search users..." />
       </div>
-      <button class="btn btn-secondary">Filter</button>
+      <div class="filter-container">
+        <button class="btn btn-secondary" @click="toggleFilterDropdown">
+          <FilterIcon :size="16" class="filter-icon" />
+          Filter
+        </button>
+
+        <!-- Filter dropdown -->
+        <div v-if="showFilterDropdown" class="filter-dropdown">
+          <div class="filter-header">
+            <h3>Filter Users</h3>
+            <button class="close-btn" @click="toggleFilterDropdown">
+              <XIcon :size="16" />
+            </button>
+          </div>
+
+          <div class="filter-body">
+            <div class="filter-group">
+              <label for="role-filter">Role</label>
+              <select id="role-filter" v-model="filters.role">
+                <option value="">All Roles</option>
+                <option value="admin">Admin</option>
+                <option value="instructor">Instructor</option>
+                <option value="student">Student</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="status-filter">Status</label>
+              <select id="status-filter" v-model="filters.status">
+                <option value="">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filter-footer">
+            <button class="btn-text" @click="clearFilters">Clear Filters</button>
+            <button class="btn-primary" @click="toggleFilterDropdown">Apply</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="user-table-wrapper">
-      <table class="user-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Enrolled Courses</th>
-            <th>Created</th>
-            <th></th> <!-- Actions column -->
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="user in filteredUsers" :key="user.id">
-            <td>{{ user.name }}</td>
-            <td>{{ user.email }}</td>
-            <td>
-              <span :class="['tag', getRoleTagClass(user.role)]">{{ user.role }}</span>
-            </td>
-            <td>
-              <span :class="['tag', getStatusTagClass(user.status)]">{{ user.status }}</span>
-            </td>
-            <td>{{ user.enrolledCourses }}</td>
-            <td>{{ user.created }}</td>
-            <td>
-              <button class="action-btn">
-                <MoreVerticalIcon :size="16" />
-              </button>
-            </td>
-          </tr>
-          <tr v-if="filteredUsers.length === 0">
-             <td colspan="7" class="text-center no-results">No users found.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <!-- User Table Component -->
+    <UserTable
+      :users="users"
+      :loading="loading"
+      :searchTerm="searchTerm"
+      :roleFilter="filters.role"
+      :statusFilter="filters.status"
+    />
+
+    <!-- Add User Modal -->
+    <AddUserModal
+      :show="showAddUserModal"
+      @close="showAddUserModal = false"
+      @created="handleUserCreated"
+    />
   </div>
 </template>
 
 <style scoped>
-/* Add tag-red and tag-gray if not in global css */
-.tag-red {
-  background-color: #fee2e2; /* Light red */
-  color: #991b1b; /* Dark red */
-}
-.tag-gray {
- background-color: #f3f4f6; /* Light gray */
- color: #4b5563; /* Medium-dark gray */
-}
-
 .user-management-container {
   width: 100%;
   background-color: var(--bg-white);
@@ -132,6 +129,9 @@ const getStatusTagClass = (status: string): string => {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   /* Mimic card appearance */
   padding: calc(var(--spacing-unit) * 4); /* Override section-padding if needed */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
@@ -199,61 +199,125 @@ const getStatusTagClass = (status: string): string => {
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); /* Optional focus ring */
 }
 
-.user-table-wrapper {
-    overflow-x: auto; /* Enable horizontal scrolling on small screens */
+/* Filter styles */
+.filter-container {
+  position: relative;
 }
 
-.user-table {
-  width: 100%;
-  border-collapse: collapse; /* Remove space between borders */
-  margin-top: calc(var(--spacing-unit) * 2);
-  font-size: 0.9rem;
-  white-space: nowrap; /* Prevent text wrapping in cells */
+.filter-icon {
+  margin-right: 6px;
 }
 
-.user-table th,
-.user-table td {
-  padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 2);
-  text-align: left;
+.filter-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 300px;
+  background-color: var(--bg-white);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
   border-bottom: 1px solid var(--border-color);
-  vertical-align: middle; /* Align cell content vertically */
 }
 
-.user-table th {
-  font-weight: 500;
-  color: var(--text-light);
-  background-color: var(--bg-light); /* Subtle header background */
-  text-transform: capitalize; /* Match mockup */
+.filter-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
-/* Remove bottom border from the last row */
-.user-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.user-table td .tag {
-  margin-bottom: 0; /* Override global tag margin if needed */
-  font-size: 0.7rem; /* Slightly smaller tag */
-  padding: calc(var(--spacing-unit) * 0.4) calc(var(--spacing-unit) * 1);
-}
-
-.action-btn {
+.close-btn {
   background: none;
   border: none;
   color: var(--text-light);
   cursor: pointer;
-  padding: calc(var(--spacing-unit) * 0.5);
+  padding: 4px;
   border-radius: 4px;
 }
 
-.action-btn:hover {
+.close-btn:hover {
   background-color: var(--bg-light);
   color: var(--text-dark);
 }
 
-.no-results {
-    color: var(--text-light);
-    padding: calc(var(--spacing-unit) * 4) 0;
+.filter-body {
+  padding: 16px;
+}
+
+.filter-group {
+  margin-bottom: 16px;
+}
+
+.filter-group:last-child {
+  margin-bottom: 0;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-medium);
+}
+
+.filter-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--bg-white);
+  color: var(--text-dark);
+  font-size: 0.9rem;
+}
+
+.filter-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--text-medium);
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0;
+}
+
+.btn-text:hover {
+  color: var(--text-dark);
+  text-decoration: underline;
+}
+
+/* Dark mode styles for filter */
+html.dark .filter-dropdown {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+html.dark .filter-header {
+  border-color: #374151;
+}
+
+html.dark .filter-group select {
+  background-color: #111827;
+  border-color: #374151;
+  color: #f9fafb;
+}
+
+html.dark .close-btn:hover {
+  background-color: #374151;
 }
 
 /* Responsive adjustments if needed */
@@ -273,6 +337,16 @@ const getStatusTagClass = (status: string): string => {
   .search-bar {
       max-width: none;
   }
+  .filter-dropdown {
+    width: 100%;
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 16px 16px 0 0;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
 }
-
 </style>

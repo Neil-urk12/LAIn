@@ -1,87 +1,158 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { pb } from '../pocketbase/pocketbase';
+import { useAuthStore } from '../stores/auth';
+// Import necessary interfaces (Enrollments, Courses, User)
+import type { Enrollments, Courses, User } from '../models/interfaces';
 import CertificateCard from '../components/CertificatesView/CertificateCard.vue';
 import AboutSection from '../components/CertificatesView/AboutCertificatesSection.vue';
 import FaqSection from '../components/CertificatesView/FaqSection.vue';
-const activeTab = ref('earned');
 
-// Mock data for certificates (replace with actual data fetching later)
-const earnedCertificates = ref([
-  {
-    id: 1,
-    title: 'AI Fundamentals',
-    specialization: 'AI Fundamentals: Getting Started',
-    issuedDate: 'October 15, 2023',
-    credentialId: 'LAIn-AI-FUND-2023-001',
-    tags: ['Artificial Intelligence', 'Machine Learning Basics', 'Neural Networks'],
-    imageUrl: undefined, // Optional : Kapoy na
-  },
-  {
-    id: 2,
-    title: 'Machine Learning with Python',
-    specialization: 'Machine Learning with Python',
-    issuedDate: 'December 3, 2023',
-    credentialId: 'LAIn-ML-PY-2023-042',
-    tags: ['Python', 'Machine Learning', 'Data Analysis', 'Scikit-learn', 'Pandas'],
-    imageUrl: undefined,
-  },
-  {
-    id: 3,
-    title: 'Deep Learning Specialization',
-    specialization: 'Deep Learning Specialization',
-    issuedDate: 'February 20, 2024',
-    credentialId: 'LAIn-DL-SPEC-2024-018',
-    tags: ['Deep Learning', 'Neural Networks', 'TensorFlow', 'CNNs', 'RNNs'],
-    imageUrl: undefined,
-  },
-]);
+// Define the structure for displayed completed courses (representing earned certificates)
+interface CompletedCourseDisplay {
+  enrollmentId: string;
+  courseId: string;
+  title: string; // From expanded course
+  completionDate: string; // From enrollment updatedAt (approximation)
+  credentialId: string; // Generated placeholder
+  imageUrl?: string; // From expanded course
+  // Add other relevant course details if needed for the card
+}
 
-const inProgressCertificates = ref([
-  // Example: Add in-progress items for the 'In Progress' tab
-  // { id: 4, title: 'Natural Language Processing', progress: 50, expectedCompletion: 'June 2024' },
-]);
+// Define expanded enrollment type from PocketBase
+interface EnrollmentWithCourse extends Enrollments {
+  expand?: {
+    courseId: Courses;
+    userId?: User; // Optional: might be useful if needed
+  };
+}
+
+const authStore = useAuthStore();
+const isLoading = ref(true);
+const error = ref<string | null>(null);
+
+// Rename to reflect that it shows completed courses
+const completedCourses = ref<CompletedCourseDisplay[]>([]);
+
+// Remove activeTab and inProgressCertificates if view only shows completed
+// const activeTab = ref('earned');
+// const inProgressCertificates = ref([]);
+
+onMounted(async () => {
+  if (!authStore.user?.id) {
+    error.value = "User not logged in.";
+    isLoading.value = false;
+    return;
+  }
+
+  try {
+    isLoading.value = true;
+    error.value = null;
+    const userId = authStore.user.id;
+
+    // Fetch completed enrollments for the current user, expand course
+    const records = await pb.collection<EnrollmentWithCourse>('enrollments').getFullList({
+      filter: `userId = "${userId}" && isCompleted = true`,
+      expand: 'courseId',
+      sort: '-updatedAt', // Sort by most recently completed
+    });
+
+    // Transform fetched data into the display format
+    completedCourses.value = records.map(enrollment => {
+      const course = enrollment.expand?.courseId;
+      const completionTimestamp = new Date(enrollment.updatedAt).getTime(); // Use updatedAt for timestamp
+
+      // Basic check for expanded data
+      if (!course) {
+        console.warn(`Missing expanded course data for enrollment ${enrollment.id}`);
+        return {
+          enrollmentId: enrollment.id,
+          courseId: enrollment.courseId,
+          title: 'Course Data Missing',
+          completionDate: enrollment.updatedAt, // Fallback
+          // Generate placeholder credential ID
+          credentialId: `${userId}-${enrollment.courseId}-${completionTimestamp}`,
+          imageUrl: undefined,
+        };
+      }
+
+      return {
+        enrollmentId: enrollment.id,
+        courseId: course.id,
+        title: course.title,
+        completionDate: enrollment.updatedAt, // Use enrollment update time as completion date
+        // Generate placeholder credential ID
+        credentialId: `${userId}-${course.id}-${completionTimestamp}`,
+        imageUrl: course.imageUrl || undefined,
+      };
+    });
+
+  } catch (err: unknown) {
+    console.error("Error fetching completed enrollments:", err);
+    if (err instanceof Error) {
+      error.value = `Failed to load completed courses: ${err.message}. Please try again later.`;
+    } else {
+      error.value = "An unknown error occurred while loading completed courses.";
+    }
+  } finally {
+    isLoading.value = false;
+  }
+});
 
 </script>
 
 <template>
   <div class="certificates-view container">
     <header class="certificates-header">
-      <h1>Certificates</h1>
-      <p>View and manage your earned certificates</p>
+      <h1>Your Certificates</h1>
+      <p>View certificates for your completed courses</p>
+      <!-- Search bar might need rethinking - search courses? -->
       <div class="search-bar">
-        <input type="text" placeholder="Search Certificates..." />
+        <input type="text" placeholder="Search Completed Courses..." />
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="search-icon">
           <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
         </svg>
       </div>
     </header>
 
-    <div class="tabs">
+    <!-- Remove Tabs if only showing completed -->
+    <!-- <div class="tabs">
       <button :class="{ active: activeTab === 'earned' }" @click="activeTab = 'earned'">Earned Certificates</button>
       <button :class="{ active: activeTab === 'inProgress' }" @click="activeTab = 'inProgress'">In Progress</button>
+    </div> -->
+
+    <!-- Loading State -->
+    <div v-if="isLoading" class="loading-state">
+      <p>Loading completed courses...</p>
     </div>
 
-    <section v-if="activeTab === 'earned'" class="certificates-list">
-      <div class="certificate-grid">
+    <!-- Error State -->
+    <div v-else-if="error" class="error-state">
+      <p>{{ error }}</p>
+    </div>
+
+    <!-- Completed Courses Section -->
+    <section v-else class="certificates-list">
+      <!-- Rename class if desired, e.g., completed-courses-list -->
+      <div v-if="completedCourses.length" class="certificate-grid">
+        <!-- Ensure CertificateCard props match CompletedCourseDisplay -->
         <CertificateCard
-          v-for="certificate in earnedCertificates"
-          :key="certificate.id"
-          :title="certificate.title"
-          :specialization="certificate.specialization"
-          :issued-date="certificate.issuedDate"
-          :credential-id="certificate.credentialId"
-          :tags="certificate.tags"
-          :image-url="certificate.imageUrl"
+          v-for="course in completedCourses"
+          :key="course.enrollmentId"
+          :title="course.title"
+          :completion-date="course.completionDate" 
+          :credential-id="course.credentialId"
+          :image-url="course.imageUrl"
+          :course-id="course.courseId" 
         />
-        <p v-if="!earnedCertificates.length">You haven't earned any certificates yet.</p>
       </div>
+      <p v-else>You haven't completed any courses yet.</p>
     </section>
 
-    <section v-if="activeTab === 'inProgress'" class="in-progress-list">
-       <!-- Placeholder or component for in-progress items -->
+    <!-- Remove In Progress Section -->
+    <!-- <section v-if="activeTab === 'inProgress'" class="in-progress-list">
        <p v-if="!inProgressCertificates.length">No certificates currently in progress.</p>
-       <!-- Add logic to display in-progress items if needed -->
-    </section>
+    </section> -->
 
     <section class="about-section-container">
       <h2>About LAIn Certificates</h2>
@@ -96,6 +167,8 @@ const inProgressCertificates = ref([
 </template>
 
 <style scoped>
+/* Styles remain largely the same, minor text changes if needed */
+
 .certificates-view {
   padding-top: calc(var(--spacing-unit) * 6);
   padding-bottom: calc(var(--spacing-unit) * 10);
@@ -145,46 +218,22 @@ const inProgressCertificates = ref([
 }
 
 
-.tabs {
-  display: flex;
-  gap: calc(var(--spacing-unit) * 1);
-  margin-bottom: calc(var(--spacing-unit) * 4);
-  border-bottom: 1px solid var(--border-color);
-}
+/* Remove Tab Styles */
+/* .tabs { ... } */
 
-.tabs button {
-  padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 3);
-  border: none;
-  background-color: transparent;
-  color: var(--text-light);
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-
-.tabs button.active {
-  color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
-}
-
-.tabs button:hover:not(.active) {
-  color: var(--text-dark);
-}
-
-.certificates-list, .in-progress-list {
+.certificates-list {
   margin-bottom: calc(var(--spacing-unit) * 8);
 }
 
 .certificate-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    /* Ensure auto-fit works as expected with a defined minimum and flexible max */
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); 
     gap: calc(var(--spacing-unit) * 4);
+    width: 100%; /* Ensure grid container takes full available width */
+    justify-content: center; /* Center grid items if there's leftover space on the last row */
 }
 
-.in-progress-list p,
 .certificates-list p {
     color: var(--text-light);
     text-align: center;
@@ -204,6 +253,18 @@ const inProgressCertificates = ref([
   text-align: left;
 }
 
+/* Loading/Error States */
+.loading-state, .error-state {
+  text-align: center;
+  padding: calc(var(--spacing-unit) * 4) 0;
+  color: var(--text-light);
+}
+
+.error-state {
+  color: var(--danger-color); /* Assuming you have a danger color variable */
+}
+
+
 /* Dark mode adjustments */
 html.dark .about-section-container,
 html.dark .faq-section-container {
@@ -220,19 +281,8 @@ html.dark .search-bar input::placeholder {
     color: var(--text-light);
 }
 
-html.dark .tabs button {
-    color: var(--text-light);
-}
+/* Remove dark mode tab styles */
 
-html.dark .tabs button.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
-}
-html.dark .tabs button:hover:not(.active) {
-    color: var(--text-dark);
-}
-
-html.dark .in-progress-list p,
 html.dark .certificates-list p {
     color: var(--text-light);
 }

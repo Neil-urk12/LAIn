@@ -2,71 +2,18 @@
 import { useRoute, useRouter } from "vue-router";
 import { ref, onMounted, computed } from "vue";
 import { useEnrollmentStore } from "../stores/enrollment";
+import { useAuthStore } from "../stores/auth";
 import { pb } from "../pocketbase/pocketbase";
 import type { Courses, Lessons, Instructor, Enrollments } from "../models/interfaces";
 import type { CourseWithExpand } from "../models/types";
+import html2pdf from 'html2pdf.js';
+import CertificateTemplate from '../components/CertificateTemplate.vue';
 
-// const course = {
-//   title: 'AI Fundamentals: Getting Started',
-//   description: 'A beginner-friendly introduction to artificial intelligence concepts and applications.',
-//   duration: '10 hours',
-//   lessons: 24,
-//   students: 65000,
-//   certificate: 'Included',
-//   instructor: 'Dr. Emily Zhang',
-//   rating: 4.6,
-//   beginner: true
-// };
-
-// const modules = [
-//   {
-//     title: 'Module 1: Introduction to AI',
-//     duration: '2 hours',
-//     lessonCount: 5,
-//     lessons: [
-//       { title: 'What is Artificial Intelligence?', duration: '12 min', type: 'lesson', desc: 'A simple explanation of AI and how it differs from traditional computing.' },
-//       { title: 'AI in Everyday Life', duration: '15 min', type: 'lesson' },
-//       { title: 'Brief History of AI', duration: '18 min', type: 'lesson' },
-//       { title: 'AI Myths and Misconceptions', duration: '14 min', type: 'lesson' },
-//       { title: 'Module 1 Quiz', duration: '10 min', type: 'quiz' }
-//     ]
-//   },
-//   {
-//     title: 'Module 2: AI Concepts and Terminology',
-//     duration: '3 hours',
-//     lessonCount: 3,
-//     lessons: [
-//       { title: 'Machine Learning Basics', duration: '20 min', type: 'lesson' },
-//       { title: 'Neural Networks Simplified', duration: '22 min', type: 'lesson' },
-//       { title: 'Understanding Algorithms', duration: '18 min', type: 'lesson' }
-//     ]
-//   }
-// ];
-
-// const nextSteps = [
-//   {
-//     icon: '▶️',
-//     title: 'Start the first lesson',
-//     desc: 'Begin your learning journey with the introductory lesson.',
-//     button: { text: 'Start Learning', style: 'primary' }
-//   },
-//   {
-//     icon: '👥',
-//     title: 'Join the community',
-//     desc: 'Connect with fellow students to enhance your learning experience.',
-//     button: { text: 'View Community', style: 'secondary' }
-//   },
-//   {
-//     icon: '📄',
-//     title: 'Download course materials',
-//     desc: 'Access supplementary resources to support your learning.',
-//     button: { text: 'View Resources', style: 'secondary' }
-//   }
-// ];
 const route = useRoute();
 const router = useRouter();
 const courseId = route.params.id as string;
 const enrollmentStore = useEnrollmentStore();
+const authStore = useAuthStore();
 const isLoading = ref(true);
 const course = ref<(Courses & { instructor: Instructor }) | null>(null);
 const lessons = ref<Lessons[]>([]);
@@ -96,10 +43,18 @@ const courseDuration = computed(() =>
 
 const courseStudentsCount = ref(0);
 const courseLessonsCount = ref(0);
-const certificate = ref('Included');
+const showCertificatePreview = ref(false);
+const certificateData = ref({
+  studentName: '',
+  courseTitle: '',
+  completionDate: '',
+  credentialId: ''
+});
+const certificateTemplateRef = ref<HTMLElement | null>(null);
 
 onMounted(async () => {
   try {
+    isLoading.value = true;
     const data = (await pb
       .collection<Courses>("courses")
       .getOne(courseId, { expand: "instructorId" })) as CourseWithExpand;
@@ -118,7 +73,7 @@ onMounted(async () => {
 
     courseStudentsCount.value = enrollments.length;
   } catch (err) {
-    console.error(err);
+    console.error("Failed to load course data:", err);
     router.replace({ name: "not-found", state: window.history.state });
   } finally {
     isLoading.value = false;
@@ -130,6 +85,10 @@ const progressPercent = computed(() => {
   return courseLessonsCount.value
     ? Math.round((prog / courseLessonsCount.value) * 100)
     : 0;
+});
+
+const isCourseCompleted = computed(() => {
+  return enrollmentStore.currentEnrollment?.isCompleted ?? false;
 });
 
 const goToLesson = (lessonId: string) => {
@@ -148,10 +107,8 @@ const startFirstLesson = () => {
 const continueLesson = () => {
   const progress = enrollmentStore.currentEnrollment?.progress || 0;
   if (progress < lessons.value.length) {
-    // Go to the next uncompleted lesson
     goToLesson(lessons.value[progress].id);
   } else if (lessons.value.length > 0) {
-    // If all lessons are completed, go to the first lesson
     goToLesson(lessons.value[0].id);
   }
 };
@@ -160,6 +117,53 @@ const isLessonCompleted = (index: number) => {
   const progress = enrollmentStore.currentEnrollment?.progress || 0;
   return index < progress;
 };
+
+function openCertificatePreview() {
+  if (!authStore.user || !course.value) {
+    console.error("User or course data missing for certificate preview.");
+    return;
+  }
+
+  const currentDate = new Date();
+  const completionTimestamp = currentDate.getTime();
+
+  certificateData.value = {
+    studentName: authStore.user.name || 'Student Name',
+    courseTitle: course.value.title,
+    completionDate: currentDate.toLocaleDateString(),
+    credentialId: `${authStore.user.id}-${course.value.id}-${completionTimestamp}`,
+  };
+  showCertificatePreview.value = true;
+}
+
+function closeCertificatePreview() {
+  showCertificatePreview.value = false;
+}
+
+async function downloadCertificateAsPdf() {
+  const element = certificateTemplateRef.value;
+  if (!element) {
+    console.error("Certificate template element not found.");
+    return;
+  }
+
+  const pdfOptions = {
+    margin:       0.5,
+    filename:     `${certificateData.value.courseTitle}_Certificate_${certificateData.value.studentName}.pdf`,
+    image:        { type: 'jpeg' as 'jpeg' | 'png' | 'webp', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true },
+    jsPDF:        { unit: 'in' as const, format: 'letter', orientation: 'landscape' as const }
+  };
+
+  try {
+    console.log("Generating PDF...");
+    await html2pdf().from(element).set(pdfOptions).save();
+    console.log("Certificate downloaded as PDF.");
+  } catch (pdfError) {
+    console.error("Error generating PDF:", pdfError);
+    alert("Sorry, there was an error generating the certificate PDF.");
+  }
+}
 </script>
 
 <template>
@@ -208,6 +212,13 @@ const isLessonCompleted = (index: number) => {
 
       <!-- Main Content -->
       <main class="main-content">
+        <!-- Breadcrumb Navigation -->
+        <nav class="breadcrumbs">
+          <router-link to="/dashboard">Dashboard</router-link> >
+          <router-link to="/courses">Courses</router-link> >
+          <span>{{ course?.title }}</span>
+        </nav>
+        
         <!-- Welcome Banner -->
         <div class="welcome-banner">
           <div>
@@ -247,7 +258,7 @@ const isLessonCompleted = (index: number) => {
             </div>
             <div class="info-block">
               <div class="info-label">Certificate</div>
-              <div class="info-value">{{ certificate }}</div>
+              <div class="info-value">{{ isCourseCompleted ? 'Available on Completion' : 'Included' }}</div>
             </div>
           </div>
           <div class="dashboard-progress">
@@ -264,7 +275,8 @@ const isLessonCompleted = (index: number) => {
             <span class="instructor-label">Instructor</span>
             <span class="instructor-name">{{ course?.instructor.name }}</span>
             <span class="course-rating">★ {{ course?.rating }}</span>
-            <button class="continue-btn" @click="continueLesson">Continue Learning</button>
+            <button v-if="!isCourseCompleted" class="continue-btn" @click="continueLesson">Continue Learning</button>
+            <button v-else class="certificate-btn" @click="openCertificatePreview">View Certificate</button>
           </div>
         </section>
 
@@ -280,8 +292,8 @@ const isLessonCompleted = (index: number) => {
                 <span class="module-block-title">{{ lesson.title }}</span>
               </div>
               <span class="module-block-progress"
-                >0 / 1 completed</span
-              > <!-- Assuming each fetched lesson is a single item -->
+                >{{ isLessonCompleted(lIdx) ? 1 : 0 }} / 1 completed</span
+              >
             </div>
             <ul class="module-block-lessons-expanded">
               <li
@@ -290,7 +302,8 @@ const isLessonCompleted = (index: number) => {
                 @click="goToLesson(lesson.id)"
               >
                 <div class="lesson-icon">
-                  <span>▶️</span> <!-- Assuming all fetched items are lessons -->
+                  <span v-if="isLessonCompleted(lIdx)">✅</span>
+                  <span v-else>▶️</span>
                 </div>
                 <div class="lesson-content">
                   <div class="lesson-title-row">
@@ -331,9 +344,43 @@ const isLessonCompleted = (index: number) => {
   <template v-else>
     <div>Loading course...</div>
   </template>
+
+  <!-- Certificate Preview Modal -->
+  <div v-if="showCertificatePreview" class="certificate-preview-overlay" @click.self="closeCertificatePreview">
+    <div class="certificate-preview-modal-content">
+      <h2>Certificate Preview</h2>
+      <div ref="certificateTemplateRef">
+        <CertificateTemplate
+          :student-name="certificateData.studentName"
+          :course-title="certificateData.courseTitle"
+          :completion-date="certificateData.completionDate"
+          :credential-id="certificateData.credentialId"
+        />
+      </div>
+      <div class="certificate-preview-actions">
+        <button @click="downloadCertificateAsPdf">Download PDF</button>
+        <button @click="closeCertificatePreview" class="close-btn">Close</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
+.breadcrumbs {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-bottom: 20px;
+}
+
+.breadcrumbs a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
 .dashboard-container {
   display: flex;
   min-height: 100vh;
@@ -760,5 +807,93 @@ const isLessonCompleted = (index: number) => {
     flex-direction: column;
     gap: 0.5rem;
   }
+}
+
+/* Styles for Certificate Button */
+.certificate-btn {
+  margin-left: auto;
+  background: transparent;
+  color: green;
+  border: 1px solid green;
+  padding: 0.65rem 1.4rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.certificate-btn:hover {
+  background: green;
+  color: #fff;
+}
+
+/* Styles for Certificate Preview Modal */
+.certificate-preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 2rem 0;
+}
+
+.certificate-preview-modal-content {
+  background: var(--bg-white);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: auto;
+  max-width: 90%;
+  display: inline-block;
+}
+
+.certificate-preview-modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--text-dark);
+}
+
+.certificate-preview-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.certificate-preview-actions button {
+  padding: 0.7rem 1.4rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: 1px solid var(--primary-color);
+}
+
+.certificate-preview-actions button:not(.close-btn) {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.certificate-preview-actions button:not(.close-btn):hover {
+  background: var(--primary-color-dark);
+  border-color: var(--primary-color-dark);
+}
+
+.certificate-preview-actions .close-btn {
+  background: var(--bg-light);
+  color: var(--primary-color-dark);
+}
+
+.certificate-preview-actions .close-btn:hover {
+  background: var(--border-color);
 }
 </style>

@@ -23,7 +23,12 @@
       <p class="dashboard-subtitle">Overview of your platform's performance and activity.</p>
 
       <!-- Stats Cards -->
-      <div class="stats-grid">
+      <div v-if="!isStatsLoaded" class="loading-container">
+        <Loader :size="32" class="loading-spinner" />
+        <p>Loading statistics...</p>
+      </div>
+
+      <div v-else class="stats-grid">
         <div v-for="stat in stats" :key="stat.title" class="stat-card">
           <div class="stat-info">
             <p class="stat-title">{{ stat.title }}</p>
@@ -44,22 +49,30 @@
         <!-- Recent Activity -->
         <div class="recent-activity card">
           <h2 class="card-title">Recent Activity</h2>
-          <ul class="activity-list">
-            <li v-for="activity in recentActivity" :key="activity.id" class="activity-item">
-              <div class="activity-avatar" :style="{ backgroundColor: activity.avatarColor }">
-                {{ activity.initials }}
-              </div>
-              <div class="activity-details">
-                <p>
-                  <span class="font-semibold">{{ activity.userName }}</span>
-                  {{ activity.action }}
-                  <span v-if="activity.subject" class="font-semibold">{{ activity.subject }}</span>
-                </p>
-                <p class="activity-timestamp">{{ activity.timestamp }}</p>
-              </div>
-            </li>
-          </ul>
-          <a href="#" class="view-all-link">View all activity</a>
+
+          <div v-if="!isActivityLoaded" class="activity-loading">
+            <Loader :size="24" class="loading-spinner" />
+            <p>Loading activity...</p>
+          </div>
+
+          <template v-else>
+            <ul class="activity-list">
+              <li v-for="activity in recentActivity" :key="activity.id" class="activity-item">
+                <div class="activity-avatar" :style="{ backgroundColor: activity.avatarColor }">
+                  {{ activity.initials }}
+                </div>
+                <div class="activity-details">
+                  <p>
+                    <span class="font-semibold">{{ activity.userName }}</span>
+                    {{ activity.action }}
+                    <span v-if="activity.subject" class="font-semibold">{{ activity.subject }}</span>
+                  </p>
+                  <p class="activity-timestamp">{{ activity.timestamp }}</p>
+                </div>
+              </li>
+            </ul>
+            <a href="#" class="view-all-link">View all activity</a>
+          </template>
         </div>
 
         <!-- Quick Actions -->
@@ -82,10 +95,12 @@ import {
   Bell,
   UserCircle,
   ArrowUp,
+  Loader,
 } from 'lucide-vue-next';
 import type { Component } from 'vue';
+import { computed } from 'vue';
 
-defineProps<{
+const props = defineProps<{
   stats: {
     title: string;
     value: number;
@@ -93,7 +108,7 @@ defineProps<{
     icon: Component;
   }[];
   recentActivity: {
-    id: number;
+    id: string | number;
     initials: string;
     userName: string;
     action: string;
@@ -105,6 +120,10 @@ defineProps<{
     label: string;
   }[];
 }>();
+
+// Computed properties to check if data is loaded
+const isStatsLoaded = computed(() => props.stats && props.stats.length > 0);
+const isActivityLoaded = computed(() => props.recentActivity && props.recentActivity.length > 0);
 </script>
 
 <style scoped>
@@ -457,5 +476,48 @@ html.dark .quick-action-button {
 html.dark .quick-action-button:hover {
     background-color: #047857;
     color: #ffffff;
+}
+
+/* Loading styles */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--spacing-unit) * 6) 0;
+  margin-bottom: calc(var(--spacing-unit) * 4);
+  background-color: var(--bg-white, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  color: var(--text-light);
+}
+
+.activity-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--spacing-unit) * 3) 0;
+  color: var(--text-light);
+}
+
+.loading-spinner {
+  animation: spin 1.5s linear infinite;
+  margin-bottom: calc(var(--spacing-unit) * 2);
+  color: var(--primary-color);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+html.dark .loading-container,
+html.dark .activity-loading {
+  color: #9ca3af;
+}
+
+html.dark .loading-spinner {
+  color: #34d399;
 }
 </style>
